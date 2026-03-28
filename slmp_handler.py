@@ -9,6 +9,7 @@ Every ~20 ms:
   WRITE  M2010–M2026  Sequence request  (one-hot: bit N = 1 when
                                         state.plc_sequence_request == N)
   READ   M0–M4        PLC input bits    (stored in state.plc_inputs)
+  READ   M2040–M2056  Sequence complete flags (stored in state.plc_sequence_complete)
 
 Fault behaviour: any exception is caught, logged, and retried after 2 s.
 The AGV motion loop is completely unaffected by PLC comms loss.
@@ -18,6 +19,7 @@ an integer 0–16.  Set it back to None to clear all sequence bits.
 """
 
 import asyncio
+import time
 import pymcprotocol
 
 import config
@@ -61,6 +63,19 @@ def _plc_sync_cycle(plc, state) -> None:
         "M3_EMERGENCY":     bool(values[3]),
         "M4_MASTER_ON":     bool(values[4]),
     }
+
+    # ── Read M2040–M2056 sequence complete flags ──────────────────────────────
+    complete = plc.batchread_bitunits(headdevice="M2040", readsize=_NUM_SEQ_BITS)
+    state.plc_sequence_complete = [bool(v) for v in complete]
+
+    # ── Auto-clear sequence request pulse ────────────────────────────────────
+    # Clears after 1-second pulse window expires.
+    # The complete flag is NOT used to clear — it may already be HIGH from a
+    # previous run, which would incorrectly cancel a freshly issued request.
+    req = state.plc_sequence_request
+    if req is not None:
+        if time.time() >= state.plc_sequence_pulse_expire:
+            state.plc_sequence_request = None
 
 
 async def slmp_handler(state) -> None:

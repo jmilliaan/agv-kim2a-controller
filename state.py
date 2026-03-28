@@ -31,6 +31,8 @@ class AMRState:
         # current_mode mirrors mode_manager's local variable so the SLMP task
         # can compute the correct M2000-M2005 write values without coupling.
         self.current_mode          = None   # None | "manual" | "armed" | "running" | "emergency"
-        self.plc_inputs            = {}     # latest M0-M4 values read from the FX5U PLC
-        self.plc_sequence_request  = None   # int 0-16 → sets M201x; None → all sequence bits LOW
+        self.plc_inputs             = {}     # latest M0-M4 values read from the FX5U PLC
+        self.plc_sequence_request      = None  # int 0-16 → sets M201x; None → all sequence bits LOW
+        self.plc_sequence_pulse_expire = 0.0   # epoch time after which the request bit is auto-cleared
+        self.plc_sequence_complete     = [False] * 17  # M2040-M2056: True when PLC signals sequence N done
         

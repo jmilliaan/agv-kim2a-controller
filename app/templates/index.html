@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGV Monitor</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #d4d0c8;   /* Classic Windows/HMI gray */
+    color: #000;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  /* ── Raised / sunken panel borders (classic HMI look) ── */
+  .raised {
+    border-top:    2px solid #fff;
+    border-left:   2px solid #fff;
+    border-right:  2px solid #808080;
+    border-bottom: 2px solid #808080;
+  }
+  .sunken {
+    border-top:    2px solid #808080;
+    border-left:   2px solid #808080;
+    border-right:  2px solid #fff;
+    border-bottom: 2px solid #fff;
+  }
+
+  /* ── Header bar ── */
+  #header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #000080;   /* Siemens-blue title bar */
+    color: #fff;
+    padding: 5px 10px;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+  #header .title { flex: 1; }
+
+  /* Mode badge — large, prominent */
+  .mode-badge {
+    padding: 2px 14px;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    border-top:    2px solid #808080;
+    border-left:   2px solid #808080;
+    border-right:  2px solid #fff;
+    border-bottom: 2px solid #fff;
+    background: #c0c0c0;
+    color: #000;
+  }
+  .mode-manual    { background: #0000c0; color: #fff; }
+  .mode-armed     { background: #c0a000; color: #000; }
+  .mode-running   { background: #008000; color: #fff; }
+  .mode-emergency { background: #c00000; color: #fff; }
+
+  /* Emergency indicator lamp */
+  .emrg-lamp {
+    display: flex; align-items: center; gap: 6px;
+    font-weight: bold; font-size: 12px; letter-spacing: 1px;
+    color: #606060;
+  }
+  .emrg-lamp .lamp {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #606060;
+    border: 2px solid #404040;
+  }
+  .emrg-lamp.active { color: #000; }
+  .emrg-lamp.active .lamp {
+    background: #ff2020;
+    border-color: #800000;
+    box-shadow: 0 0 6px 2px #ff000088;
+  }
+
+  /* Timestamp */
+  #ts { font-size: 11px; color: #c0c0c0; letter-spacing: 1px; }
+
+  /* ── Layout ── */
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  /* Panel */
+  .panel {
+    background: #c0c0c0;
+    padding: 0;
+  }
+  .panel-title {
+    background: #000080;
+    color: #fff;
+    font-weight: bold;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 3px 8px;
+    text-transform: uppercase;
+  }
+  .panel-body { padding: 8px; }
+
+  /* Section label inside panel */
+  .section-label {
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #404040;
+    text-transform: uppercase;
+    margin: 6px 0 3px 0;
+    border-bottom: 1px solid #a0a0a0;
+    padding-bottom: 2px;
+  }
+  .section-label:first-child { margin-top: 0; }
+
+  /* ── Bit row ── */
+  .bit-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 22px;
+    border-bottom: 1px solid #b0b0b0;
+  }
+  .bit-row:last-child { border-bottom: none; }
+
+  .bit-addr {
+    width: 46px;
+    flex-shrink: 0;
+    font-size: 10px;
+    color: #505050;
+    padding: 0 4px;
+    border-right: 1px solid #a0a0a0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    background: #b8b4ac;
+  }
+  .bit-name {
+    flex: 1;
+    padding: 0 6px;
+    font-weight: bold;
+    font-size: 12px;
+    color: #000;
+    letter-spacing: 0.5px;
+  }
+
+  /* Indicator lamp */
+  .lamp {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-right: 6px;
+    background: #888;
+    border: 2px solid #606060;
+    box-shadow: inset 0 1px 2px #00000044;
+  }
+  .lamp.on-green {
+    background: radial-gradient(circle at 35% 35%, #80ff80, #00a000);
+    border-color: #005000;
+    box-shadow: 0 0 5px 1px #00cc0066, inset 0 1px 2px #ffffff44;
+  }
+  .lamp.on-red {
+    background: radial-gradient(circle at 35% 35%, #ff8080, #cc0000);
+    border-color: #800000;
+    box-shadow: 0 0 5px 1px #cc000066, inset 0 1px 2px #ffffff44;
+  }
+  .lamp.on-blue {
+    background: radial-gradient(circle at 35% 35%, #80c0ff, #0060c0);
+    border-color: #003080;
+    box-shadow: 0 0 5px 1px #0080ff66, inset 0 1px 2px #ffffff44;
+  }
+  .lamp.on-amber {
+    background: radial-gradient(circle at 35% 35%, #ffe080, #d08000);
+    border-color: #804000;
+    box-shadow: 0 0 5px 1px #ffa00066, inset 0 1px 2px #ffffff44;
+  }
+
+  /* ── Sequence grid ── */
+  .seq-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    margin-top: 2px;
+  }
+  .seq-cell {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 4px;
+    background: #b8b4ac;
+    border: 1px solid #a0a0a0;
+  }
+  .seq-cell .lamp { width: 12px; height: 12px; flex-shrink: 0; margin-right: 0; }
+  .seq-cell .seq-label { display: flex; flex-direction: column; line-height: 1.2; }
+  .seq-cell .seq-name { font-size: 11px; font-weight: bold; color: #1a1a1a; }
+  .seq-cell .seq-addr { font-size: 9px; color: #606060; }
+
+  /* ── Control bar ── */
+  #ctrl {
+    background: #c0c0c0;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  #ctrl .ctrl-label {
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #000;
+  }
+
+  select {
+    background: #fff;
+    color: #000;
+    border-top:    2px solid #808080;
+    border-left:   2px solid #808080;
+    border-right:  2px solid #fff;
+    border-bottom: 2px solid #fff;
+    padding: 3px 6px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  button {
+    padding: 4px 18px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer;
+    /* raised border = clickable */
+    border-top:    2px solid #fff;
+    border-left:   2px solid #fff;
+    border-right:  2px solid #808080;
+    border-bottom: 2px solid #808080;
+  }
+  button:active {
+    border-top:    2px solid #808080;
+    border-left:   2px solid #808080;
+    border-right:  2px solid #fff;
+    border-bottom: 2px solid #fff;
+  }
+  #btn-set   { background: #00a000; color: #fff; }
+  #btn-clear { background: #c00000; color: #fff; }
+
+  #ctrl-status {
+    font-size: 11px;
+    font-weight: bold;
+    color: #000080;
+    letter-spacing: 1px;
+  }
+
+  /* Condition indicators row */
+  #ctrl-conditions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-left: 8px;
+    padding-left: 12px;
+    border-left: 2px solid #a0a0a0;
+  }
+  .cond-item {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: bold; color: #606060;
+    letter-spacing: 0.5px;
+  }
+  .cond-item .lamp { width: 10px; height: 10px; }
+
+  /* Seq request active label */
+  #seq-req-label {
+    color: #0000c0;
+    font-weight: bold;
+  }
+
+  /* Connection status strip */
+  #conn-strip {
+    display: flex;
+    gap: 2px;
+    margin-left: auto;
+    align-items: center;
+    font-size: 10px;
+    color: #c0c0c0;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Title bar -->
+<div id="header" class="raised">
+  <span class="title">AGV CONTROL MONITOR &nbsp;|&nbsp; AGV1-KIM</span>
+  <span id="mode-badge" class="mode-badge">MODE: —</span>
+  <div id="emrg-lamp" class="emrg-lamp">
+    <div class="lamp"></div>EMERGENCY
+  </div>
+  <span id="ts" style="font-size:11px;color:#c0c0c0;letter-spacing:1px;">—</span>
+</div>
+
+<div class="columns">
+
+  <!-- LEFT: AGV → PLC writes -->
+  <div class="panel raised">
+    <div class="panel-title">AGV &rarr; PLC &nbsp;&nbsp;[ WRITE ]</div>
+    <div class="panel-body">
+
+      <div class="section-label">AGV STATUS FLAGS</div>
+
+      <div class="bit-row">
+        <span class="bit-addr">M2000</span>
+        <span class="bit-name">READY</span>
+        <span class="lamp" id="w-M2000"></span>
+      </div>
+      <div class="bit-row">
+        <span class="bit-addr">M2001</span>
+        <span class="bit-name">EMERGENCY</span>
+        <span class="lamp" id="w-M2001"></span>
+      </div>
+      <div class="bit-row">
+        <span class="bit-addr">M2002</span>
+        <span class="bit-name">TROLLEY EMERGENCY</span>
+        <span class="lamp" id="w-M2002"></span>
+      </div>
+      <div class="bit-row">
+        <span class="bit-addr">M2003</span>
+        <span class="bit-name">MANUAL</span>
+        <span class="lamp" id="w-M2003"></span>
+      </div>
+      <div class="bit-row">
+        <span class="bit-addr">M2004</span>
+        <span class="bit-name">AUTO</span>
+        <span class="lamp" id="w-M2004"></span>
+      </div>
+      <div class="bit-row">
+        <span class="bit-addr">M2005</span>
+        <span class="bit-name">RUNNING</span>
+        <span class="lamp" id="w-M2005"></span>
+      </div>
+
+      <div class="section-label">SEQUENCE REQUEST &nbsp;<span id="seq-req-label">—</span></div>
+      <div class="seq-grid" id="seq-req-grid"></div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT: PLC → AGV reads -->
+  <div class="panel raised">
+    <div class="panel-title">PLC &rarr; AGV &nbsp;&nbsp;[ READ ]</div>
+    <div class="panel-body">
+
+      <div class="section-label">PLC INPUT FLAGS</div>
+
+      <div class="bit-row">
+        <span class="bit-addr">M0</span>
+        <span class="bit-name">PB START AUTO</span>
+        <span class="lamp" id="r-M0"></span>
+      </div>
+      <div class="bit-row">
+        <span class="bit-addr">M1</span>
+        <span class="bit-name">MODE: MAN</span>
+        <span class="lamp" id="r-M1"></span>
+      </div>
+      <div class="bit-row">
+        <span class="bit-addr">M2</span>
+        <span class="bit-name">MODE: AUTO</span>
+        <span class="lamp" id="r-M2"></span>
+      </div>
+      <div class="bit-row">
+        <span class="bit-addr">M3</span>
+        <span class="bit-name">EMERGENCY</span>
+        <span class="lamp" id="r-M3"></span>
+      </div>
+      <div class="bit-row">
+        <span class="bit-addr">M4</span>
+        <span class="bit-name">MASTER ON</span>
+        <span class="lamp" id="r-M4"></span>
+      </div>
+
+      <div class="section-label">SEQUENCE COMPLETE FLAGS</div>
+      <div class="seq-grid" id="seq-done-grid"></div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Sequence control panel -->
+<div id="ctrl" class="raised">
+  <span class="ctrl-label">Sequence Request:</span>
+  <select id="seq-select">
+    <option value="null">— NONE —</option>
+  </select>
+  <button id="btn-set">SET</button>
+  <button id="btn-clear">CLEAR</button>
+  <span id="ctrl-status"></span>
+  <div id="ctrl-conditions">
+    <div class="cond-item"><span class="lamp" id="cond-master"></span>M4 MASTER ON</div>
+    <div class="cond-item"><span class="lamp" id="cond-manual"></span>M1 MANUAL MODE</div>
+    <div class="cond-item"><span class="lamp" id="cond-pulse"></span>PULSE ACTIVE</div>
+  </div>
+</div>
+
+<script>
+const N_SEQ = 17;
+
+(function init() {
+  const sel      = document.getElementById('seq-select');
+  const reqGrid  = document.getElementById('seq-req-grid');
+  const doneGrid = document.getElementById('seq-done-grid');
+  for (let i = 0; i < N_SEQ; i++) {
+    const opt = document.createElement('option');
+    opt.value = i; opt.textContent = `SEQ ${i}`;
+    sel.appendChild(opt);
+
+    const rc = document.createElement('div');
+    rc.className = 'seq-cell';
+    rc.innerHTML = `<span class="lamp" id="w-seq${i}"></span>`
+                 + `<span class="seq-label"><span class="seq-name">SEQ ${i}</span>`
+                 + `<span class="seq-addr">M${2010+i}</span></span>`;
+    reqGrid.appendChild(rc);
+
+    const dc = document.createElement('div');
+    dc.className = 'seq-cell';
+    dc.innerHTML = `<span class="lamp" id="r-seq${i}"></span>`
+                 + `<span class="seq-label"><span class="seq-name">SEQ ${i}</span>`
+                 + `<span class="seq-addr">M${2040+i}</span></span>`;
+    doneGrid.appendChild(dc);
+  }
+})();
+
+function setLamp(el, on, cls) {
+  if (!el) return;
+  el.className = 'lamp' + (on ? (' ' + cls) : '');
+}
+
+function fetchState() {
+  fetch('/api/state')
+    .then(r => r.json())
+    .then(d => {
+      const agv = d.agv;
+      const w   = d.plc_writes;
+      const r   = d.plc_reads;
+
+      // Mode badge
+      const mode  = agv.mode || null;
+      const badge = document.getElementById('mode-badge');
+      badge.textContent = 'MODE: ' + (mode ? mode.toUpperCase() : '—');
+      badge.className   = 'mode-badge' + (mode ? (' mode-' + mode) : '');
+
+      // Emergency lamp
+      const el = document.getElementById('emrg-lamp');
+      el.className = 'emrg-lamp' + (agv.emergency ? ' active' : '');
+
+      // Status write lamps (green = normal on, red = emergency on)
+      setLamp(document.getElementById('w-M2000'), w.M2000_READY,             'on-green');
+      setLamp(document.getElementById('w-M2001'), w.M2001_EMERGENCY,         'on-red');
+      setLamp(document.getElementById('w-M2002'), w.M2002_TROLLEY_EMERGENCY, 'on-red');
+      setLamp(document.getElementById('w-M2003'), w.M2003_MANUAL,            'on-blue');
+      setLamp(document.getElementById('w-M2004'), w.M2004_AUTO,              'on-blue');
+      setLamp(document.getElementById('w-M2005'), w.M2005_RUNNING,           'on-green');
+
+      // Sequence request
+      const req = agv.sequence_request;
+      document.getElementById('seq-req-label').textContent =
+        (req !== null && req !== undefined) ? `SEQ ${req}` : '—';
+      for (let i = 0; i < N_SEQ; i++) {
+        setLamp(document.getElementById(`w-seq${i}`), w[`M${2010+i}_SEQ${i}`], 'on-blue');
+      }
+
+      // PLC read lamps
+      setLamp(document.getElementById('r-M0'), r.M0_PB_START_AUTO, 'on-green');
+      setLamp(document.getElementById('r-M1'), r.M1_MODE_MAN,      'on-blue');
+      setLamp(document.getElementById('r-M2'), r.M2_MODE_AUTO,     'on-blue');
+      setLamp(document.getElementById('r-M3'), r.M3_EMERGENCY,     'on-red');
+      setLamp(document.getElementById('r-M4'), r.M4_MASTER_ON,     'on-green');
+
+      // Sequence complete lamps
+      for (let i = 0; i < N_SEQ; i++) {
+        setLamp(document.getElementById(`r-seq${i}`), r[`M${2040+i}_SEQ${i}_COMPLETE`], 'on-amber');
+      }
+
+      // Condition indicators
+      const masterOn   = r.M4_MASTER_ON;
+      const manualOn   = r.M1_MODE_MAN;
+      const pulseActive = agv.seq_pulse_active;
+      setLamp(document.getElementById('cond-master'), masterOn,   'on-green');
+      setLamp(document.getElementById('cond-manual'), manualOn,   'on-blue');
+      setLamp(document.getElementById('cond-pulse'),  pulseActive, 'on-amber');
+
+      // Disable SET while pulse is active
+      document.getElementById('btn-set').disabled = pulseActive;
+      document.getElementById('btn-set').style.opacity = pulseActive ? '0.4' : '1';
+
+      document.getElementById('ts').textContent = new Date().toLocaleTimeString();
+    })
+    .catch(() => {
+      document.getElementById('ts').textContent = 'NO CONN';
+    });
+}
+
+document.getElementById('btn-set').addEventListener('click', () => {
+  const val  = document.getElementById('seq-select').value;
+  const body = val === 'null' ? { sequence: null } : { sequence: parseInt(val) };
+  fetch('/api/sequence', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  .then(r => r.json())
+  .then(d => {
+    const st = document.getElementById('ctrl-status');
+    st.style.color = d.ok ? '#006000' : '#c00000';
+    st.textContent  = d.ok
+      ? (d.sequence !== null ? `SET → SEQ ${d.sequence}` : 'CLEARED')
+      : (d.error || 'ERROR');
+    setTimeout(() => { st.textContent = ''; }, 4000);
+  });
+});
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+  document.getElementById('seq-select').value = 'null';
+  fetch('/api/sequence', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sequence: null })
+  })
+  .then(r => r.json())
+  .then(d => {
+    const st = document.getElementById('ctrl-status');
+    st.style.color  = d.ok ? '#006000' : '#c00000';
+    st.textContent  = d.ok ? 'CLEARED' : (d.error || 'ERROR');
+    setTimeout(() => { st.textContent = ''; }, 4000);
+  });
+});
+
+fetchState();
+setInterval(fetchState, 500);
+</script>
+</body>
+</html>

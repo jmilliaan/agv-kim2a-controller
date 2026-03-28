@@ -1,5 +1,6 @@
 import asyncio
 import signal
+import threading
 from pymodbus.client import AsyncModbusTcpClient
 
 import config
@@ -8,6 +9,7 @@ import io_hardware
 import modes
 from rfid_processor import rfid_processor
 import slmp_handler
+from app.app import run_server
 
 async def shutdown():
     """Zero all DO and AO outputs via direct Modbus writes, bypassing the queues."""
@@ -33,6 +35,8 @@ async def run():
     loop = asyncio.get_running_loop()
 
     state = AMRState()
+
+    threading.Thread(target=run_server, args=(state,), daemon=True).start()
 
     def terminate_gracefully():
         print("\nTermination signal received. Cancelling tasks...")
