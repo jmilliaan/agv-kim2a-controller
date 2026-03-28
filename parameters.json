@@ -7,7 +7,7 @@
     "RFID_IP": "192.168.3.200",
     "RFID_PORT": 2022,
     "SLMP_IP": "192.168.4.10",
-    "SLMP_PORT": 5001
+    "SLMP_PORT": 1280
   },
   "io_mapping": {
     "DI_BASE": 0,
@@ -190,6 +190,74 @@
     "M2026": {
       "description": "AGV.REQ.SEQUENCE.16",
       "permission": "R/W"
+    },
+    "M2040": {
+      "description": "SEQUENCE.0.COMPLETE",
+      "permission": "R"
+    },
+    "M2041": {
+      "description": "SEQUENCE.1.COMPLETE",
+      "permission": "R"
+    },
+    "M2042": {
+      "description": "SEQUENCE.2.COMPLETE",
+      "permission": "R"
+    },
+    "M2043": {
+      "description": "SEQUENCE.3.COMPLETE",
+      "permission": "R"
+    },
+    "M2044": {
+      "description": "SEQUENCE.4.COMPLETE",
+      "permission": "R"
+    },
+    "M2045": {
+      "description": "SEQUENCE.5.COMPLETE",
+      "permission": "R"
+    },
+    "M2046": {
+      "description": "SEQUENCE.6.COMPLETE",
+      "permission": "R"
+    },
+    "M2047": {
+      "description": "SEQUENCE.7.COMPLETE",
+      "permission": "R"
+    },
+    "M2048": {
+      "description": "SEQUENCE.8.COMPLETE",
+      "permission": "R"
+    },
+    "M2049": {
+      "description": "SEQUENCE.9.COMPLETE",
+      "permission": "R"
+    },
+    "M2050": {
+      "description": "SEQUENCE.10.COMPLETE",
+      "permission": "R"
+    },
+    "M2051": {
+      "description": "SEQUENCE.11.COMPLETE",
+      "permission": "R"
+    },
+    "M2052": {
+      "description": "SEQUENCE.12.COMPLETE",
+      "permission": "R"
+    },
+    "M2053": {
+      "description": "SEQUENCE.13.COMPLETE",
+      "permission": "R"
+    },
+    "M2054": {
+      "description": "SEQUENCE.14.COMPLETE",
+      "permission": "R"
+    },
+    "M2055": {
+      "description": "SEQUENCE.15.COMPLETE",
+      "permission": "R"
+    },
+    "M2056": {
+      "description": "SEQUENCE.16.COMPLETE",
+      "permission": "R"
     },
     "M2100": {
       "description": "AGV.AUTO.REQ TOP CONV FWD",
