@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGV Web Dashboard</title>
+    <!-- Gunakan CSS lokal jika benar-benar tidak ada internet, 
+         di sini saya menggunakan style standar agar rapi -->
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: white; margin: 0; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: #2d2d2d; padding: 20px; border-radius: 10px; border-left: 5px solid #007bff; }
+        .value { font-size: 2em; font-weight: bold; color: #00ff00; }
+        .status { padding: 5px 10px; border-radius: 5px; font-size: 0.8em; }
+        .on { background: green; }
+        .off { background: red; }
+        .btn { padding: 15px 25px; background: #007bff; border: none; color: white; border-radius: 5px; cursor: pointer; }
+        .btn-stop { background: #dc3545; }
+        .control-panel { margin-top: 20px; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>AGV MONITORING DASHBOARD</h1>
+    
+    <div class="grid">
+        <!-- Sensor Magnetik -->
+        <div class="card">
+            <h3>TRACKER MAGNETIK</h3>
+            <div id="tape-status" class="status off">TAPE: DISCONNECTED</div>
+            <div id="sensor-val" class="value">0 mm</div>
+            <p>Posisi dari Garis Tengah</p>
+        </div>
+
+        <!-- RFID -->
+        <div class="card">
+            <h3>RFID SYSTEM</h3>
+            <div id="rfid-val" class="value">None</div>
+            <p>Tag Terakhir Terdeteksi</p>
+        </div>
+    </div>
+
+    <div class="card control-panel">
+        <h3>KONTROL MANUAL & SPEED</h3>
+        <input type="range" min="0" max="1" step="0.1" id="speed-slider" style="width: 80%;">
+        <p>Target Speed: <span id="speed-display">0.4</span> m/s</p>
+        <button class="btn">MAJU</button>
+        <button class="btn btn-stop">STOP / BRAKE</button>
+    </div>
+
+    <!-- Script untuk Socket.IO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        socket.on('agv_update', function(data) {
+            if (data.sensor) {
+                document.getElementById('sensor-val').innerText = data.sensor.left_mm + " mm";
+                const tapeStatus = document.getElementById('tape-status');
+                if (data.sensor.tape_detected) {
+                    tapeStatus.innerText = "TAPE: DETECTED";
+                    tapeStatus.className = "status on";
+                } else {
+                    tapeStatus.innerText = "TAPE: LOST";
+                    tapeStatus.className = "status off";
+                }
+            }
+            if (data.rfid) {
+                document.getElementById('rfid-val').innerText = data.rfid;
+            }
+        });
+
+        document.getElementById('speed-slider').oninput = function() {
+            document.getElementById('speed-display').innerText = this.value;
+        };
+    </script>
+</body>
+</html>

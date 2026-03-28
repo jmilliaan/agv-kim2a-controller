@@ -1,0 +1,323 @@
+{
+  "networking": {
+    "DIO_IP": "192.168.1.31",
+    "AO_IP": "192.168.1.30",
+    "MODBUS_PORT": 502,
+    "DEVICE_ID": 1,
+    "RFID_IP": "192.168.3.200",
+    "RFID_PORT": 2022,
+    "SLMP_IP": "192.168.4.10",
+    "SLMP_PORT": 5001
+  },
+  "io_mapping": {
+    "DI_BASE": 0,
+    "DO_BASE": 0,
+    "NUM_DI": 16,
+    "NUM_DO": 16,
+    "AO_BASE": 4096,
+    "NUM_AO": 2,
+    "DI_EMERGENCY": 3,
+    "DI_FWD": 4,
+    "DI_REV": 5,
+    "DI_LEFT": 6,
+    "DI_RIGHT": 7,
+    "DI_MODE_SWITCH": 2,
+    "DI_START": 0,
+    "DI_RESET": 1
+  },
+  "hardware": {
+    "V_RANGE": 10.0,
+    "DAC_RES": 4095
+  },
+  "kinematics": {
+    "WHEEL_DIAMETER": 0.18,
+    "GEAR_RATIO": 30
+  },
+  "speeds": {
+    "MANUAL_TARGET_HIGH_SPEED": 0.4,
+    "MANUAL_TARGET_SLOW_SPEED": 0.15,
+    "AUTO_TARGET_HIGH_SPEED": 0.4,
+    "AUTO_TARGET_SLOW_SPEED": 0.25,
+    "AUTO_TARGET_EXTRA_SLOW_SPEED": 0.15,
+    "ACCEL_RATE": 0.8
+  },
+  "pid_tuning": {
+    "comment": "HIGH speed gains — tuned for 0.4m/s with loaded trolley",
+    "KP": 1.4,
+    "TD": 0.12,
+    "N": 20,
+    "comment_slow": "SLOW / EXTRA_SLOW gains — tuned for 0.25m/s, proven stable",
+    "KP_SLOW": 2.2,
+    "TD_SLOW": 0.14,
+    "N_SLOW": 12,
+    "comment_shared": "Shared — integral and timing, same for all speed modes",
+    "TI": 20,
+    "TI_DEADBAND": 25,
+    "TI_MAX": 500,
+    "DT": 0.01,
+    "comment_sr": "Speed reduction — split by speed mode",
+    "V_RED_COEF": 4,
+    "V_RED_COEF_SLOW": 2,
+    "OUTPUT_CLAMP_RPM": 800,
+    "SR_ALPHA": 0.15,
+    "SR_CAP": 0.55
+  },
+  "can_sensor": {
+    "SENSOR_COB_ID": 390,
+    "FLAG_TAPE_DETECT": 2,
+    "FLAG_SENSOR_FAIL": 128,
+    "CAN_TIMEOUT": 0.5,
+    "CAN_NODE_ID": 6
+  },
+  "rfid_commands": {
+    "0014": "RF_CMD_01",
+    "0016": "RF_CMD_02",
+    "000C": "RF_CMD_05"
+  },
+  "rfid": {
+    "RFID_INIT_CMD_HEX": "CFFF0070002415",
+    "SEQUENCE_STOP_DELAY": 4.0
+  },
+  "slmp_plc": {
+    "M0": {
+      "description": "PB START AUTO",
+      "permission": "R"
+    },
+    "M1": {
+      "description": "MODE: MAN",
+      "permission": "R"
+    },
+    "M2": {
+      "description": "MODE: AUTO",
+      "permission": "R"
+    },
+    "M3": {
+      "description": "EMERGENCY",
+      "permission": "R"
+    },
+    "M4": {
+      "description": "MASTER ON",
+      "permission": "R"
+    },
+    "M2000": {
+      "description": "AGV.READY",
+      "permission": "R/W"
+    },
+    "M2001": {
+      "description": "AGV.EMERGENCY",
+      "permission": "R/W"
+    },
+    "M2002": {
+      "description": "AGV.REQ TROLLEY EMERGENCY",
+      "permission": "R/W"
+    },
+    "M2003": {
+      "description": "AGV.MANUAL",
+      "permission": "R/W"
+    },
+    "M2004": {
+      "description": "AGV.AUTO",
+      "permission": "R/W"
+    },
+    "M2005": {
+      "description": "AGV.RUNNING",
+      "permission": "R/W"
+    },
+    "M2010": {
+      "description": "AGV.REQ.SEQUENCE.0",
+      "permission": "R/W"
+    },
+    "M2011": {
+      "description": "AGV.REQ.SEQUENCE.1",
+      "permission": "R/W"
+    },
+    "M2012": {
+      "description": "AGV.REQ.SEQUENCE.2",
+      "permission": "R/W"
+    },
+    "M2013": {
+      "description": "AGV.REQ.SEQUENCE.3",
+      "permission": "R/W"
+    },
+    "M2014": {
+      "description": "AGV.REQ.SEQUENCE.4",
+      "permission": "R/W"
+    },
+    "M2015": {
+      "description": "AGV.REQ.SEQUENCE.5",
+      "permission": "R/W"
+    },
+    "M2016": {
+      "description": "AGV.REQ.SEQUENCE.6",
+      "permission": "R/W"
+    },
+    "M2017": {
+      "description": "AGV.REQ.SEQUENCE.7",
+      "permission": "R/W"
+    },
+    "M2018": {
+      "description": "AGV.REQ.SEQUENCE.8",
+      "permission": "R/W"
+    },
+    "M2019": {
+      "description": "AGV.REQ.SEQUENCE.9",
+      "permission": "R/W"
+    },
+    "M2020": {
+      "description": "AGV.REQ.SEQUENCE.10",
+      "permission": "R/W"
+    },
+    "M2021": {
+      "description": "AGV.REQ.SEQUENCE.11",
+      "permission": "R/W"
+    },
+    "M2022": {
+      "description": "AGV.REQ.SEQUENCE.12",
+      "permission": "R/W"
+    },
+    "M2023": {
+      "description": "AGV.REQ.SEQUENCE.13",
+      "permission": "R/W"
+    },
+    "M2024": {
+      "description": "AGV.REQ.SEQUENCE.14",
+      "permission": "R/W"
+    },
+    "M2025": {
+      "description": "AGV.REQ.SEQUENCE.15",
+      "permission": "R/W"
+    },
+    "M2026": {
+      "description": "AGV.REQ.SEQUENCE.16",
+      "permission": "R/W"
+    },
+    "M2100": {
+      "description": "AGV.AUTO.REQ TOP CONV FWD",
+      "permission": "R/W"
+    },
+    "M2101": {
+      "description": "AGV.AUTO.REQ TOP CONV RVS",
+      "permission": "R/W"
+    },
+    "M2102": {
+      "description": "AGV.AUTO.REQ TOP CONV CLR",
+      "permission": "R/W"
+    },
+    "M2103": {
+      "description": "AGV.AUTO.REQ TOP CONV BRK",
+      "permission": "R/W"
+    },
+    "M2110": {
+      "description": "AGV.MAN.REQ TOP CONV FWD",
+      "permission": "R/W"
+    },
+    "M2111": {
+      "description": "AGV.MAN.REQ TOP CONV RVS",
+      "permission": "R/W"
+    },
+    "M2112": {
+      "description": "AGV.MAN.REQ TOP CONV CLR",
+      "permission": "R/W"
+    },
+    "M2113": {
+      "description": "AGV.MAN.REQ TOP CONV BRK",
+      "permission": "R/W"
+    },
+    "M2120": {
+      "description": "AGV.AUTO.REQ BOTTOM CONV FWD",
+      "permission": "R/W"
+    },
+    "M2121": {
+      "description": "AGV.AUTO.REQ BOTTOM CONV RVS",
+      "permission": "R/W"
+    },
+    "M2122": {
+      "description": "AGV.AUTO.REQ BOTTOM CONV CLR",
+      "permission": "R/W"
+    },
+    "M2123": {
+      "description": "AGV.AUTO.REQ BOTTOM CONV BRK",
+      "permission": "R/W"
+    },
+    "M2130": {
+      "description": "AGV.MAN.REQ BOTTOM CONV FWD",
+      "permission": "R/W"
+    },
+    "M2131": {
+      "description": "AGV.MAN.REQ BOTTOM CONV RVS",
+      "permission": "R/W"
+    },
+    "M2132": {
+      "description": "AGV.MAN.REQ BOTTOM CONV CLR",
+      "permission": "R/W"
+    },
+    "M2133": {
+      "description": "AGV.MAN.REQ BOTTOM CONV BRK",
+      "permission": "R/W"
+    },
+    "M2210": {
+      "description": "AGV.AUTO.REQ BOTTOM PUSHER PUSH",
+      "permission": "R/W"
+    },
+    "M2211": {
+      "description": "AGV.AUTO.REQ BOTTOM PUSHER PULL",
+      "permission": "R/W"
+    },
+    "M2214": {
+      "description": "AGV.MAN.REQ BOTTOM PUSHER PUSH",
+      "permission": "R/W"
+    },
+    "M2215": {
+      "description": "AGV.MAN.REQ BOTTOM PUSHER PULL",
+      "permission": "R/W"
+    },
+    "M2220": {
+      "description": "AGV.AUTO.REQ TOP PUSHER PUSH",
+      "permission": "R/W"
+    },
+    "M2221": {
+      "description": "AGV.AUTO.REQ TOP PUSHER PULL",
+      "permission": "R/W"
+    },
+    "M2224": {
+      "description": "AGV.MAN.REQ TOP PUSHER PUSH",
+      "permission": "R/W"
+    },
+    "M2225": {
+      "description": "AGV.MAN.REQ TOP PUSHER PULL",
+      "permission": "R/W"
+    },
+    "M2300": {
+      "description": "PRX1.TOP.FRONT.RIGHT",
+      "permission": "R"
+    },
+    "M2301": {
+      "description": "PRX2.TOP.REAR.RIGHT",
+      "permission": "R"
+    },
+    "M2302": {
+      "description": "PRX3.TOP.REAR.LEFT",
+      "permission": "R"
+    },
+    "M2303": {
+      "description": "PRX4.TOP.FRONT.LEFT",
+      "permission": "R"
+    },
+    "M2304": {
+      "description": "PRX5.BOT.FRONT.RIGHT",
+      "permission": "R"
+    },
+    "M2305": {
+      "description": "PRX6.BOT.REAR.RIGHT",
+      "permission": "R"
+    },
+    "M2306": {
+      "description": "PRX7.BOT.REAR.LEFT",
+      "permission": "R"
+    },
+    "M2307": {
+      "description": "PRX8.BOT.FRONT.LEFT",
+      "permission": "R"
+    }
+  }
+}
