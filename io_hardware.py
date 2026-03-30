@@ -110,12 +110,16 @@ async def can_reader(state):
                     left, right = struct.unpack_from("<hh", msg.data, 0)
                     flags = msg.data[4]
                     state.can_last_rx = time.time()
-                    await state.sensor_queue.put({
+                    frame = {
                         "left_mm":        left,
                         "right_mm":       right,
                         "tape_detected":  bool(flags & config.FLAG_TAPE_DETECT),
+                        "left_marker":    bool(flags & config.FLAG_LEFT_MARKER),
+                        "right_marker":   bool(flags & config.FLAG_RIGHT_MARKER),
                         "sensor_failure": bool(flags & config.FLAG_SENSOR_FAIL),
-                    })
+                    }
+                    state.latest_sensor = frame
+                    await state.sensor_queue.put(frame)
                     
         except Exception as e:
             print(f"CAN error or disconnect: {e}, retrying in 2s...")

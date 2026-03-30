@@ -14,8 +14,9 @@ class AMRState:
         self.ao_queue     = asyncio.Queue()  # commands: (channel_no, voltage)
 
         # ── Hardware state ────────────────────────────────────────────────────
-        self.latest_di   = None
-        self.can_last_rx = 0.0   # timestamp of last CAN message received
+        self.latest_di     = None
+        self.latest_sensor = None  # last CAN frame dict from MGS1600
+        self.can_last_rx   = 0.0   # timestamp of last CAN message received
 
         # ── Emergency flag ────────────────────────────────────────────────────
         # Set True by mode_manager when DI_EMERGENCY is triggered.
@@ -26,6 +27,7 @@ class AMRState:
 
         self.speed_mode         = "HIGH"   # "HIGH" | "SLOW"
         self.sequence_stop      = False    # True = AGV should brake and wait
+        self.pending_sequence   = None     # int = approaching seq N (slowing, marker not yet seen)
 
         # ── PLC / SLMP state ──────────────────────────────────────────────────
         # current_mode mirrors mode_manager's local variable so the SLMP task

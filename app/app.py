@@ -12,6 +12,9 @@ import os
 import time
 import threading
 from flask import Flask, render_template, jsonify, request
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 # Flask looks for templates relative to the app.py file location
 _here = os.path.dirname(os.path.abspath(__file__))
@@ -56,7 +59,17 @@ def _build_state_snapshot():
     for i in range(_NUM_SEQ_BITS):
         plc_reads[f"M{2040 + i}_SEQ{i}_COMPLETE"] = complete[i] if i < len(complete) else False
 
-    return {"agv": agv, "plc_writes": plc_writes, "plc_reads": plc_reads}
+    # ── Magnetic sensor (MGS1600 via CAN) ────────────────────────────────────
+    raw = s.latest_sensor
+    sensor = {
+        "left_mm":        raw["left_mm"]        if raw else None,
+        "tape_detected":  raw["tape_detected"]   if raw else False,
+        "left_marker":    raw["left_marker"]     if raw else False,
+        "right_marker":   raw["right_marker"]    if raw else False,
+        "sensor_failure": raw["sensor_failure"]  if raw else False,
+    }
+
+    return {"agv": agv, "plc_writes": plc_writes, "plc_reads": plc_reads, "sensor": sensor}
 
 
 @app.route("/")

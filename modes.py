@@ -89,6 +89,7 @@ async def auto_mode(state):
                 sensor = await state.sensor_queue.get()
 
             if sensor is not None:
+                print(sensor["left_marker"])
                 if not sensor["tape_detected"]:
                     print("LOST TAPE — stopping")
                     await motion.set_brake(state)
@@ -296,8 +297,9 @@ async def mode_manager(state):
         await motion.set_brake(state)
 
     def _reset_rfid_state():
-        state.speed_mode    = "HIGH"
-        state.sequence_stop = False
+        state.speed_mode       = "HIGH"
+        state.sequence_stop    = False
+        state.pending_sequence = None
 
     while True:
         if state.latest_di is None:

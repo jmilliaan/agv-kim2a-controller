@@ -15,8 +15,9 @@ import time
 import config
 
 
-_TROLLEY_SEQ_IGNORE_SECONDS = 10.0
-_TROLLEY_SEQ_TIMEOUT       = 30.0
+_TROLLEY_SEQ_IGNORE_SECONDS  = 10.0
+_TROLLEY_SEQ_APPROACH_TIMEOUT = 15.0   # max time from RFID tag to left marker
+_TROLLEY_SEQ_TIMEOUT          = 30.0   # max time waiting for PLC complete flag
 
 
 async def rfid_processor(state):
@@ -42,32 +43,59 @@ async def rfid_processor(state):
             print(f"[RFID] TROLLEY_SEQUENCE_{seq_num:02d} — AGV not RUNNING. Ignored.")
             return
 
-        print(f"[RFID] TROLLEY_SEQUENCE_{seq_num:02d} — stopping AGV, "
-              f"requesting PLC sequence {seq_num}.")
+        # ── Phase 1: slow down and approach to left marker ────────────────────
+        print(f"[RFID] TROLLEY_SEQUENCE_{seq_num:02d} — tag read. "
+              f"Slowing down, waiting for left marker.")
+        state.speed_mode      = "SLOW"
+        state.pending_sequence = seq_num
 
-        # ── Stop AGV and send 1-second sequence pulse ─────────────────────────
+        deadline = time.time() + _TROLLEY_SEQ_APPROACH_TIMEOUT
+        while True:
+            if time.time() > deadline:
+                print(f"[RFID] TROLLEY_SEQUENCE_{seq_num:02d} — timeout waiting "
+                      f"for left marker. Resuming HIGH speed.")
+                state.speed_mode      = "HIGH"
+                state.pending_sequence = None
+                return
+            if state.current_mode != "running":
+                print(f"[RFID] TROLLEY_SEQUENCE_{seq_num:02d} — mode changed "
+                      f"during approach. Aborting.")
+                state.speed_mode      = "HIGH"
+                state.pending_sequence = None
+                return
+            sen = state.latest_sensor
+            if sen and sen["left_marker"]:
+                break
+            await asyncio.sleep(0.02)
+
+        state.pending_sequence = None
+        print(f"[RFID] TROLLEY_SEQUENCE_{seq_num:02d} — left marker detected. "
+              f"Stopping AGV, requesting PLC sequence {seq_num}.")
+
+        # ── Phase 2: stop AGV and send 1-second sequence pulse ────────────────
         state.sequence_stop             = True
         state.plc_sequence_request      = seq_num
         state.plc_sequence_pulse_expire = time.time() + 1.0
 
-        # ── Phase 1: wait for complete flag to go LOW (PLC started) ──────────
+        # ── Phase 3: wait for complete flag to go LOW (PLC started) ──────────
         # Necessary when the flag is still HIGH from the previous run.
-        # The PLC clears it automatically when it begins executing the sequence.
         deadline = time.time() + 5.0
         while state.plc_sequence_complete[seq_num]:
             if time.time() > deadline:
                 print(f"[RFID] TROLLEY_SEQUENCE_{seq_num:02d} — PLC did not "
                       f"clear complete flag in 5s. Aborting.")
                 state.sequence_stop = False
+                state.speed_mode    = "HIGH"
                 return
             if state.current_mode != "running":
                 print(f"[RFID] TROLLEY_SEQUENCE_{seq_num:02d} — mode changed "
-                      f"during wait (phase 1). Aborting.")
+                      f"during wait (phase 3). Aborting.")
                 state.sequence_stop = False
+                state.speed_mode    = "HIGH"
                 return
             await asyncio.sleep(0.1)
 
-        # ── Phase 2: wait for complete flag to go HIGH (PLC finished) ─────────
+        # ── Phase 4: wait for complete flag to go HIGH (PLC finished) ─────────
         deadline = time.time() + _TROLLEY_SEQ_TIMEOUT
         while not state.plc_sequence_complete[seq_num]:
             if time.time() > deadline:
@@ -76,15 +104,18 @@ async def rfid_processor(state):
                 break
             if state.current_mode != "running":
                 print(f"[RFID] TROLLEY_SEQUENCE_{seq_num:02d} — mode changed "
-                      f"during wait (phase 2). Aborting.")
+                      f"during wait (phase 4). Aborting.")
                 state.sequence_stop = False
+                state.speed_mode    = "HIGH"
                 return
             await asyncio.sleep(0.1)
         else:
-            print(f"[RFID] TROLLEY_SEQUENCE_{seq_num:02d} — complete. Resuming AGV.")
+            print(f"[RFID] TROLLEY_SEQUENCE_{seq_num:02d} — complete. "
+                  f"Resuming AGV at HIGH speed.")
 
-        # ── Resume AGV and start ignore window ────────────────────────────────
+        # ── Resume AGV at HIGH speed and start ignore window ─────────────────
         state.sequence_stop         = False
+        state.speed_mode            = "HIGH"
         _seq_ignore_until[seq_num]  = time.time() + _TROLLEY_SEQ_IGNORE_SECONDS
         print(f"[RFID] TROLLEY_SEQUENCE_{seq_num:02d} — "
               f"ignoring tag for {_TROLLEY_SEQ_IGNORE_SECONDS:.0f}s.")

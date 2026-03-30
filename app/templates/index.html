@@ -293,6 +293,57 @@
     color: #c0c0c0;
     letter-spacing: 1px;
   }
+
+  /* ── Sensor panel ── */
+  #sensor-panel {
+    background: #c0c0c0;
+    padding: 0;
+    margin-top: 8px;
+  }
+  #sensor-body {
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .sensor-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sensor-field-label {
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #000;
+  }
+  #pos-display {
+    font-size: 20px;
+    font-weight: bold;
+    font-family: 'Courier New', Courier, monospace;
+    letter-spacing: 2px;
+    color: #000080;
+    background: #fff;
+    padding: 2px 10px;
+    min-width: 80px;
+    text-align: right;
+    border-top:    2px solid #808080;
+    border-left:   2px solid #808080;
+    border-right:  2px solid #fff;
+    border-bottom: 2px solid #fff;
+  }
+  .sensor-lamp-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #404040;
+    letter-spacing: 0.5px;
+  }
+  .sensor-lamp-item .lamp { width: 18px; height: 18px; }
 </style>
 </head>
 <body>
@@ -410,6 +461,31 @@
   </div>
 </div>
 
+<!-- Sensor panel -->
+<div id="sensor-panel" class="raised">
+  <div class="panel-title">MAGNETIC SENSOR &nbsp;[ MGS1600 / CAN ]</div>
+  <div id="sensor-body">
+    <div class="sensor-field">
+      <span class="sensor-field-label">Position:</span>
+      <span id="pos-display">—</span>
+      <span class="sensor-field-label" style="color:#606060;">mm</span>
+    </div>
+    <div style="width:2px;height:32px;background:#a0a0a0;"></div>
+    <div class="sensor-lamp-item">
+      <span class="lamp" id="lamp-tape"></span>TAPE
+    </div>
+    <div class="sensor-lamp-item">
+      <span class="lamp" id="lamp-lm"></span>LEFT MARKER
+    </div>
+    <div class="sensor-lamp-item">
+      <span class="lamp" id="lamp-rm"></span>RIGHT MARKER
+    </div>
+    <div class="sensor-lamp-item">
+      <span class="lamp" id="lamp-fail"></span>SENSOR FAIL
+    </div>
+  </div>
+</div>
+
 <script>
 const N_SEQ = 17;
 
@@ -500,6 +576,15 @@ function fetchState() {
       // Disable SET while pulse is active
       document.getElementById('btn-set').disabled = pulseActive;
       document.getElementById('btn-set').style.opacity = pulseActive ? '0.4' : '1';
+
+      // Sensor panel
+      const sen = d.sensor;
+      document.getElementById('pos-display').textContent =
+        (sen && sen.left_mm !== null) ? sen.left_mm : '—';
+      setLamp(document.getElementById('lamp-tape'), sen && sen.tape_detected,  'on-green');
+      setLamp(document.getElementById('lamp-lm'),   sen && sen.left_marker,    'on-amber');
+      setLamp(document.getElementById('lamp-rm'),   sen && sen.right_marker,   'on-amber');
+      setLamp(document.getElementById('lamp-fail'), sen && sen.sensor_failure, 'on-red');
 
       document.getElementById('ts').textContent = new Date().toLocaleTimeString();
     })

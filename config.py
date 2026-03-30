@@ -82,8 +82,10 @@ SR_CAP           = _params["pid_tuning"]["SR_CAP"]
 
 # ── CAN Sensor ───────────────────────────────────────────────────────────────
 SENSOR_COB_ID    = _params["can_sensor"]["SENSOR_COB_ID"]
-FLAG_TAPE_DETECT = _params["can_sensor"]["FLAG_TAPE_DETECT"]
-FLAG_SENSOR_FAIL = _params["can_sensor"]["FLAG_SENSOR_FAIL"]
+FLAG_TAPE_DETECT  = _params["can_sensor"]["FLAG_TAPE_DETECT"]
+FLAG_LEFT_MARKER  = _params["can_sensor"]["FLAG_LEFT_MARKER"]
+FLAG_RIGHT_MARKER = _params["can_sensor"]["FLAG_RIGHT_MARKER"]
+FLAG_SENSOR_FAIL  = _params["can_sensor"]["FLAG_SENSOR_FAIL"]
 CAN_TIMEOUT      = _params["can_sensor"]["CAN_TIMEOUT"]
 CAN_NODE_ID      = _params["can_sensor"]["CAN_NODE_ID"]
 
