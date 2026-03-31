@@ -37,4 +37,8 @@ class AMRState:
         self.plc_sequence_request      = None  # int 0-16 → sets M201x; None → all sequence bits LOW
         self.plc_sequence_pulse_expire = 0.0   # epoch time after which the request bit is auto-cleared
         self.plc_sequence_complete     = [False] * 17  # M2040-M2056: True when PLC signals sequence N done
-        
+
+        # ── Reverse auto mode ─────────────────────────────────────────────────
+        # Set True by the Flask dashboard to start reverse auto mode.
+        # Cleared by Flask STOP button or mode_manager on reset/emergency.
+        self.reverse_auto_request = False

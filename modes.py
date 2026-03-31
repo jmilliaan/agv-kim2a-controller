@@ -192,6 +192,146 @@ async def auto_mode(state):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+#  REVERSE AUTO MODE
+# ══════════════════════════════════════════════════════════════════════════════
+
+async def reverse_auto_mode(state):
+    """
+    Tape-following at fixed SLOW speed in reverse.
+
+    The magnetic sensor is behind the wheels when moving backwards, so the
+    PID error sign is inverted compared to forward auto_mode:
+      forward:  e = 0.0 - pv   (positive pv → steer left)
+      reverse:  e = pv - 0.0   (positive pv → steer left in terms of rear swing)
+
+    No RFID, no speed modes, no sequence stops — straight-line only.
+    Cancelled by mode_manager when state.reverse_auto_request goes False.
+    """
+    await motion.idle(state)
+    await motion.set_reverse(state, 0.0)
+
+    current_target_speed = 0.0
+    integral             = 0.0
+    last_pv              = 0.0
+    filtered_d           = 0.0
+    last_speed_reduction = 0.0
+    tape_was_lost        = False
+
+    alpha = config.DT / ((config.TD_SLOW / config.N_SLOW) + config.DT)
+
+    recorder = RunRecorder()
+    recorder.start()
+
+    try:
+        while True:
+
+            # ── Emergency guard ───────────────────────────────────────────────
+            if state.emergency_active:
+                await motion.set_brake(state)
+                await asyncio.sleep(config.DT)
+                continue
+
+            # ── Drain sensor queue — keep only the latest frame ───────────────
+            sensor = None
+            while not state.sensor_queue.empty():
+                sensor = await state.sensor_queue.get()
+
+            if sensor is not None:
+                if not sensor["tape_detected"]:
+                    logger.warning("[REVERSE] LOST TAPE — stopping")
+                    await motion.set_brake(state)
+                    current_target_speed = 0.0
+                    integral             = 0.0
+                    last_pv              = 0.0
+                    filtered_d           = 0.0
+                    last_speed_reduction = 0.0
+                    tape_was_lost        = True
+                    await asyncio.sleep(0.01)
+                    continue
+
+                if tape_was_lost:
+                    logger.info("[REVERSE] TAPE REACQUIRED — resuming")
+                    await motion.set_reverse(state, 0.0)
+                    tape_was_lost = False
+
+                # ── Acceleration ramp ─────────────────────────────────────────
+                target_speed = config.AUTO_TARGET_SLOW_SPEED
+                if current_target_speed < target_speed:
+                    current_target_speed += config.ACCEL_RATE * config.DT
+                    if current_target_speed > target_speed:
+                        current_target_speed = target_speed
+
+                base_rpm = motion.mps_to_rpm(current_target_speed)
+
+                # ── PID (error sign inverted — sensor is at the rear) ─────────
+                pv = sensor["left_mm"]
+                e  = pv - 0.0   # inverted vs forward auto_mode
+
+                p_term = config.KP_SLOW * e
+
+                if config.TI is not None:
+                    if abs(e) < config.TI_DEADBAND:
+                        integral += e * config.DT
+                        integral  = max(-config.TI_MAX, min(config.TI_MAX, integral))
+                    i_term = config.KP_SLOW * (1.0 / config.TI) * integral
+                else:
+                    i_term = 0.0
+
+                raw_d      = -config.KP_SLOW * config.TD_SLOW * ((pv - last_pv) / config.DT)
+                filtered_d = filtered_d + alpha * (raw_d - filtered_d)
+
+                output = p_term + i_term + filtered_d
+                output = max(-config.OUTPUT_CLAMP_RPM, min(config.OUTPUT_CLAMP_RPM, output))
+
+                # ── Speed reduction ───────────────────────────────────────────
+                raw_sr               = abs(e * config.V_RED_COEF_SLOW) + abs((pv - last_pv) / config.DT) * 0.5
+                raw_sr               = min(raw_sr, base_rpm * config.SR_CAP)
+                speed_reduction      = last_speed_reduction + config.SR_ALPHA * (raw_sr - last_speed_reduction)
+                last_speed_reduction = speed_reduction
+
+                left_rpm  = base_rpm - speed_reduction + output
+                right_rpm = base_rpm - speed_reduction - output
+                left_v    = max(0.0, min(5.0, motion.rpm_to_voltage(left_rpm)))
+                right_v   = max(0.0, min(5.0, motion.rpm_to_voltage(right_rpm)))
+
+                await state.ao_queue.put((0, left_v))
+                await state.ao_queue.put((1, right_v))
+
+                recorder.record(error_mm=e, left_rpm=left_rpm, right_rpm=right_rpm,
+                                pid_output=output, d_term=filtered_d)
+
+                logger.debug(
+                    "[REVERSE] Target=%.2fm/s e=%+.1fmm P=%+.1f I=%+.1f D=%+.1f "
+                    "out=%+.1f L=%.1f R=%.1frpm Vred=%.1frpm",
+                    current_target_speed, e,
+                    p_term, i_term, filtered_d, output,
+                    left_rpm, right_rpm, speed_reduction,
+                )
+
+                last_pv = pv
+
+            # ── CAN timeout ───────────────────────────────────────────────────
+            if time.time() - state.can_last_rx > config.CAN_TIMEOUT:
+                if not tape_was_lost:
+                    logger.warning("[REVERSE] CAN TIMEOUT — sensor lost, stopping")
+                    await motion.set_brake(state)
+                    current_target_speed = 0.0
+                    integral             = 0.0
+                    last_pv              = 0.0
+                    filtered_d           = 0.0
+                    last_speed_reduction = 0.0
+                    tape_was_lost        = True
+
+                await asyncio.sleep(config.DT)
+                continue
+
+            await asyncio.sleep(config.DT)
+
+    finally:
+        recorder.stop()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 #  MANUAL MODE
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -412,6 +552,24 @@ async def mode_manager(state):
                 current_mode = "running"
                 state.current_mode = current_mode
 
+        elif current_mode == "armed" and state.reverse_auto_request:
+            tape_present  = False
+            latest_sensor = None
+            while not state.sensor_queue.empty():
+                latest_sensor = state.sensor_queue.get_nowait()
+            if latest_sensor is not None:
+                tape_present = latest_sensor.get("tape_detected", False)
+                await state.sensor_queue.put(latest_sensor)
+
+            if not tape_present:
+                logger.warning("REVERSE START ignored — tape not detected. Place AGV on tape first.")
+                state.reverse_auto_request = False   # reset so we don't loop
+            else:
+                logger.info("REVERSE START — launching reverse auto mode.")
+                active_task  = asyncio.create_task(reverse_auto_mode(state))
+                current_mode = "reverse"
+                state.current_mode = current_mode
+
         elif current_mode == "running" and reset_rising:
             logger.info("RESET — stopping AUTO, returning to ARMED.")
             await _cancel_active()
@@ -420,5 +578,14 @@ async def mode_manager(state):
             current_mode = "armed"
             state.current_mode = current_mode
             logger.info("ARMED. Press START to run again.")
+
+        elif current_mode == "reverse" and (reset_rising or not state.reverse_auto_request):
+            logger.info("STOP — stopping reverse auto, returning to ARMED.")
+            await _cancel_active()
+            await _flush_and_idle()
+            state.reverse_auto_request = False
+            current_mode = "armed"
+            state.current_mode = current_mode
+            logger.info("ARMED.")
 
         await asyncio.sleep(0.01)

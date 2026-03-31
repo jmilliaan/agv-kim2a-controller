@@ -45,8 +45,8 @@ def _plc_sync_cycle(plc, state) -> None:
         int(state.emergency_active),            # M2001  AGV.EMERGENCY
         int(state.emergency_active),            # M2002  AGV.REQ TROLLEY EMERGENCY
         int(mode == "manual"),                  # M2003  AGV.MANUAL
-        int(mode in ("armed", "running")),      # M2004  AGV.AUTO
-        int(mode == "running"),                 # M2005  AGV.RUNNING
+        int(mode in ("armed", "running", "reverse")),  # M2004  AGV.AUTO
+        int(mode in ("running", "reverse")),          # M2005  AGV.RUNNING
     ]
     plc.batchwrite_bitunits(headdevice="M2000", values=status)
 

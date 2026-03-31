@@ -32,12 +32,13 @@ def _build_state_snapshot():
 
     # ── AGV summary ───────────────────────────────────────────────────────────
     agv = {
-        "mode":             mode,
-        "emergency":        s.emergency_active,
-        "speed_mode":       s.speed_mode,
-        "sequence_stop":    s.sequence_stop,
-        "sequence_request": s.plc_sequence_request,
-        "seq_pulse_active": s.plc_sequence_request is not None,
+        "mode":                mode,
+        "emergency":           s.emergency_active,
+        "speed_mode":          s.speed_mode,
+        "sequence_stop":       s.sequence_stop,
+        "sequence_request":    s.plc_sequence_request,
+        "seq_pulse_active":    s.plc_sequence_request is not None,
+        "reverse_auto_request": s.reverse_auto_request,
     }
 
     # ── What the AGV is writing to the PLC right now ──────────────────────────
@@ -47,8 +48,8 @@ def _build_state_snapshot():
         "M2001_EMERGENCY":         s.emergency_active,
         "M2002_TROLLEY_EMERGENCY": s.emergency_active,
         "M2003_MANUAL":            mode == "manual",
-        "M2004_AUTO":              mode in ("armed", "running"),
-        "M2005_RUNNING":           mode == "running",
+        "M2004_AUTO":              mode in ("armed", "running", "reverse"),
+        "M2005_RUNNING":           mode in ("running", "reverse"),
     }
     for i in range(_NUM_SEQ_BITS):
         plc_writes[f"M{2010 + i}_SEQ{i}"] = (req == i)
@@ -114,6 +115,28 @@ def api_sequence():
     _state.plc_sequence_request      = seq
     _state.plc_sequence_pulse_expire = time.time() + 1.0   # 1-second pulse
     return jsonify({"ok": True, "sequence": seq})
+
+
+@app.route("/api/reverse_auto", methods=["POST"])
+def api_reverse_auto():
+    if _state is None:
+        return jsonify({"error": "state not initialised"}), 503
+
+    data    = request.get_json(silent=True) or {}
+    running = data.get("running")
+
+    if running is True:
+        mode = _state.current_mode
+        if mode != "armed":
+            return jsonify({"error": f"Cannot start reverse auto in mode: {mode}"}), 403
+        _state.reverse_auto_request = True
+        return jsonify({"ok": True, "running": True})
+
+    elif running is False:
+        _state.reverse_auto_request = False
+        return jsonify({"ok": True, "running": False})
+
+    return jsonify({"error": "running must be true or false"}), 400
 
 
 def run_server(state):
