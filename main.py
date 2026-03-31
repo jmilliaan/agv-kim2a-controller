@@ -1,9 +1,11 @@
 import asyncio
+import logging
 import signal
 import threading
 from pymodbus.client import AsyncModbusTcpClient
 
 import config
+from logger import setup_logging
 from state import AMRState
 import io_hardware
 import modes
@@ -11,9 +13,12 @@ from rfid_processor import rfid_processor
 import slmp_handler
 from app.app import run_server
 
+logger = logging.getLogger(__name__)
+
+
 async def shutdown():
     """Zero all DO and AO outputs via direct Modbus writes, bypassing the queues."""
-    print("\nShutting down — zeroing all outputs...")
+    logger.info("Shutting down — zeroing all outputs...")
     try:
         dio_client = AsyncModbusTcpClient(config.DIO_IP, port=config.MODBUS_PORT)
         ao_client  = AsyncModbusTcpClient(config.AO_IP,  port=config.MODBUS_PORT)
@@ -27,11 +32,13 @@ async def shutdown():
 
         dio_client.close()
         ao_client.close()
-        print("All outputs zeroed. Shutdown complete.")
+        logger.info("All outputs zeroed. Shutdown complete.")
     except Exception as e:
-        print(f"Shutdown error: {e}")
+        logger.error("Shutdown error: %s", e)
 
 async def run():
+    setup_logging()
+
     loop = asyncio.get_running_loop()
 
     state = AMRState()
@@ -39,7 +46,7 @@ async def run():
     threading.Thread(target=run_server, args=(state,), daemon=True).start()
 
     def terminate_gracefully():
-        print("\nTermination signal received. Cancelling tasks...")
+        logger.info("Termination signal received. Cancelling tasks...")
         for task in asyncio.all_tasks(loop):
             task.cancel()
 
@@ -60,7 +67,7 @@ async def run():
     try:
         await tasks
     except asyncio.CancelledError:
-        print("Main loops cancelled. Executing Modbus hardware shutdown...")
+        logger.info("Main loops cancelled. Executing Modbus hardware shutdown...")
         await shutdown()
 
 if __name__ == "__main__":

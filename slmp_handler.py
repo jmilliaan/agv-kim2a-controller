@@ -19,10 +19,13 @@ an integer 0–16.  Set it back to None to clear all sequence bits.
 """
 
 import asyncio
+import logging
 import time
 import pymcprotocol
 
 import config
+
+logger = logging.getLogger(__name__)
 
 
 # Number of sequence bits defined in the register map (M2010 … M2026)
@@ -89,14 +92,14 @@ async def slmp_handler(state) -> None:
             await loop.run_in_executor(
                 None, lambda: plc.connect(config.SLMP_IP, config.SLMP_PORT)
             )
-            print(f"[SLMP] Connected to PLC at {config.SLMP_IP}:{config.SLMP_PORT}")
+            logger.info("[SLMP] Connected to PLC at %s:%s", config.SLMP_IP, config.SLMP_PORT)
 
             while True:
                 await loop.run_in_executor(None, _plc_sync_cycle, plc, state)
                 await asyncio.sleep(0.02)
 
         except Exception as e:
-            print(f"[SLMP] Error: {e}. Retrying in 2 s...")
+            logger.error("[SLMP] Error: %s. Retrying in 2s...", e)
 
         finally:
             try:

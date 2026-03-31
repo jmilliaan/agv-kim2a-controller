@@ -13,8 +13,8 @@ import time
 import threading
 from flask import Flask, render_template, jsonify, request
 import logging
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
+
+logger = logging.getLogger(__name__)
 
 # Flask looks for templates relative to the app.py file location
 _here = os.path.dirname(os.path.abspath(__file__))
@@ -119,5 +119,5 @@ def api_sequence():
 def run_server(state):
     global _state
     _state = state
-    print(f"[Flask] Dashboard at http://0.0.0.0:5000")
+    logger.info("[Flask] Dashboard at http://0.0.0.0:5000")
     app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)

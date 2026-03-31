@@ -1,10 +1,13 @@
 import asyncio
+import logging
 import time
 
 import config
 import motion
 
 from debugging.plotter import RunRecorder
+
+logger = logging.getLogger(__name__)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -42,7 +45,7 @@ async def auto_mode(state):
             # ── Sequence stop ─────────────────────────────────────────────────
             if state.sequence_stop:
                 if not was_sequence_stopped:
-                    print("[AUTO] Sequence stop — holding.")
+                    logger.info("[AUTO] Sequence stop — holding.")
                     await motion.set_brake(state)
                     current_target_speed = 0.0
                     integral             = 0.0
@@ -54,7 +57,7 @@ async def auto_mode(state):
                 continue
 
             if was_sequence_stopped:
-                print("[AUTO] Sequence stop ended — resuming.")
+                logger.info("[AUTO] Sequence stop ended — resuming.")
                 await motion.set_forward(state, 0.0)
                 was_sequence_stopped = False
 
@@ -89,9 +92,9 @@ async def auto_mode(state):
                 sensor = await state.sensor_queue.get()
 
             if sensor is not None:
-                print(sensor["left_marker"])
+                logger.debug("[AUTO] left_marker=%s", sensor["left_marker"])
                 if not sensor["tape_detected"]:
-                    print("LOST TAPE — stopping")
+                    logger.warning("LOST TAPE — stopping")
                     await motion.set_brake(state)
                     current_target_speed = 0.0
                     integral             = 0.0
@@ -103,7 +106,7 @@ async def auto_mode(state):
                     continue
 
                 if tape_was_lost:
-                    print("TAPE REACQUIRED — resuming")
+                    logger.info("TAPE REACQUIRED — resuming")
                     await motion.set_forward(state, 0.0)
                     tape_was_lost = False
 
@@ -157,12 +160,12 @@ async def auto_mode(state):
                 # recorder.record(error_mm=e, left_rpm=left_rpm, right_rpm=right_rpm)
                 recorder.record(error_mm=e, left_rpm=left_rpm, right_rpm=right_rpm, pid_output=output, d_term=filtered_d)
 
-                print(
-                    f"[{state.speed_mode}] "
-                    f"Target={current_target_speed:.2f}m/s e={e:+.1f}mm "
-                    f"P={p_term:+.1f} I={i_term:+.1f} D={filtered_d:+.1f} "
-                    f"out={output:+.1f} L={left_rpm:.1f} R={right_rpm:.1f}rpm "
-                    f"Vred={speed_reduction:.1f}rpm"
+                logger.debug(
+                    "[%s] Target=%.2fm/s e=%+.1fmm P=%+.1f I=%+.1f D=%+.1f "
+                    "out=%+.1f L=%.1f R=%.1frpm Vred=%.1frpm",
+                    state.speed_mode, current_target_speed, e,
+                    p_term, i_term, filtered_d, output,
+                    left_rpm, right_rpm, speed_reduction,
                 )
 
                 last_pv = pv
@@ -170,7 +173,7 @@ async def auto_mode(state):
             # ── CAN timeout ───────────────────────────────────────────────────
             if time.time() - state.can_last_rx > config.CAN_TIMEOUT:
                 if not tape_was_lost:
-                    print("CAN TIMEOUT — sensor lost, stopping AGV")
+                    logger.warning("CAN TIMEOUT — sensor lost, stopping AGV")
                     await motion.set_brake(state)
                     current_target_speed = 0.0
                     integral             = 0.0
@@ -235,7 +238,7 @@ async def manual_mode(state):
             motion_state = "idle"
 
         if motion_state != current_motion:
-            print(f"Manual: {motion_state.upper()}")
+            logger.debug("Manual: %s", motion_state.upper())
             if   motion_state == "fwd_left":  await motion.set_forward_left(state, v_high, v_slow)
             elif motion_state == "fwd_right": await motion.set_forward_right(state, v_high, v_slow)
             elif motion_state == "rvs_left":  await motion.set_reverse_left(state, v_high, v_slow)
@@ -324,7 +327,7 @@ async def mode_manager(state):
 
         if not emergency_safe:
             if current_mode != "emergency":
-                print("!! EMERGENCY — all motion stopped")
+                logger.critical("!! EMERGENCY — all motion stopped")
                 await _cancel_active()
                 await _flush_and_brake()
                 _reset_rfid_state()
@@ -343,17 +346,17 @@ async def mode_manager(state):
                 await asyncio.sleep(0.01)
                 continue
 
-            print("Emergency cleared by operator RESET.")
+            logger.info("Emergency cleared by operator RESET.")
             state.emergency_active = False
 
             if switch_manual:
-                print("Entering MANUAL.")
+                logger.info("Entering MANUAL.")
                 await _flush_and_idle()
                 active_task  = asyncio.create_task(manual_mode(state))
                 current_mode = "manual"
                 state.current_mode = current_mode
             else:
-                print("Entering ARMED. Press START to run AUTO.")
+                logger.info("Entering ARMED. Press START to run AUTO.")
                 await _flush_and_idle()
                 current_mode = "armed"
                 state.current_mode = current_mode
@@ -367,17 +370,17 @@ async def mode_manager(state):
 
         if current_mode is None:
             if switch_manual:
-                print("Startup: MANUAL")
+                logger.info("Startup: MANUAL")
                 active_task  = asyncio.create_task(manual_mode(state))
                 current_mode = "manual"
                 state.current_mode = current_mode
             else:
-                print("Startup: AUTO selector — ARMED. Press START.")
+                logger.info("Startup: AUTO selector — ARMED. Press START.")
                 current_mode = "armed"
                 state.current_mode = current_mode
 
         elif switch_manual and current_mode != "manual":
-            print("Mode switch: MANUAL")
+            logger.info("Mode switch: MANUAL")
             await _cancel_active()
             await _flush_and_idle()
             _reset_rfid_state()
@@ -386,7 +389,7 @@ async def mode_manager(state):
             state.current_mode = current_mode
 
         elif not switch_manual and current_mode == "manual":
-            print("Mode switch: AUTO — ARMED. Place AGV on tape and press START.")
+            logger.info("Mode switch: AUTO — ARMED. Place AGV on tape and press START.")
             await _cancel_active()
             await _flush_and_idle()
             current_mode = "armed"
@@ -402,20 +405,20 @@ async def mode_manager(state):
                 await state.sensor_queue.put(latest_sensor)
 
             if not tape_present:
-                print("START ignored — tape not detected. Place AGV on tape first.")
+                logger.warning("START ignored — tape not detected. Place AGV on tape first.")
             else:
-                print("START — launching AUTO mode.")
+                logger.info("START — launching AUTO mode.")
                 active_task  = asyncio.create_task(auto_mode(state))
                 current_mode = "running"
                 state.current_mode = current_mode
 
         elif current_mode == "running" and reset_rising:
-            print("RESET — stopping AUTO, returning to ARMED.")
+            logger.info("RESET — stopping AUTO, returning to ARMED.")
             await _cancel_active()
             await _flush_and_idle()
             _reset_rfid_state()
             current_mode = "armed"
             state.current_mode = current_mode
-            print("ARMED. Press START to run again.")
+            logger.info("ARMED. Press START to run again.")
 
         await asyncio.sleep(0.01)

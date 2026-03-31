@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import socket
 import binascii
 import struct
@@ -8,6 +9,8 @@ from pymodbus.client import AsyncModbusTcpClient
 import serial.tools.list_ports as list_ports
 
 import config
+
+logger = logging.getLogger(__name__)
 
 # ── Input loops ───────────────────────────────────────────────────────────────
 
@@ -19,21 +22,21 @@ async def di_reader(state):
             if not client.connected:
                 await client.connect()
                 if not client.connected:
-                    print(f"DIO not ready at {config.DIO_IP}. Retrying...")
+                    logger.warning("DIO not ready at %s. Retrying...", config.DIO_IP)
                     await asyncio.sleep(2)
                     continue
 
             result = await client.read_discrete_inputs(address=config.DI_BASE, count=config.NUM_DI, device_id=config.DEVICE_ID)
             if not result.isError():
                 state.latest_di = result.bits[:config.NUM_DI]
-                # print(state.latest_di)
+                # logger.debug("DI: %s", state.latest_di)
                 await state.di_queue.put(state.latest_di)
             else:
-                print("Modbus read error, reconnecting...")
+                logger.warning("Modbus read error, reconnecting...")
                 client.close()
 
         except Exception as e:
-            print(f"DI Reader exception: {e}")
+            logger.error("DI Reader exception: %s", e)
             client.close()
             
         await asyncio.sleep(0.05)
@@ -46,24 +49,24 @@ async def rfid_reader(state):
         try:
             await loop.sock_connect(sock, (config.RFID_IP, config.RFID_PORT))
             await loop.sock_sendall(sock, config.RFID_INIT_CMD)
-            print("RFID Connected.")
-            
+            logger.info("RFID Connected.")
+
             while True:
                 data = await loop.sock_recv(sock, 1024)
                 if not data:
-                    print("RFID connection closed by peer.")
+                    logger.warning("RFID connection closed by peer.")
                     break
-                
+
                 hex_data = binascii.hexlify(data).decode().upper()
                 for packet in hex_data.split("CF")[1:]:
                     packet = "CF" + packet
                     if len(packet) >= 34:
                         tag = packet[26:30]
-                        print(f"RFID tag read: {tag} (dec={int(tag, 16)})")
+                        logger.info("RFID tag read: %s (dec=%d)", tag, int(tag, 16))
                         await state.rfid_queue.put(tag)
-                        
+
         except Exception as e:
-            print(f"RFID connection failed/lost: {e}. Retrying in 2s...")
+            logger.warning("RFID connection failed/lost: %s. Retrying in 2s...", e)
         finally:
             sock.close()
             
@@ -73,14 +76,14 @@ def find_canable_port(VID=0x16D0, PID=0X117E):
     ports = list_ports.comports()
     for port in ports:
         if port.vid == VID and port.pid == PID:
-            print(f"Found at: {port.device}")
+            logger.debug("CANable2 found at: %s", port.device)
             return port.device
 
 async def can_reader(state):
     while True:
         CAN_CHANNEL = find_canable_port()
         if CAN_CHANNEL is None:
-            print("CANable2 not found, retrying in 2s...")
+            logger.warning("CANable2 not found, retrying in 2s...")
             await asyncio.sleep(2)
             continue
             
@@ -101,7 +104,7 @@ async def can_reader(state):
                 is_extended_id=False
             ))
             
-            print(f"CAN connected on {CAN_CHANNEL}")
+            logger.info("CAN connected on %s", CAN_CHANNEL)
             state.can_last_rx = time.time()
             
             async for msg in reader:
@@ -122,7 +125,7 @@ async def can_reader(state):
                     await state.sensor_queue.put(frame)
                     
         except Exception as e:
-            print(f"CAN error or disconnect: {e}, retrying in 2s...")
+            logger.warning("CAN error or disconnect: %s, retrying in 2s...", e)
             
         finally:
             if notifier is not None:
@@ -146,7 +149,7 @@ async def do_writer(state):
             await client.write_coil(address=config.DO_BASE + channel_no, value=bool(active_state), device_id=config.DEVICE_ID)
         
         except Exception as e:
-            print(f"DO Writer error: {e}. Reconnecting...")
+            logger.error("DO Writer error: %s. Reconnecting...", e)
             client.close()
             await asyncio.sleep(1)
 
@@ -158,11 +161,11 @@ async def ao_writer(state):
         try:
             if not client.connected:
                 await client.connect()
-            
+
             await client.write_register(address=config.AO_BASE + channel_no, value=dac_value, device_id=config.DEVICE_ID)
-            
+
         except Exception as e:
-            print(f"AO Writer error: {e}. Reconnecting...")
+            logger.error("AO Writer error: %s. Reconnecting...", e)
             client.close()
             await asyncio.sleep(1)
             

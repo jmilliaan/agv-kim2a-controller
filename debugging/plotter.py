@@ -33,9 +33,12 @@ recorder.record(
 """
 
 import csv as csv_module
+import logging
 import os
 import time
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  USER SETTING
@@ -78,7 +81,7 @@ class RunRecorder:
         self._pid_outputs = []
         self._d_terms     = []
         self._active      = True
-        print("[PLOT] Recording started.")
+        logger.info("[PLOT] Recording started.")
 
     def record(self, error_mm: float, left_rpm: float, right_rpm: float,
                pid_output: float, d_term: float):
@@ -114,9 +117,9 @@ class RunRecorder:
         if n < 2:
             # Run was too short — this is normal for a tape-not-found abort
             # or an emergency stop in the first cycle. Not an error.
-            print(f"[PLOT] Run too short ({n} samples) — no file saved.")
+            logger.info("[PLOT] Run too short (%d samples) — no file saved.", n)
             return
-        print(f"[PLOT] Run ended — {n} samples over {self._times[-1]:.1f}s. Saving...")
+        logger.info("[PLOT] Run ended — %d samples over %.1fs. Saving...", n, self._times[-1])
         try:
             _save_outputs(
                 self._times, self._errors,
@@ -125,7 +128,7 @@ class RunRecorder:
             )
         except Exception as e:
             # Never let a plotting failure crash the caller
-            print(f"[PLOT] ERROR saving output: {e}")
+            logger.error("[PLOT] ERROR saving output: %s", e)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -152,7 +155,7 @@ def _save_outputs(times, errors, left_rpms, right_rpms, pid_outputs, d_terms):
                 f"{row[4]:.3f}",
                 f"{row[5]:.3f}",
             ])
-    print(f"[PLOT] CSV  saved → {csv_path}")
+    logger.info("[PLOT] CSV  saved → %s", csv_path)
 
     # ── PNG ───────────────────────────────────────────────────────────────────
     import matplotlib
@@ -201,4 +204,4 @@ def _save_outputs(times, errors, left_rpms, right_rpms, pid_outputs, d_terms):
     fig.savefig(png_path, dpi=150)
     plt.close(fig)
 
-    print(f"[PLOT] PNG  saved → {png_path}")
+    logger.info("[PLOT] PNG  saved → %s", png_path)
