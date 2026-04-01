@@ -295,6 +295,54 @@
     letter-spacing: 1px;
   }
 
+  /* System error lamp */
+  .syserr-lamp {
+    display: flex; align-items: center; gap: 6px;
+    font-weight: bold; font-size: 12px; letter-spacing: 1px;
+    color: #606060;
+  }
+  .syserr-lamp .lamp {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #606060;
+    border: 2px solid #404040;
+  }
+  .syserr-lamp.active { color: #c00000; }
+  .syserr-lamp.active .lamp {
+    background: #ff8800;
+    border-color: #804000;
+    box-shadow: 0 0 6px 2px #ff880088;
+  }
+
+  /* ── Sequence status panel ── */
+  #seq-status-panel {
+    background: #c0c0c0;
+    padding: 0;
+    margin-top: 8px;
+  }
+  #seq-status-body {
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .seq-status-field {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .seq-status-label {
+    font-size: 11px; font-weight: bold;
+    letter-spacing: 1px; text-transform: uppercase; color: #404040;
+  }
+  .seq-status-value {
+    font-size: 12px; font-weight: bold; color: #000080;
+    background: #fff; padding: 2px 8px; min-width: 120px;
+    border-top:    2px solid #808080;
+    border-left:   2px solid #808080;
+    border-right:  2px solid #fff;
+    border-bottom: 2px solid #fff;
+  }
+  .seq-status-value.none { color: #a0a0a0; }
+
   /* ── Sensor panel ── */
   #sensor-panel {
     background: #c0c0c0;
@@ -355,6 +403,9 @@
   <span id="mode-badge" class="mode-badge">MODE: —</span>
   <div id="emrg-lamp" class="emrg-lamp">
     <div class="lamp"></div>EMERGENCY
+  </div>
+  <div id="syserr-lamp" class="syserr-lamp">
+    <div class="lamp"></div>SYS ERROR
   </div>
   <span id="ts" style="font-size:11px;color:#c0c0c0;letter-spacing:1px;">—</span>
 </div>
@@ -487,6 +538,27 @@
   </div>
 </div>
 
+<!-- Sequence engine status panel -->
+<div id="seq-status-panel" class="raised">
+  <div class="panel-title">SEQUENCE ENGINE STATUS</div>
+  <div id="seq-status-body">
+    <div class="seq-status-field">
+      <span class="seq-status-label">Active:</span>
+      <span id="seq-active" class="seq-status-value none">—</span>
+    </div>
+    <div style="width:2px;height:28px;background:#a0a0a0;"></div>
+    <div class="seq-status-field">
+      <span class="seq-status-label">Armed:</span>
+      <span id="seq-armed" class="seq-status-value none">—</span>
+    </div>
+    <div style="width:2px;height:28px;background:#a0a0a0;"></div>
+    <div class="seq-status-field">
+      <span class="seq-status-label">Cooldowns:</span>
+      <span id="seq-cooldowns" class="seq-status-value none">—</span>
+    </div>
+  </div>
+</div>
+
 <!-- Reverse auto control panel -->
 <div id="rev-panel" class="raised" style="background:#c0c0c0;padding:0;margin-top:8px;">
   <div class="panel-title">REVERSE AUTO &nbsp;[ TAPE FOLLOWING — REVERSE ]</div>
@@ -553,6 +625,10 @@ function fetchState() {
       const el = document.getElementById('emrg-lamp');
       el.className = 'emrg-lamp' + (agv.emergency ? ' active' : '');
 
+      // System error lamp
+      const sel2 = document.getElementById('syserr-lamp');
+      sel2.className = 'syserr-lamp' + (agv.system_error ? ' active' : '');
+
       // Status write lamps (green = normal on, red = emergency on)
       setLamp(document.getElementById('w-M2000'), w.M2000_READY,             'on-green');
       setLamp(document.getElementById('w-M2001'), w.M2001_EMERGENCY,         'on-red');
@@ -601,6 +677,30 @@ function fetchState() {
       setLamp(document.getElementById('lamp-lm'),   sen && sen.left_marker,    'on-amber');
       setLamp(document.getElementById('lamp-rm'),   sen && sen.right_marker,   'on-amber');
       setLamp(document.getElementById('lamp-fail'), sen && sen.sensor_failure, 'on-red');
+
+      // Sequence engine status
+      const seqs = d.sequences || {};
+      const seqActive = seqs.active || null;
+      const seqArmed  = seqs.armed  || null;
+      const seqCd     = seqs.cooldowns || {};
+      const cdKeys    = Object.keys(seqCd);
+
+      const activeEl = document.getElementById('seq-active');
+      activeEl.textContent = seqActive || '—';
+      activeEl.className = 'seq-status-value' + (seqActive ? '' : ' none');
+
+      const armedEl = document.getElementById('seq-armed');
+      armedEl.textContent = seqArmed || '—';
+      armedEl.className = 'seq-status-value' + (seqArmed ? '' : ' none');
+
+      const cdEl = document.getElementById('seq-cooldowns');
+      if (cdKeys.length === 0) {
+        cdEl.textContent = '—';
+        cdEl.className = 'seq-status-value none';
+      } else {
+        cdEl.textContent = cdKeys.map(k => `${k}: ${seqCd[k].toFixed(1)}s`).join(' | ');
+        cdEl.className = 'seq-status-value';
+      }
 
       // Reverse auto lamp + button state
       const revActive = agv.reverse_auto_request || agv.mode === 'reverse';

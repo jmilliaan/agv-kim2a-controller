@@ -20,7 +20,8 @@ logger = logging.getLogger(__name__)
 _here = os.path.dirname(os.path.abspath(__file__))
 app   = Flask(__name__, template_folder=os.path.join(_here, "templates"))
 
-_state = None   # set once by run_server()
+_state  = None   # set once by run_server()
+_engine = None   # set once by run_server()
 
 _NUM_SEQ_BITS = 17
 
@@ -32,12 +33,13 @@ def _build_state_snapshot():
 
     # ── AGV summary ───────────────────────────────────────────────────────────
     agv = {
-        "mode":                mode,
-        "emergency":           s.emergency_active,
-        "speed_mode":          s.speed_mode,
-        "sequence_stop":       s.sequence_stop,
-        "sequence_request":    s.plc_sequence_request,
-        "seq_pulse_active":    s.plc_sequence_request is not None,
+        "mode":                 mode,
+        "emergency":            s.emergency_active,
+        "system_error":         s.system_error,
+        "speed_mode":           s.speed_mode,
+        "sequence_stop":        s.sequence_stop,
+        "sequence_request":     s.plc_sequence_request,
+        "seq_pulse_active":     s.plc_sequence_request is not None,
         "reverse_auto_request": s.reverse_auto_request,
     }
 
@@ -70,7 +72,18 @@ def _build_state_snapshot():
         "sensor_failure": raw["sensor_failure"]  if raw else False,
     }
 
-    return {"agv": agv, "plc_writes": plc_writes, "plc_reads": plc_reads, "sensor": sensor}
+    # ── Sequence engine status ────────────────────────────────────────────────
+    sequences = _engine.status() if _engine is not None else {
+        "active": None, "armed": None, "cooldowns": {}
+    }
+
+    return {
+        "agv":        agv,
+        "plc_writes": plc_writes,
+        "plc_reads":  plc_reads,
+        "sensor":     sensor,
+        "sequences":  sequences,
+    }
 
 
 @app.route("/")
@@ -139,8 +152,9 @@ def api_reverse_auto():
     return jsonify({"error": "running must be true or false"}), 400
 
 
-def run_server(state):
-    global _state
-    _state = state
+def run_server(state, engine=None):
+    global _state, _engine
+    _state  = state
+    _engine = engine
     logger.info("[Flask] Dashboard at http://0.0.0.0:5000")
     app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)
