@@ -8,7 +8,7 @@
 #   pymcprotocol     — Mitsubishi SLMP / MC Protocol (Type3E binary)
 
 pymodbus>=3.6.0
-pymcprotocol>=0.9.0
+pymcprotocol>=0.3.0
 python-can>=4.3.0
 pyserial>=3.5.0
 Flask>=3.0.0

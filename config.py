@@ -50,6 +50,7 @@ SLMP_IP     = _params["networking"]["SLMP_IP"]
 SLMP_PORT   = _params["networking"]["SLMP_PORT"]
 
 # ── IO Mapping ────────────────────────────────────────────────────────────────
+DI_FLIPPED     = bool(_params["io_mapping"].get("DI_FLIPPED", 0))
 DI_BASE        = _params["io_mapping"]["DI_BASE"]
 DO_BASE        = _params["io_mapping"]["DO_BASE"]
 NUM_DI         = _params["io_mapping"]["NUM_DI"]

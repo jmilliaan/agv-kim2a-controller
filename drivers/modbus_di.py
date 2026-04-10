@@ -31,7 +31,10 @@ class DIReader(SensorDriver):
                     device_id=config.DEVICE_ID)
 
                 if not result.isError():
-                    state.latest_di = result.bits[:config.NUM_DI]
+                    bits = result.bits[:config.NUM_DI]
+                    if config.DI_FLIPPED:
+                        bits = [not b for b in bits]
+                    state.latest_di = bits
                     await state.di_queue.put(state.latest_di)
                     self._record_rx()
                 else:
