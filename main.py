@@ -59,7 +59,12 @@ async def run():
     rfid_drv = RFIDReader()
     do_drv   = DOWriter()
     ao_drv   = AOWriter()
-    slmp_drv = SLMPDriver()
+    slmp_drv = SLMPDriver() if config.SLMP_ENABLED else None
+
+    if config.SLMP_ENABLED:
+        logger.info("SLMP enabled — PLC integration active.")
+    else:
+        logger.info("SLMP disabled — no PLC integration.")
 
     threading.Thread(target=run_server, args=(state, engine), daemon=True).start()
 
@@ -71,13 +76,12 @@ async def run():
     loop.add_signal_handler(signal.SIGTERM, terminate_gracefully)
     loop.add_signal_handler(signal.SIGINT, terminate_gracefully)
 
-    tasks = asyncio.gather(
+    core_tasks = [
         di_drv.run(state),
         rfid_drv.run(state),
         can_drv.run(state),
         do_drv.run(state),
         ao_drv.run(state),
-        slmp_drv.run(state),
         safety_watchdog(state, watched=[
             (di_drv,   config.WATCHDOG_DI_TIMEOUT_S),
             (can_drv,  config.WATCHDOG_CAN_TIMEOUT_S),
@@ -85,7 +89,11 @@ async def run():
         ]),
         rfid_processor(state, engine),
         modes.mode_manager(state, engine),
-    )
+    ]
+    if slmp_drv is not None:
+        core_tasks.append(slmp_drv.run(state))
+
+    tasks = asyncio.gather(*core_tasks)
 
     try:
         await tasks

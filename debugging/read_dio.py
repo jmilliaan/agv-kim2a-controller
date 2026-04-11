@@ -26,6 +26,8 @@ async def main():
                 print("Modbus read error:", result)
             else:
                 bits = result.bits[:16]
+                if config.DI_FLIPPED:
+                    bits = [not b for b in bits]
                 print(f"{'Index':<8} {'State'}")
                 print("-" * 20)
                 for i, bit in enumerate(bits):

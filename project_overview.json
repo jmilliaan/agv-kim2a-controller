@@ -1,0 +1,386 @@
+{
+  "_purpose": "Quick-start reference for new Claude Code instances. Read this before touching any file.",
+  "project": {
+    "name": "AGV KIM2A Controller",
+    "language": "Python 3 (asyncio)",
+    "entry_point": "main.py",
+    "run_command": "AGV_ID=agv1_kim python3 main.py",
+    "description": "Autonomous Guided Vehicle controller for a differential-drive tape-following robot. Controls hardware over Modbus TCP, CAN bus, TCP sockets, and SLMP/MC Protocol. All motion logic is async; Flask dashboard runs in a daemon thread."
+  },
+
+  "architecture": {
+    "pattern": "Single asyncio event loop with concurrent tasks + one Flask daemon thread",
+    "shared_state": "AMRState instance passed by reference to all tasks — no message passing between tasks except via queues inside AMRState",
+    "queues": {
+      "di_queue":     "DI bit arrays produced by DIReader, consumed by manual_mode",
+      "rfid_queue":   "RFID hex tag strings produced by RFIDReader, consumed by rfid_processor",
+      "sensor_queue": "CAN sensor frame dicts produced by CANReader, consumed by auto_mode and mode_manager",
+      "do_queue":     "Tuples (channel, bool) consumed by DOWriter",
+      "ao_queue":     "Tuples (channel, float voltage) consumed by AOWriter"
+    },
+    "task_graph": [
+      "DIReader.run        — Modbus TCP DI poll every 50ms → di_queue + state.latest_di",
+      "RFIDReader.run      — TCP socket RFID reader → rfid_queue",
+      "CANReader.run       — CAN bus MGS1600 sensor → sensor_queue + state.latest_sensor",
+      "DOWriter.run        — consumes do_queue → Modbus TCP coil writes",
+      "AOWriter.run        — consumes ao_queue → Modbus TCP register writes (DAC)",
+      "SLMPDriver.run      — run_in_executor sync PLC cycle every 20ms (reads+writes)",
+      "safety_watchdog     — polls driver health every 50ms, sets state.system_error",
+      "rfid_processor      — consumes rfid_queue, calls engine.on_rfid_tag()",
+      "modes.mode_manager  — central FSM, spawns manual_mode or auto_mode as subtasks"
+    ]
+  },
+
+  "config_system": {
+    "file": "config.py",
+    "mechanism": "Loads profiles/{AGV_ID}.json at import time. AGV_ID from env var, default 'agv1_kim'. Falls back to parameters.json for backwards compat.",
+    "profile_dir": "profiles/",
+    "active_profile": "profiles/agv1_kim.json",
+    "sections": {
+      "networking":     "DIO_IP, AO_IP, MODBUS_PORT, DEVICE_ID, RFID_IP, RFID_PORT, SLMP_IP, SLMP_PORT",
+      "io_mapping":     "DI_BASE, DO_BASE, NUM_DI(16), NUM_DO(16), AO_BASE, NUM_AO(2), DI_EMERGENCY, DI_FWD, DI_REV, DI_LEFT, DI_RIGHT, DI_MODE_SWITCH, DI_START, DI_RESET, DI_FLIPPED",
+      "motor_channels": "left/right → {do_fwd, do_rev, do_brake, ao_speed} channel indices",
+      "hardware":       "V_RANGE(10.0V), DAC_RES(4095)",
+      "kinematics":     "WHEEL_DIAMETER(0.18m), GEAR_RATIO(30)",
+      "speeds":         "MANUAL_TARGET_HIGH_SPEED, MANUAL_TARGET_SLOW_SPEED, AUTO_TARGET_HIGH_SPEED, AUTO_TARGET_SLOW_SPEED, AUTO_TARGET_EXTRA_SLOW_SPEED, ACCEL_RATE",
+      "pid_tuning":     "KP, TD, N (HIGH gains), KP_SLOW, TD_SLOW, N_SLOW (SLOW gains), TI, TI_DEADBAND, TI_MAX, DT, V_RED_COEF, V_RED_COEF_SLOW, OUTPUT_CLAMP_RPM, SR_ALPHA, SR_CAP",
+      "can_sensor":     "SENSOR_COB_ID(390), FLAG_TAPE_DETECT(2), FLAG_LEFT_MARKER(4), FLAG_RIGHT_MARKER(8), FLAG_SENSOR_FAIL(128), CAN_TIMEOUT(0.5s), CAN_NODE_ID(6)",
+      "rfid":           "RFID_INIT_CMD_HEX, SEQUENCE_STOP_DELAY",
+      "sequences":      "List of sequence defs — see sequence_engine section",
+      "watchdog":       "DI_TIMEOUT_S(1.0), CAN_TIMEOUT_S(1.0), RFID_TIMEOUT_S(5.0)"
+    },
+    "di_flipped": "DI_FLIPPED in io_mapping (0/1). When 1, all DI bits are inverted at read time in DIReader. Use for modules where NO input = ON, signal = OFF. Default 0."
+  },
+
+  "state": {
+    "file": "state.py",
+    "class": "AMRState",
+    "note": "Has flat property shims for all sub-domain fields so existing code works without changes.",
+    "domains": {
+      "SystemState": {
+        "owner": "mode_manager, safety_watchdog",
+        "fields": {
+          "current_mode":     "None | 'manual' | 'armed' | 'running' | 'reverse' | 'emergency'",
+          "emergency_active": "bool",
+          "system_error":     "bool — set by safety_watchdog on driver comms loss"
+        }
+      },
+      "KinematicState": {
+        "owner": "sequence_engine, mode_manager",
+        "fields": {
+          "speed_mode":           "'HIGH' | 'SLOW' | 'EXTRA_SLOW'",
+          "sequence_stop":        "bool — True = AGV holds brake and waits",
+          "pending_sequence":     "str name of armed rfid_then_marker sequence or None",
+          "reverse_auto_request": "bool — set by Flask /api/reverse_auto to start reverse tape-follow"
+        }
+      },
+      "PerceptionState": {
+        "owner": "hardware drivers",
+        "fields": {
+          "latest_di":     "list[bool] — last DI bits from Modbus (after DI_FLIPPED applied)",
+          "latest_sensor": "dict — last CAN frame {left_mm, right_mm, tape_detected, left_marker, right_marker, sensor_failure}",
+          "can_last_rx":   "float epoch — last CAN message time"
+        }
+      },
+      "PLCState": {
+        "owner": "slmp_handler",
+        "fields": {
+          "plc_inputs":                "dict M0-M4 PLC input bits",
+          "plc_sequence_request":      "int 0-16 → one-hot M201x output; None = all LOW",
+          "plc_sequence_pulse_expire": "float epoch — when to auto-clear sequence request",
+          "plc_sequence_complete":     "list[bool] × 17 — M2040–M2056 complete flags"
+        }
+      }
+    }
+  },
+
+  "modes": {
+    "file": "modes.py",
+    "state_machine": {
+      "states": ["None", "manual", "armed", "running", "reverse", "emergency"],
+      "transitions": {
+        "None → manual":       "DI_MODE_SWITCH HIGH on startup",
+        "None → armed":        "DI_MODE_SWITCH LOW on startup",
+        "armed → running":     "DI_START rising edge + tape detected",
+        "armed → reverse":     "state.reverse_auto_request True (set by Flask) + tape detected",
+        "running → armed":     "DI_RESET rising edge",
+        "reverse → armed":     "DI_RESET rising edge OR reverse_auto_request cleared",
+        "any → emergency":     "DI_EMERGENCY active (NO contact — True = triggered)",
+        "emergency → manual":  "DI_RESET rising edge + DI_MODE_SWITCH HIGH",
+        "emergency → armed":   "DI_RESET rising edge + DI_MODE_SWITCH LOW",
+        "any → manual":        "DI_MODE_SWITCH HIGH (live switch)",
+        "manual → armed":      "DI_MODE_SWITCH LOW (live switch)"
+      }
+    },
+    "auto_mode": {
+      "description": "PID tape-following loop, shared for forward and reverse",
+      "direction_forward": "error_sign=-1.0, speed modes active, sequence stops active, RFID marker hooks active",
+      "direction_reverse": "error_sign=+1.0, fixed SLOW speed, no sequence stops, no RFID hooks",
+      "loop": "Drain sensor_queue (keep latest frame only), compute PID, put voltages to ao_queue",
+      "tape_loss": "Brake + reset PID on tape lost; re-arm forward/reverse on reacquire",
+      "can_timeout": "Brake if time since can_last_rx > CAN_TIMEOUT",
+      "accel_ramp": "current_target_speed ramps toward target at ACCEL_RATE * DT per cycle"
+    },
+    "manual_mode": {
+      "description": "Pendant jogging. Drains di_queue, maps button combos to motion primitives.",
+      "combos": "fwd+left, fwd+right, rvs+left, rvs+right, fwd, rvs, left, right, idle"
+    }
+  },
+
+  "motion": {
+    "file": "motion.py",
+    "kinematic_math": {
+      "voltage_to_rpm": "rpm = 646.59 * v - 101.2",
+      "rpm_to_voltage": "v = (rpm + 101.2) / 646.59",
+      "mps_to_rpm":     "motor_rpm = (v_mps * 60 / WHEEL_CIRCUMFERENCE) * GEAR_RATIO"
+    },
+    "drive_primitive": "_drive(state, left_fwd, left_v, right_fwd, right_v) — puts DO+AO commands to queues",
+    "commands": ["set_forward", "set_reverse", "set_left", "set_right", "set_forward_left", "set_forward_right", "set_reverse_left", "set_reverse_right", "set_brake", "idle"],
+    "channel_mapping": "Read from config.MOTOR_CHANNELS — never hardcoded"
+  },
+
+  "pid_controller": {
+    "file": "core/pid.py",
+    "class": "PIDController",
+    "features": [
+      "Filtered derivative (low-pass, coefficient alpha = dt / (td/n + dt))",
+      "Integral with deadband (only accumulates if |e| < TI_DEADBAND)",
+      "Integral anti-windup clamp (±TI_MAX)",
+      "Output clamp (±OUTPUT_CLAMP_RPM)",
+      "Speed reduction: low-pass filtered, capped at SR_CAP * base_rpm",
+      "Live gain switching via update_gains() — does NOT reset integrator",
+      "reset() zeros integral, last_pv, filtered_d, speed_reduction"
+    ],
+    "compute_signature": "compute(pv, base_rpm, error_sign) → (left_rpm, right_rpm, debug_dict)",
+    "pv": "sensor left_mm (lateral offset in mm)",
+    "output_to_wheels": "left_rpm = base_rpm - speed_reduction + output; right_rpm = base_rpm - speed_reduction - output"
+  },
+
+  "sequence_engine": {
+    "file": "core/sequence_engine.py",
+    "class": "SequenceEngine",
+    "description": "Declarative JSON-driven sequence runner. No Python changes needed to add sequences — edit profile JSON.",
+    "trigger_types": {
+      "rfid":             "Fires immediately when matching RFID tag is read",
+      "marker":           "Fires when matching tape marker (left/right) detected by auto_mode",
+      "rfid_then_marker": "RFID arms approach (slows to SLOW), marker fires execution"
+    },
+    "action_types": {
+      "set_speed":         "Sets state.speed_mode to 'HIGH' | 'SLOW' | 'EXTRA_SLOW'",
+      "wait_marker":       "Polls state.latest_sensor until side marker seen or timeout",
+      "stop_agv":          "Sets state.sequence_stop = True (auto_mode brakes)",
+      "resume":            "Clears sequence_stop, optionally sets speed",
+      "sequence_stop":     "Timed stop: stop for duration seconds then auto-resume",
+      "wait_seconds":      "asyncio.sleep(duration)",
+      "plc_request":       "Sets plc_sequence_request + pulse expire for SLMP one-hot output",
+      "wait_plc_complete": "Phase A: wait for complete flag LOW (PLC ack). Phase B: wait for HIGH (PLC done)."
+    },
+    "preconditions": "requires_mode check + cooldown check + no active sequence (one at a time)",
+    "rfid_then_marker_flow": "RFID → arm in self._armed, speed_mode=SLOW → marker → skip set_speed+wait_marker steps → run remaining actions",
+    "cancel_armed": "Called by mode_manager on any mode transition to flush stale armed state",
+    "extensibility": "register_action(name, async_handler) to add custom action types"
+  },
+
+  "drivers": {
+    "base": {
+      "file": "drivers/base.py",
+      "SensorDriver": "ABC with _record_rx() and get_health() → {ok, last_rx, detail}. Monitored by safety_watchdog.",
+      "ActuatorDriver": "ABC, output-only, NOT watchdog-monitored"
+    },
+    "DIReader": {
+      "file": "drivers/modbus_di.py",
+      "type": "SensorDriver",
+      "hardware": "Modbus TCP discrete inputs",
+      "poll_rate": "50ms",
+      "di_flipped": "If config.DI_FLIPPED is True, all bits are NOT-ed before writing to state",
+      "output": "state.latest_di (list[bool]) + state.di_queue"
+    },
+    "DOWriter": {
+      "file": "drivers/modbus_do.py",
+      "type": "ActuatorDriver",
+      "hardware": "Modbus TCP coil writes",
+      "input": "state.do_queue — tuples (channel_no, bool)"
+    },
+    "AOWriter": {
+      "file": "drivers/modbus_ao.py",
+      "type": "ActuatorDriver",
+      "hardware": "Modbus TCP register writes",
+      "conversion": "dac_value = int(target_v / V_RANGE * DAC_RES)",
+      "input": "state.ao_queue — tuples (channel_no, float voltage)"
+    },
+    "CANReader": {
+      "file": "drivers/can_mgs1600.py",
+      "type": "SensorDriver",
+      "hardware": "CANable2 USB adapter (VID=0x16D0, PID=0x117E), slcan interface, 500kbps",
+      "sensor": "MGS1600 magnetic guide sensor",
+      "frame_format": "COB-ID=SENSOR_COB_ID, bytes 0-3: <hh left_mm/right_mm, byte 4: flags",
+      "output": "state.latest_sensor + state.sensor_queue + state.can_last_rx",
+      "auto_discovery": "_find_canable_port() scans USB serial ports by VID/PID"
+    },
+    "RFIDReader": {
+      "file": "drivers/rfid_tcp.py",
+      "type": "SensorDriver",
+      "hardware": "RFID reader over raw TCP socket",
+      "protocol": "Send RFID_INIT_CMD on connect, parse incoming hex stream split on 'CF' delimiter, tag = packet[26:30]",
+      "output": "state.rfid_queue — 4-char hex tag strings"
+    },
+    "SLMPDriver": {
+      "file": "drivers/slmp_plc.py",
+      "type": "ActuatorDriver",
+      "hardware": "Mitsubishi FX5U PLC via SLMP/MC Protocol (pymcprotocol Type3E binary)",
+      "cycle_rate": "20ms via run_in_executor (sync)",
+      "writes": {
+        "M2000-M2005": "AGV status bits: READY, EMERGENCY, TROLLEY_EMERGENCY, MANUAL, AUTO, RUNNING",
+        "M2010-M2026": "One-hot sequence request vector (17 bits)"
+      },
+      "reads": {
+        "M0-M4":       "PLC inputs: PB_START_AUTO, MODE_MAN, MODE_AUTO, EMERGENCY, MASTER_ON → state.plc_inputs",
+        "M2040-M2056": "Sequence complete flags (17 bits) → state.plc_sequence_complete"
+      },
+      "pulse_logic": "plc_sequence_request auto-clears after plc_sequence_pulse_expire epoch"
+    }
+  },
+
+  "safety_watchdog": {
+    "file": "safety_watchdog.py",
+    "poll_rate": "50ms",
+    "monitored_drivers": ["DIReader (DI_TIMEOUT_S)", "CANReader (CAN_TIMEOUT_S)", "RFIDReader (RFID_TIMEOUT_S)"],
+    "fault_action": "state.system_error = True + immediately zeros ao_queue (channels 0 and 1 → 0.0V)",
+    "recovery": "state.system_error cleared when all drivers healthy again",
+    "mode_manager_response": "On system_error, mode_manager cancels active task and brakes"
+  },
+
+  "rfid_processor": {
+    "file": "rfid_processor.py",
+    "role": "Thin dispatcher. Awaits state.rfid_queue, calls engine.on_rfid_tag(tag_hex)."
+  },
+
+  "web_dashboard": {
+    "file": "app/app.py",
+    "framework": "Flask in daemon thread (not asyncio)",
+    "url": "http://0.0.0.0:5000",
+    "thread_safety": "GIL-safe for reads; single-attribute writes (plc_sequence_request, reverse_auto_request) are atomic",
+    "endpoints": {
+      "GET  /":                  "Renders index.html template",
+      "GET  /api/state":         "Full JSON snapshot of AGV, PLC writes, PLC reads, sensor, sequence engine status",
+      "POST /api/sequence":      "Set (requires MASTER_ON + MANUAL_MODE) or clear sequence request. Body: {sequence: int|null}",
+      "POST /api/reverse_auto":  "Start/stop reverse tape-follow. Body: {running: true|false}. Requires mode='armed' to start."
+    }
+  },
+
+  "shutdown": {
+    "file": "main.py",
+    "trigger": "SIGTERM or SIGINT cancels all asyncio tasks",
+    "procedure": "On CancelledError: opens fresh Modbus clients, zeros all DO (NUM_DO coils) and AO (NUM_AO registers) directly, bypassing queues"
+  },
+
+  "logging": {
+    "file": "logger.py",
+    "setup": "Call setup_logging() once from main.py",
+    "outputs": {
+      "console": "INFO and above by default",
+      "file":    "DEBUG and above, rotating 10MB × 5 files in ./logs/agv_YYYYMMDD_HHMMSS.log"
+    },
+    "silenced": "werkzeug (ERROR), pymodbus (WARNING), can (WARNING)",
+    "level_conventions": {
+      "DEBUG":    "High-frequency: PID loop values, raw sensor frames",
+      "INFO":     "Normal events: connections, mode transitions, sequence start/stop",
+      "WARNING":  "Recoverable faults: tape loss, CAN timeout, reconnects",
+      "ERROR":    "Comms failures, unhandled exceptions",
+      "CRITICAL": "Emergency stop"
+    }
+  },
+
+  "debugging_tools": {
+    "read_dio.py": {
+      "file": "debugging/read_dio.py",
+      "description": "Connects to DIO Modbus and continuously prints all 16 DI states every 320ms. Ctrl+C to stop."
+    },
+    "check_connections.py": {
+      "file": "debugging/check_connections.py",
+      "description": "Pings all network devices (DIO, AO, RFID, SLMP) and checks CANable2 USB presence. 3 retries × 2s interval. Prints summary.",
+      "note": "Uses system ping (-c 1 -W 1) for network checks — application-level protocol not verified"
+    },
+    "motor_test.py": {
+      "file": "debugging/motor_test.py",
+      "description": "Standalone synchronous motor direction verification script. Reads parameters.json directly (NOT config.py). Commands LEFT=FWD, RIGHT=REV at TEST_VOLTAGE for RUN_DURATION seconds, then auto-stops. LEFT_REVERSED / RIGHT_REVERSED flags swap FWD/REV coils per side. Uses sync ModbusTcpClient. CAUTION: AGV physically moves."
+    },
+    "plotter.py": {
+      "file": "debugging/plotter.py",
+      "description": "RunRecorder class imported by modes.py auto_mode. Controlled by PLOTTING_ENABLED flag (True/False, zero overhead when False). On stop() saves PNG + CSV to PLOT_DIR (analysis_plot/). PNG: dual-axis — Left/Right RPM (left axis 0-2000) and tracking error mm (right axis -100 to +100) vs time. CSV columns: time_s, error_mm, left_rpm, right_rpm, pid_output, d_term. Both files prefixed YYYYMMDD_HHMMSS."
+    },
+    "debug.py": {
+      "file": "debugging/debug.py",
+      "description": "Full async multi-subsystem hardware monitor. Enable subsystems via SHOW_DI/DO/AO/CAN/RFID flags. Filter channels via WATCH_DI/DO/AO lists (None = all). Polling: DI 10Hz, DO/AO 5Hz. COMPACT_DI/DO mode prints bitstring instead of per-channel. CAN uses a background reader thread + asyncio.Queue bridge. RFID prints raw frame hex on incomplete frames. NOTE: reads raw Modbus DI bits — DI_FLIPPED is NOT applied here."
+    },
+    "slmp_tester10.py": {
+      "file": "debugging/slmp_tester10.py",
+      "description": "Minimal standalone PLC comms tester. Hardcoded IP 192.168.4.10:1280. Toggles M100-M104 every 0.5s and cycles D10/D11/D12 word values on an 8-step/4s pattern. Used for verifying SLMP connectivity and PLC ladder response. Not integrated with config.py."
+    }
+  },
+  "web_template": {
+    "file": "app/templates/index.html",
+    "description": "Single HTML dashboard page served by Flask at /. Polls /api/state periodically to display live AGV mode, sensor, PLC, and sequence status."
+  },
+
+  "hardware_map": {
+    "DIO_module": {
+      "ip": "192.168.1.31",
+      "port": 502,
+      "protocol": "Modbus TCP",
+      "di_base": 0,
+      "do_base": 0,
+      "num_di": 16,
+      "num_do": 16,
+      "di_flipped": "Currently 1 in agv1_kim profile — bits are inverted"
+    },
+    "AO_module": {
+      "ip": "192.168.1.30",
+      "port": 502,
+      "protocol": "Modbus TCP",
+      "ao_base": 4096,
+      "num_ao": 2,
+      "resolution": "0–4095 mapped to 0–10V"
+    },
+    "RFID_reader": {
+      "ip": "192.168.3.200",
+      "port": 2022,
+      "protocol": "Raw TCP"
+    },
+    "PLC": {
+      "model": "Mitsubishi FX5U",
+      "ip": "192.168.4.10",
+      "port": 1280,
+      "protocol": "SLMP/MC Protocol Type3E binary"
+    },
+    "CAN_sensor": {
+      "device": "CANable2 USB (VID=0x16D0, PID=0x117E)",
+      "interface": "slcan",
+      "bitrate": "500kbps",
+      "sensor": "MGS1600 magnetic guide sensor",
+      "cob_id": 390,
+      "node_id": 6
+    },
+    "motor_channels": {
+      "left":  {"do_fwd": 0, "do_rev": 1, "do_brake": 2, "ao_speed": 0},
+      "right": {"do_fwd": 3, "do_rev": 4, "do_brake": 5, "ao_speed": 1}
+    }
+  },
+
+  "legacy_and_shims": {
+    "io_hardware.py":  "Backwards-compat shim re-exporting all drivers. Import from drivers/*.py for new code.",
+    "slmp_handler.py": "Standalone duplicate of SLMPDriver logic. Not used by main.py (which uses SLMPDriver from drivers/slmp_plc.py directly).",
+    "module_shims":    "Each driver file also exposes a module-level function (di_reader, can_reader, etc.) wrapping a private _instance for backwards compat."
+  },
+
+  "key_design_rules": [
+    "Never block the asyncio event loop — all sync hardware calls use run_in_executor",
+    "Queues are drained fully each cycle (keep-latest pattern) to avoid stale data accumulation",
+    "All motion commands go through motion.py queues — never write DO/AO directly except in shutdown()",
+    "One sequence runs at a time — _active_sequence guard in SequenceEngine",
+    "mode_manager owns all mode transitions — auto_mode and manual_mode are passive subtasks",
+    "safety_watchdog and mode_manager are the only tasks that can halt motion unilaterally",
+    "Profile JSON is the only place to add/modify sequences — zero Python changes needed",
+    "DI_FLIPPED inverts at read time in DIReader — all downstream code sees logical values"
+  ]
+}

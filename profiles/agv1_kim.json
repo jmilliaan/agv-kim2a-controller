@@ -241,6 +241,10 @@
     }
   ],
 
+  "slmp": {
+    "enabled": 1
+  },
+
   "watchdog": {
     "_comment": "Safety watchdog timeouts for hardware driver health checks",
     "DI_TIMEOUT_S": 1.0,

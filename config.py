@@ -129,6 +129,9 @@ SEQUENCE_STOP_DELAY = _params["rfid"]["SEQUENCE_STOP_DELAY"]
 # ── Sequences (Phase 3 — sequence engine) ────────────────────────────────────
 SEQUENCES = _params.get("sequences", [])
 
+# ── SLMP ─────────────────────────────────────────────────────────────────────
+SLMP_ENABLED = bool(_params.get("slmp", {}).get("enabled", 0))
+
 # ── Watchdog timeouts (Phase 4) ───────────────────────────────────────────────
 _wd = _params.get("watchdog", {})
 WATCHDOG_DI_TIMEOUT_S   = _wd.get("DI_TIMEOUT_S",   1.0)
