@@ -22,8 +22,8 @@ class SensorDriver(ABC):
 
     def __init__(self, name: str):
         self._name    = name
-        self._last_rx = 0.0   # epoch of last successful hardware read
-        self._ok      = False  # True once first successful read
+        self._last_rx = time.time()  # epoch of last successful hardware read
+        self._ok      = False        # True once first successful read
 
     @abstractmethod
     async def run(self, state) -> None:

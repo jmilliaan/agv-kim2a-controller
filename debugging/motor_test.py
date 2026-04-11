@@ -1,213 +1,150 @@
 """
-motor_test.py — AGV Motor Direction Verification
-==================================================
-Standalone synchronous script. No asyncio, no queues, no motion.py.
-Directly writes Modbus coils and registers to verify motor wiring.
+motor_test.py — Direct motor command for wiring verification and manual testing.
 
-Run from the same directory as config.py:
-    python3 motor_test.py
+Usage:
+    python3 motor_test.py <left_rpm>,<right_rpm>,<duration_s>
 
-PURPOSE
--------
-Moves the AGV for a short burst to confirm motor direction wiring.
-Left motor is commanded FORWARD, right motor is commanded REVERSE.
-Watch what physically happens:
+    left_rpm / right_rpm:
+        positive  → forward
+        negative  → reverse
+        0         → stopped (direction signals off, zero voltage)
 
-  - If the AGV moves FORWARD  → left is wired correctly, right is inverted  (expected)
-  - If the AGV SPINS in place → both motors are spinning the same direction, check wiring
-  - If the AGV moves BACKWARD → both motors are inverted
-
-After confirming, edit the REVERSED flags below to match your hardware
-and re-run to verify the corrected forward motion.
-
-SAFETY
-------
-Keep hands and feet clear. The AGV will move.
-The stop sequence runs in a finally block — Ctrl+C will still stop the motors.
+Examples:
+    python3 motor_test.py 500,500,3       # both forward at 500 RPM for 3s
+    python3 motor_test.py -300,300,2      # spin left in place for 2s
+    python3 motor_test.py 0,0,1           # stop both for 1s (useful as a reset)
 """
 
-import time
 import sys
+import os
+import time
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
 from pymodbus.client import ModbusTcpClient
+import config
+from motion import rpm_to_voltage
 
-# ── Load parameters directly — no config.py dependency ───────────────────────
-import json, os
-_dir = os.path.dirname(os.path.abspath(__file__))
-with open(os.path.join(_dir, "parameters.json")) as f:
-    _p = json.load(f)
+# ── Channel map from profile ──────────────────────────────────────────────────
+L = config.MOTOR_CHANNELS["left"]
+R = config.MOTOR_CHANNELS["right"]
 
-DIO_IP     = _p["networking"]["DIO_IP"]
-AO_IP      = _p["networking"]["AO_IP"]
-PORT       = _p["networking"]["MODBUS_PORT"]
-DEVICE_ID  = _p["networking"]["DEVICE_ID"]
-DO_BASE    = _p["io_mapping"]["DO_BASE"]
-AO_BASE    = _p["io_mapping"]["AO_BASE"]
-V_RANGE    = _p["hardware"]["V_RANGE"]
-DAC_RES    = _p["hardware"]["DAC_RES"]
+CH_L_FWD   = L["do_fwd"]
+CH_L_REV   = L["do_rev"]
+CH_L_BRK   = L["do_brake"]
+CH_L_ALARM = L.get("do_alarm")
+CH_R_FWD   = R["do_fwd"]
+CH_R_REV   = R["do_rev"]
+CH_R_BRK   = R["do_brake"]
+CH_R_ALARM = R.get("do_alarm")
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  TEST CONFIGURATION — edit these
-# ══════════════════════════════════════════════════════════════════════════════
-
-# DO channel assignments (Y-numbers from the hardware label)
-CH_L_FWD = 0   # Y00
-CH_L_REV = 1   # Y01
-CH_L_BRK = 2   # Y02
-CH_R_FWD = 3   # Y03
-CH_R_REV = 4   # Y04
-CH_R_BRK = 5   # Y05
-
-# AO channel assignments
-CH_AO_LEFT  = 0
-CH_AO_RIGHT = 1
-
-# Test voltage — keep very low for first verification run
-TEST_VOLTAGE = 0.5   # volts
-
-# Duration the motors run before auto-stop
-RUN_DURATION = 1.0   # seconds
-
-# Motor polarity overrides.
-# Set to True if that motor's FWD/REV signals need to be swapped.
-# After first run, edit these to fix whichever side spins the wrong way.
-LEFT_REVERSED  = False
-RIGHT_REVERSED = False
-
-# ══════════════════════════════════════════════════════════════════════════════
-#  HELPERS
-# ══════════════════════════════════════════════════════════════════════════════
-
-def volts_to_dac(v):
-    return int(v / V_RANGE * DAC_RES)
+CH_AO_LEFT  = L["ao_speed"]
+CH_AO_RIGHT = R["ao_speed"]
 
 
-def write_coil(client, channel, value):
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def rpm_to_volts(rpm: float) -> float:
+    if rpm == 0:
+        return 0.0
+    return max(0.0, min(rpm_to_voltage(abs(rpm)), config.V_RANGE))
+
+def volts_to_dac(v: float) -> int:
+    return int(v / config.V_RANGE * config.DAC_RES)
+
+def coil(client, channel, value):
     result = client.write_coil(
-        address=DO_BASE + channel,
-        value=bool(value),
-        slave=DEVICE_ID
-    )
+        address=config.DO_BASE + channel, value=bool(value), device_id=config.DEVICE_ID)
     state = "ON " if value else "OFF"
-    print(f"  DO{channel:02d} (Y{channel:02d}) = {state}  {'OK' if not result.isError() else 'ERROR'}")
-    if result.isError():
-        print(f"  !! Modbus error on DO{channel}: {result}")
+    status = "OK" if not result.isError() else "ERR"
+    print(f"  DO{channel:02d} = {state}  [{status}]")
 
-
-def write_ao(client, channel, volts):
+def ao(client, channel, volts):
     dac = volts_to_dac(volts)
     result = client.write_register(
-        address=AO_BASE + channel,
-        value=dac,
-        slave=DEVICE_ID
-    )
-    print(f"  AO{channel} = {volts:.3f}V (DAC={dac})  {'OK' if not result.isError() else 'ERROR'}")
-    if result.isError():
-        print(f"  !! Modbus error on AO{channel}: {result}")
+        address=config.AO_BASE + channel, value=dac, device_id=config.DEVICE_ID)
+    status = "OK" if not result.isError() else "ERR"
+    print(f"  AO{channel}  = {volts:.3f}V (DAC={dac})  [{status}]")
+
+def stop_all(dio, ao_client):
+    print("\n[STOP] Zeroing outputs...")
+    ao(ao_client, CH_AO_LEFT,  0.0)
+    ao(ao_client, CH_AO_RIGHT, 0.0)
+    for ch in [CH_L_FWD, CH_L_REV, CH_R_FWD, CH_R_REV]:
+        coil(dio, ch, False)
 
 
-def stop_all(dio, ao):
-    print("\n[STOP] Zeroing AO channels...")
-    write_ao(ao,  CH_AO_LEFT,  0.0)
-    write_ao(ao,  CH_AO_RIGHT, 0.0)
-
-    print("[STOP] Releasing all DO channels...")
-    for ch in [CH_L_FWD, CH_L_REV, CH_L_BRK, CH_R_FWD, CH_R_REV, CH_R_BRK]:
-        write_coil(dio, ch, False)
-
-    print("[STOP] Done.")
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-#  MAIN
-# ══════════════════════════════════════════════════════════════════════════════
+# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
-    print("=" * 56)
-    print(" AGV Motor Direction Test")
-    print("=" * 56)
-    print(f" DIO module : {DIO_IP}:{PORT}")
-    print(f" AO module  : {AO_IP}:{PORT}")
-    print(f" Test cmd   : LEFT=FWD  RIGHT=REV")
-    print(f" Voltage    : {TEST_VOLTAGE}V")
-    print(f" Duration   : {RUN_DURATION}s")
-    print(f" L_REVERSED : {LEFT_REVERSED}  R_REVERSED : {RIGHT_REVERSED}")
-    print("=" * 56)
-    print()
-
-    # ── Connect ───────────────────────────────────────────────────────────────
-    print("[INIT] Connecting to DIO module...")
-    dio = ModbusTcpClient(DIO_IP, port=PORT)
-    if not dio.connect():
-        sys.exit(f"FATAL: Could not connect to DIO module at {DIO_IP}:{PORT}")
-    print(f"[INIT] DIO connected.")
-
-    print("[INIT] Connecting to AO module...")
-    ao = ModbusTcpClient(AO_IP, port=PORT)
-    if not ao.connect():
-        dio.close()
-        sys.exit(f"FATAL: Could not connect to AO module at {AO_IP}:{PORT}")
-    print(f"[INIT] AO connected.")
-    print()
+    if len(sys.argv) != 2:
+        print("Usage: python3 motor_test.py <left_rpm>,<right_rpm>,<duration_s>")
+        print("  e.g. python3 motor_test.py 500,500,3")
+        sys.exit(1)
 
     try:
+        parts = sys.argv[1].split(",")
+        left_rpm  = float(parts[0])
+        right_rpm = float(parts[1])
+        duration  = float(parts[2])
+    except (ValueError, IndexError):
+        print("Error: expected format left_rpm,right_rpm,duration  (e.g. 500,-300,2)")
+        sys.exit(1)
 
-        # # ── Step 2: release brakes ────────────────────────────────────────────
-        # print("\n[2/4] Releasing brakes...")
-        write_coil(dio, CH_L_BRK, 1)
-        write_coil(dio, CH_R_BRK, 1)
-        time.sleep(3)   # brief pause for mechanical brake release
+    if duration <= 0:
+        print("Error: duration must be > 0")
+        sys.exit(1)
 
-        # ── Step 1: ensure everything is off before starting ──────────────────
-        print("[1/4] Pre-clearing all motor channels...")
-        stop_all(dio, ao)
-        time.sleep(0.2)
+    left_v  = rpm_to_volts(left_rpm)
+    right_v = rpm_to_volts(right_rpm)
 
-        # ── Step 2: release brakes ────────────────────────────────────────────
-        print("\n[2/4] Releasing brakes...")
-        write_coil(dio, CH_L_BRK, False)
-        write_coil(dio, CH_R_BRK, False)
-        time.sleep(0.1)   # brief pause for mechanical brake release
+    def dir_label(rpm):
+        if rpm > 0:   return "FWD"
+        if rpm < 0:   return "REV"
+        return "STOP"
 
-        # ── Step 3: set direction ─────────────────────────────────────────────
-        print("\n[3/4] Setting direction: LEFT=FWD  RIGHT=REV")
+    print("=" * 52)
+    print(f"  Left  : {left_rpm:+.0f} RPM  ({dir_label(left_rpm)})  {left_v:.3f}V")
+    print(f"  Right : {right_rpm:+.0f} RPM  ({dir_label(right_rpm)})  {right_v:.3f}V")
+    print(f"  Duration: {duration}s")
+    print("=" * 52)
 
-        # Left motor forward (respects REVERSED flag)
-        l_fwd = not LEFT_REVERSED
-        write_coil(dio, CH_L_FWD, l_fwd)
-        # write_coil(dio, CH_L_REV, not l_fwd)
+    dio = ModbusTcpClient(config.DIO_IP, port=config.MODBUS_PORT)
+    if not dio.connect():
+        sys.exit(f"FATAL: Could not connect to DIO at {config.DIO_IP}")
 
-        # Right motor reverse (respects REVERSED flag)
-        r_rev = not RIGHT_REVERSED
-        write_coil(dio, CH_R_FWD, r_rev)       # if not reversed: FWD=True means physical reverse
-        # write_coil(dio, CH_R_REV, not r_rev)
-
-        # ── Step 4: apply voltage and run ─────────────────────────────────────
-        print(f"\n[4/4] Applying {TEST_VOLTAGE}V — running for {RUN_DURATION}s...")
-        write_ao(ao, CH_AO_LEFT,  TEST_VOLTAGE)
-        write_ao(ao, CH_AO_RIGHT, TEST_VOLTAGE)
-
-        print(f"\n  >>> MOTORS RUNNING — watch direction <<<")
-        time.sleep(RUN_DURATION)
-
-    finally:
-        # ── Always stop, even on Ctrl+C or exception ─────────────────────────
-        stop_all(dio, ao)
+    ao_client = ModbusTcpClient(config.AO_IP, port=config.MODBUS_PORT)
+    if not ao_client.connect():
         dio.close()
-        ao.close()
+        sys.exit(f"FATAL: Could not connect to AO at {config.AO_IP}")
 
-    print()
-    print("=" * 56)
-    print(" Test complete. Observe which direction each wheel spun.")
-    print()
-    print(" Expected result for FORWARD vehicle motion:")
-    print("   Left wheel  : spins FORWARD  (drives vehicle forward)")
-    print("   Right wheel : spins FORWARD  (drives vehicle forward)")
-    print()
-    print(" This test commanded LEFT=FWD, RIGHT=REV.")
-    print(" If the AGV moved forward, the right motor is wired")
-    print(" with inverted polarity — set RIGHT_REVERSED = True")
-    print(" and re-run to verify.")
-    print("=" * 56)
+    try:
+        # Clear everything first
+        stop_all(dio, ao_client)
+        time.sleep(0.1)
+
+        # Set direction signals
+        print("\n[DIR] Setting direction...")
+        coil(dio, CH_L_FWD, left_rpm  > 0)
+        coil(dio, CH_L_REV, left_rpm  < 0)
+        coil(dio, CH_R_FWD, right_rpm > 0)
+        coil(dio, CH_R_REV, right_rpm < 0)
+
+        # Apply speed
+        print("\n[RUN] Applying voltage...")
+        ao(ao_client, CH_AO_LEFT,  left_v)
+        ao(ao_client, CH_AO_RIGHT, right_v)
+
+        print(f"\n  >>> RUNNING for {duration}s — Ctrl+C to abort <<<\n")
+        time.sleep(duration)
+
+    except KeyboardInterrupt:
+        print("\nInterrupted.")
+    finally:
+        stop_all(dio, ao_client)
+        dio.close()
+        ao_client.close()
+        print("Done.")
 
 
 if __name__ == "__main__":

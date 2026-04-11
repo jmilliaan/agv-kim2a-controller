@@ -9,6 +9,8 @@ Access from any device on 192.168.2.x: http://192.168.2.100:5000
 """
 
 import os
+import re
+import subprocess
 import time
 import threading
 from flask import Flask, render_template, jsonify, request
@@ -86,9 +88,32 @@ def _build_state_snapshot():
     }
 
 
+_VALID_COMMANDS = {"forward", "fwd_left", "fwd_right", "reverse",
+                   "rvs_left", "rvs_right", "left", "right"}
+
 @app.route("/")
 def index():
     return render_template("index.html")
+
+@app.route("/manual")
+def manual():
+    return render_template("manual.html")
+
+@app.route("/api/manual/command", methods=["POST"])
+def api_manual_command():
+    if _state is None:
+        return jsonify({"error": "state not initialised"}), 503
+    if _state.current_mode != "manual":
+        return jsonify({"error": f"AGV not in manual mode (current: {_state.current_mode})"}), 403
+
+    data = request.get_json(silent=True) or {}
+    cmd  = data.get("command")   # None = stop
+
+    if cmd is not None and cmd not in _VALID_COMMANDS:
+        return jsonify({"error": f"unknown command: {cmd}"}), 400
+
+    _state.web_manual_command = cmd
+    return jsonify({"ok": True, "command": cmd})
 
 
 @app.route("/api/state")
@@ -152,9 +177,27 @@ def api_reverse_auto():
     return jsonify({"error": "running must be true or false"}), 400
 
 
+@app.route("/api/wifi")
+def api_wifi():
+    try:
+        out = subprocess.check_output(
+            ["nmcli", "-f", "IN-USE,SIGNAL,SSID", "dev", "wifi"],
+            timeout=2, text=True, stderr=subprocess.DEVNULL)
+        for line in out.splitlines():
+            if line.strip().startswith("*"):
+                parts = line.split()
+                signal = int(parts[1])
+                ssid   = " ".join(parts[2:])
+                return jsonify({"ok": True, "signal": signal, "ssid": ssid})
+        return jsonify({"ok": False, "signal": None, "ssid": None})
+    except Exception as e:
+        return jsonify({"ok": False, "signal": None, "ssid": None, "error": str(e)})
+
+
 def run_server(state, engine=None):
     global _state, _engine
+    import config
     _state  = state
     _engine = engine
-    logger.info("[Flask] Dashboard at http://0.0.0.0:5000")
+    logger.info("[Flask] Dashboard at http://%s:5000", config.LOCAL_IP)
     app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)

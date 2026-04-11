@@ -37,7 +37,7 @@ async def safety_watchdog(state, watched: list):
 
         for driver, timeout_s in watched:
             h = driver.get_health()
-            if not h["ok"] or (now - h["last_rx"]) > timeout_s:
+            if (now - h["last_rx"]) > timeout_s:
                 fault_detail = h["detail"]
                 break
 

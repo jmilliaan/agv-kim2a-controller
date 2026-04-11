@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>AGV Manual Remote</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #d4d0c8;
+    color: #000;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* ── Header ── */
+  #header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #000080;
+    color: #fff;
+    padding: 6px 10px;
+    font-weight: bold;
+    font-size: 14px;
+    letter-spacing: 2px;
+    flex-shrink: 0;
+  }
+  #header a {
+    color: #adf;
+    text-decoration: none;
+    font-size: 12px;
+    letter-spacing: 0;
+  }
+  #header .title { flex: 1; }
+
+  .mode-badge {
+    padding: 2px 12px;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    border-top:    2px solid #808080;
+    border-left:   2px solid #808080;
+    border-right:  2px solid #fff;
+    border-bottom: 2px solid #fff;
+    background: #c0c0c0;
+    color: #000;
+  }
+  .mode-manual  { background: #0000c0; color: #fff; }
+  .mode-armed   { background: #c0c000; color: #000; }
+  .mode-running { background: #00a000; color: #fff; }
+  .mode-emergency { background: #c00000; color: #fff; }
+
+  /* ── Status bar ── */
+  #status-bar {
+    padding: 4px 10px;
+    background: #c0c0c0;
+    border-bottom: 2px solid #808080;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  #status-bar.ok   { color: #006000; }
+  #status-bar.warn { color: #c00000; font-weight: bold; }
+
+  /* ── Main area ── */
+  #main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  /* ── Compass grid ── */
+  #compass {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 8px;
+    width: min(90vw, 90vh, 360px);
+    height: min(90vw, 90vh, 360px);
+  }
+
+  .btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: #c0c0c0;
+    border-top:    3px solid #fff;
+    border-left:   3px solid #fff;
+    border-right:  3px solid #404040;
+    border-bottom: 3px solid #404040;
+    cursor: pointer;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    text-align: center;
+    line-height: 1.2;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.05s;
+  }
+
+  .btn .arrow {
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  .btn:active,
+  .btn.pressed {
+    background: #a0a0a0;
+    border-top:    3px solid #404040;
+    border-left:   3px solid #404040;
+    border-right:  3px solid #fff;
+    border-bottom: 3px solid #fff;
+  }
+
+  .btn.diag { background: #b8b8b0; }
+  .btn.diag:active, .btn.diag.pressed { background: #909088; }
+
+  .center-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    opacity: 0.3;
+  }
+
+  /* Disabled state when not in manual */
+  body.not-manual #compass { opacity: 0.35; pointer-events: none; }
+  body.not-manual #status-bar { animation: blink 1s step-start infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ── Active command display ── */
+  #active-cmd {
+    text-align: center;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    background: #c0c0c0;
+    border-top: 2px solid #808080;
+    flex-shrink: 0;
+    height: 28px;
+  }
+</style>
+</head>
+<body class="not-manual">
+
+<div id="header">
+  <span class="title">AGV MANUAL REMOTE</span>
+  <span id="mode-badge" class="mode-badge">---</span>
+  <a href="/">&#8592; MONITOR</a>
+</div>
+
+<div id="status-bar" class="warn">Connecting...</div>
+
+<div id="main">
+  <div id="compass">
+    <!-- Row 1 -->
+    <button class="btn diag" data-cmd="fwd_left"  id="btn-fwd-left">
+      <span class="arrow">&#8598;</span>FWD-L
+    </button>
+    <button class="btn" data-cmd="forward" id="btn-fwd">
+      <span class="arrow">&#8593;</span>FORWARD
+    </button>
+    <button class="btn diag" data-cmd="fwd_right" id="btn-fwd-right">
+      <span class="arrow">&#8599;</span>FWD-R
+    </button>
+
+    <!-- Row 2 -->
+    <button class="btn" data-cmd="left" id="btn-left">
+      <span class="arrow">&#8592;</span>LEFT
+    </button>
+    <div class="center-cell">&#9679;</div>
+    <button class="btn" data-cmd="right" id="btn-right">
+      <span class="arrow">&#8594;</span>RIGHT
+    </button>
+
+    <!-- Row 3 -->
+    <button class="btn diag" data-cmd="rvs_left" id="btn-rvs-left">
+      <span class="arrow">&#8601;</span>RVS-L
+    </button>
+    <button class="btn" data-cmd="reverse" id="btn-rvs">
+      <span class="arrow">&#8595;</span>REVERSE
+    </button>
+    <button class="btn diag" data-cmd="rvs_right" id="btn-rvs-right">
+      <span class="arrow">&#8600;</span>RVS-R
+    </button>
+  </div>
+</div>
+
+<div id="active-cmd"></div>
+
+<script>
+  const statusBar  = document.getElementById('status-bar');
+  const modeBadge  = document.getElementById('mode-badge');
+  const activeCmd  = document.getElementById('active-cmd');
+  const body       = document.body;
+  let   activeBtn  = null;
+  let   lastMode   = null;
+
+  // ── Send command to backend ───────────────────────────────────────────────
+  function sendCommand(cmd) {
+    fetch('/api/manual/command', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command: cmd }),
+      keepalive: true
+    }).catch(() => {});  // fire-and-forget; state poll will show any errors
+  }
+
+  // ── Button press / release ────────────────────────────────────────────────
+  function onPress(btn) {
+    if (activeBtn && activeBtn !== btn) onRelease(activeBtn);
+    activeBtn = btn;
+    btn.classList.add('pressed');
+    const cmd = btn.dataset.cmd;
+    activeCmd.textContent = '\u25ba ' + cmd.toUpperCase().replace('_', ' ');
+    sendCommand(cmd);
+  }
+
+  function onRelease(btn) {
+    if (!btn) return;
+    btn.classList.remove('pressed');
+    activeBtn = null;
+    activeCmd.textContent = '';
+    sendCommand(null);
+  }
+
+  // ── Attach events to all buttons ──────────────────────────────────────────
+  document.querySelectorAll('.btn[data-cmd]').forEach(btn => {
+    // Mouse
+    btn.addEventListener('mousedown',  e => { e.preventDefault(); onPress(btn); });
+    btn.addEventListener('mouseup',    e => onRelease(btn));
+    btn.addEventListener('mouseleave', e => { if (activeBtn === btn) onRelease(btn); });
+
+    // Touch
+    btn.addEventListener('touchstart',  e => { e.preventDefault(); onPress(btn); }, { passive: false });
+    btn.addEventListener('touchend',    e => { e.preventDefault(); onRelease(btn); }, { passive: false });
+    btn.addEventListener('touchcancel', e => { e.preventDefault(); onRelease(btn); }, { passive: false });
+  });
+
+  // Safety: if window loses focus, stop the AGV
+  window.addEventListener('blur', () => { if (activeBtn) onRelease(activeBtn); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && activeBtn) onRelease(activeBtn);
+  });
+
+  // ── State polling ─────────────────────────────────────────────────────────
+  function applyMode(mode) {
+    if (mode === lastMode) return;
+    lastMode = mode;
+
+    modeBadge.className = 'mode-badge';
+    modeBadge.textContent = mode ? mode.toUpperCase() : '---';
+    if (mode === 'manual')    modeBadge.classList.add('mode-manual');
+    else if (mode === 'armed')    modeBadge.classList.add('mode-armed');
+    else if (mode === 'running')  modeBadge.classList.add('mode-running');
+    else if (mode === 'emergency') modeBadge.classList.add('mode-emergency');
+
+    if (mode === 'manual') {
+      body.classList.remove('not-manual');
+      statusBar.className = 'ok';
+      statusBar.textContent = 'MANUAL MODE — hold a button to move.';
+    } else {
+      body.classList.add('not-manual');
+      if (activeBtn) onRelease(activeBtn);
+      statusBar.className = 'warn';
+      statusBar.textContent = mode
+        ? 'Switch AGV to MANUAL mode to use this remote. Current: ' + mode.toUpperCase()
+        : 'AGV not ready.';
+    }
+  }
+
+  async function poll() {
+    try {
+      const r = await fetch('/api/state');
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json();
+      applyMode(d.agv.mode);
+    } catch(e) {
+      statusBar.className = 'warn';
+      statusBar.textContent = 'Connection lost — retrying...';
+    }
+  }
+
+  poll();
+  setInterval(poll, 500);
+</script>
+</body>
+</html>

@@ -202,35 +202,41 @@ async def auto_mode(state, direction="forward", engine=None):
 # ══════════════════════════════════════════════════════════════════════════════
 
 async def manual_mode(state):
-    """Handles pendant jogging.
+    """Handles pendant jogging and web remote.
+    Web remote (state.web_manual_command) takes priority over physical DI buttons.
     Emergency is fully owned by mode_manager — this task does not check it."""
     v_high = motion.rpm_to_voltage(motion.mps_to_rpm(config.MANUAL_TARGET_HIGH_SPEED))
     v_slow = motion.rpm_to_voltage(motion.mps_to_rpm(config.MANUAL_TARGET_SLOW_SPEED))
     current_motion = None
 
     while True:
+        # ── Drain DI queue — keep only the latest frame ───────────────────────
         di = None
         while not state.di_queue.empty():
             di = await state.di_queue.get()
 
-        if di is None:
+        # ── Web remote takes priority; fall back to physical DI ───────────────
+        web_cmd = state.web_manual_command
+        if web_cmd is not None:
+            motion_state = web_cmd
+        elif di is not None:
+            pb_fwd   = di[config.DI_FWD]
+            pb_rvs   = di[config.DI_REV]
+            pb_left  = di[config.DI_LEFT]
+            pb_right = di[config.DI_RIGHT]
+
+            if pb_fwd and pb_left:       motion_state = "fwd_left"
+            elif pb_fwd and pb_right:    motion_state = "fwd_right"
+            elif pb_rvs and pb_left:     motion_state = "rvs_left"
+            elif pb_rvs and pb_right:    motion_state = "rvs_right"
+            elif pb_fwd:                 motion_state = "forward"
+            elif pb_rvs:                 motion_state = "reverse"
+            elif pb_left:                motion_state = "left"
+            elif pb_right:               motion_state = "right"
+            else:                        motion_state = "idle"
+        else:
             await asyncio.sleep(0.01)
             continue
-
-        pb_fwd   = di[config.DI_FWD]
-        pb_rvs   = di[config.DI_REV]
-        pb_left  = di[config.DI_LEFT]
-        pb_right = di[config.DI_RIGHT]
-
-        if pb_fwd and pb_left:       motion_state = "fwd_left"
-        elif pb_fwd and pb_right:    motion_state = "fwd_right"
-        elif pb_rvs and pb_left:     motion_state = "rvs_left"
-        elif pb_rvs and pb_right:    motion_state = "rvs_right"
-        elif pb_fwd:                 motion_state = "forward"
-        elif pb_rvs:                 motion_state = "reverse"
-        elif pb_left:                motion_state = "left"
-        elif pb_right:               motion_state = "right"
-        else:                        motion_state = "idle"
 
         if motion_state != current_motion:
             logger.debug("Manual: %s", motion_state.upper())

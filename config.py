@@ -40,6 +40,7 @@ except json.JSONDecodeError as e:
     raise ValueError(f"CRITICAL: {_param_path} is malformed: {e}")
 
 # ── Networking ────────────────────────────────────────────────────────────────
+LOCAL_IP    = _params["networking"].get("LOCAL_IP", "0.0.0.0")
 DIO_IP      = _params["networking"]["DIO_IP"]
 AO_IP       = _params["networking"]["AO_IP"]
 MODBUS_PORT = _params["networking"]["MODBUS_PORT"]
@@ -129,8 +130,12 @@ SEQUENCE_STOP_DELAY = _params["rfid"]["SEQUENCE_STOP_DELAY"]
 # ── Sequences (Phase 3 — sequence engine) ────────────────────────────────────
 SEQUENCES = _params.get("sequences", [])
 
-# ── SLMP ─────────────────────────────────────────────────────────────────────
-SLMP_ENABLED = bool(_params.get("slmp", {}).get("enabled", 0))
+# ── Feature flags ────────────────────────────────────────────────────────────
+_feat = _params.get("features", {})
+DIO_ENABLED  = bool(_feat.get("DIO_ENABLED",  1))
+CAN_ENABLED  = bool(_feat.get("CAN_ENABLED",  1))
+RFID_ENABLED = bool(_feat.get("RFID_ENABLED", 1))
+SLMP_ENABLED = bool(_feat.get("SLMP_ENABLED", 0))
 
 # ── Watchdog timeouts (Phase 4) ───────────────────────────────────────────────
 _wd = _params.get("watchdog", {})

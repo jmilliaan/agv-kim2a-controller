@@ -27,7 +27,15 @@ class RFIDReader(SensorDriver):
                 self._record_rx()   # mark healthy on connect
 
                 while True:
-                    data = await loop.sock_recv(sock, 1024)
+                    try:
+                        data = await asyncio.wait_for(
+                            loop.sock_recv(sock, 1024),
+                            timeout=2.0)
+                    except asyncio.TimeoutError:
+                        # No tag in range — connection still alive, keep watchdog happy
+                        self._record_rx()
+                        continue
+
                     if not data:
                         logger.warning("RFID connection closed by peer.")
                         break

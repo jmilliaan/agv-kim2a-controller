@@ -36,11 +36,12 @@ class CANReader(SensorDriver):
             bus      = None
             notifier = None
             try:
-                bus = can.interface.Bus(
+                loop = asyncio.get_event_loop()
+                bus = await loop.run_in_executor(None, lambda: can.interface.Bus(
                     channel=channel,
                     interface="slcan",
                     bitrate=500_000,
-                    ttyBaudrate=3_000_000)
+                    ttyBaudrate=3_000_000))
                 reader = can.AsyncBufferedReader()
 
                 notifier = can.Notifier(bus, [reader])

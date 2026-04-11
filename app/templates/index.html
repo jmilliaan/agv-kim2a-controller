@@ -254,6 +254,17 @@
   }
   #btn-set   { background: #00a000; color: #fff; }
   #btn-clear { background: #c00000; color: #fff; }
+  #btn-remote { background: #000080; color: #fff; font-size: 11px; padding: 2px 10px; }
+  #wifi-indicator {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; letter-spacing: 1px; color: #c0c0c0;
+  }
+  #wifi-bars { display: flex; align-items: flex-end; gap: 2px; height: 14px; }
+  #wifi-bars span {
+    display: inline-block; width: 4px; background: #606060;
+    border-radius: 1px;
+  }
+  #wifi-bars span.lit { background: #80ff80; }
 
   #ctrl-status {
     font-size: 11px;
@@ -401,11 +412,21 @@
 <div id="header" class="raised">
   <span class="title">AGV CONTROL MONITOR &nbsp;|&nbsp; AGV1-KIM</span>
   <span id="mode-badge" class="mode-badge">MODE: —</span>
+  <a href="/manual"><button id="btn-remote">&#9776; MANUAL REMOTE</button></a>
   <div id="emrg-lamp" class="emrg-lamp">
     <div class="lamp"></div>EMERGENCY
   </div>
   <div id="syserr-lamp" class="syserr-lamp">
     <div class="lamp"></div>SYS ERROR
+  </div>
+  <div id="wifi-indicator">
+    <div id="wifi-bars">
+      <span style="height:4px;"  id="wb0"></span>
+      <span style="height:7px;"  id="wb1"></span>
+      <span style="height:10px;" id="wb2"></span>
+      <span style="height:14px;" id="wb3"></span>
+    </div>
+    <span id="wifi-label">—</span>
   </div>
   <span id="ts" style="font-size:11px;color:#c0c0c0;letter-spacing:1px;">—</span>
 </div>
@@ -770,8 +791,32 @@ function postRevAuto(running) {
 document.getElementById('btn-rev-start').addEventListener('click', () => postRevAuto(true));
 document.getElementById('btn-rev-stop').addEventListener('click',  () => postRevAuto(false));
 
+function fetchWifi() {
+  fetch('/api/wifi')
+    .then(r => r.json())
+    .then(d => {
+      const sig   = d.signal;  // 0–100 or null
+      const label = document.getElementById('wifi-label');
+      const bars  = [0,1,2,3].map(i => document.getElementById('wb'+i));
+      if (sig === null) {
+        label.textContent = 'NO WIFI';
+        bars.forEach(b => b.classList.remove('lit'));
+        return;
+      }
+      label.textContent = sig + '% ' + (d.ssid || '');
+      // Light bars: 0–24→1 bar, 25–49→2, 50–74→3, 75–100→4
+      const lit = sig < 25 ? 1 : sig < 50 ? 2 : sig < 75 ? 3 : 4;
+      bars.forEach((b, i) => b.classList.toggle('lit', i < lit));
+    })
+    .catch(() => {
+      document.getElementById('wifi-label').textContent = '—';
+    });
+}
+
 fetchState();
+fetchWifi();
 setInterval(fetchState, 500);
+setInterval(fetchWifi, 5000);
 </script>
 </body>
 </html>
