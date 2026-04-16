@@ -1,21 +1,21 @@
 {
-  "_agv_id": "agv1_kim",
-  "_description": "AGV1 KIM2A — primary unit",
+  "_agv_id": "agv2_kim",
+  "_description": "AGV2 KIM2A — primary unit",
 
   "networking": {
-    "LOCAL_IP": "192.168.2.100",
+    "LOCAL_IP": "192.168.2.20",
     "DIO_IP": "192.168.1.31",
     "AO_IP": "192.168.1.30",
     "MODBUS_PORT": 502,
     "DEVICE_ID": 1,
-    "RFID_IP": "192.168.5.10",
+    "RFID_IP": "192.168.3.200",
     "RFID_PORT": 2022,
     "SLMP_IP": "192.168.4.10",
     "SLMP_PORT": 1280
   },
 
   "io_mapping": {
-    "DI_FLIPPED": 0,
+    "DI_FLIPPED": 1,
     "DI_BASE": 0,
     "DO_BASE": 0,
     "NUM_DI": 16,
