@@ -34,8 +34,8 @@
 
   "motor_channels": {
     "_comment": "DO and AO channel indices for each motor drive",
-    "left":  { "do_fwd": 0, "do_rev": 1, "do_brake": 2, "do_alarm": 3, "ao_speed": 0 },
-    "right": { "do_fwd": 4, "do_rev": 5, "do_brake": 6, "do_alarm": 7, "ao_speed": 1 }
+    "left":  { "do_fwd": 0, "do_rev": 1, "do_brake": 2, "do_alarm": 888, "ao_speed": 0 },
+    "right": { "do_fwd": 3, "do_rev": 4, "do_brake": 5, "do_alarm": 888, "ao_speed": 1 }
   },
 
   "hardware": {
