@@ -16,7 +16,7 @@
   },
 
   "ao_max_voltage": 5.0,
-  "sensor_orientation": 0,
+  "sensor_orientation": -1,
 
   "io_mapping": {
     "DI_FLIPPED":         0,
