@@ -17,13 +17,14 @@ from drivers.slmp_plc    import SLMPDriver
 from safety_watchdog import safety_watchdog
 import modes
 from rfid_processor import rfid_processor
-from app.app import run_server
+from app.app import run_server, stop_server
 
 logger = logging.getLogger(__name__)
 
 
 async def shutdown():
-    """Zero all DO and AO outputs via direct Modbus writes, bypassing the queues."""
+    """Release the web server port, then zero all DO and AO outputs."""
+    stop_server()   # unblock serve_forever() so the daemon thread exits cleanly
     logger.info("Shutting down — zeroing all outputs...")
     try:
         ao_client = AsyncModbusTcpClient(config.AO_IP, port=config.MODBUS_PORT)
@@ -105,8 +106,11 @@ async def run():
 
     try:
         await tasks
-    except asyncio.CancelledError:
-        logger.info("Main loops cancelled. Executing Modbus hardware shutdown...")
+    except (asyncio.CancelledError, Exception) as exc:
+        if not isinstance(exc, asyncio.CancelledError):
+            logger.error("Unhandled task exception — forcing shutdown: %s", exc)
+        else:
+            logger.info("Main loops cancelled. Executing Modbus hardware shutdown...")
         await shutdown()
 
 if __name__ == "__main__":

@@ -63,9 +63,10 @@ DI_FWD         = _params["io_mapping"]["DI_FWD"]
 DI_REV         = _params["io_mapping"]["DI_REV"]
 DI_LEFT        = _params["io_mapping"]["DI_LEFT"]
 DI_RIGHT       = _params["io_mapping"]["DI_RIGHT"]
-DI_MODE_SWITCH = _params["io_mapping"]["DI_MODE_SWITCH"]
-DI_START       = _params["io_mapping"]["DI_START"]
-DI_RESET       = _params["io_mapping"]["DI_RESET"]
+DI_MODE_SWITCH      = _params["io_mapping"]["DI_MODE_SWITCH"]
+MODE_SWITCH_INVERT  = bool(_params["io_mapping"].get("MODE_SWITCH_INVERT", 0))
+DI_START            = _params["io_mapping"]["DI_START"]
+DI_RESET            = _params["io_mapping"]["DI_RESET"]
 
 # ── Motor Channels (parameterized — avoids hardcoded DO 0-5 in motion.py) ────
 # Falls back to the hardcoded mapping if the profile doesn't have this section
@@ -142,3 +143,10 @@ _wd = _params.get("watchdog", {})
 WATCHDOG_DI_TIMEOUT_S   = _wd.get("DI_TIMEOUT_S",   1.0)
 WATCHDOG_CAN_TIMEOUT_S  = _wd.get("CAN_TIMEOUT_S",  1.0)
 WATCHDOG_RFID_TIMEOUT_S = _wd.get("RFID_TIMEOUT_S", 5.0)
+
+# ── AGV B (TN) — per-profile options (backwards-compatible defaults = AGV A values) ──
+AO_MAX_VOLTAGE     = float(_params.get("ao_max_voltage", 10.0))
+SENSOR_ORIENTATION = int(_params.get("sensor_orientation", 1))   # 1=normal, -1=flipped
+DI_LIDAR_STOP      = _params["io_mapping"].get("DI_LIDAR_STOP", None)  # None = no lidar
+DI_LIDAR_SLOW      = _params["io_mapping"].get("DI_LIDAR_SLOW", None)
+PUSHER_CHANNELS    = _params.get("pusher_channels", None)  # None = no pusher

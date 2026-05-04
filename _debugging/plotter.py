@@ -46,7 +46,7 @@ logger = logging.getLogger(__name__)
 
 PLOTTING_ENABLED = True
 
-PLOT_DIR = "/home/agv1-kim/src/analysis_plot"
+PLOT_DIR = "/home/amr-quality/traknus/agv-kim2a-controller/_motion_analysis"
 
 
 # ══════════════════════════════════════════════════════════════════════════════

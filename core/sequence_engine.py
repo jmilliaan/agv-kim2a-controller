@@ -21,6 +21,9 @@ import asyncio
 import logging
 import time
 
+import config
+import motion
+
 logger = logging.getLogger(__name__)
 
 
@@ -59,6 +62,8 @@ class SequenceEngine:
             "wait_seconds":      self._act_wait_seconds,
             "plc_request":       self._act_plc_request,
             "wait_plc_complete": self._act_wait_plc_complete,
+            "pusher_extend":     self._act_pusher_extend,
+            "pusher_retract":    self._act_pusher_retract,
         }
 
     # ── Plugin point ─────────────────────────────────────────────────────────
@@ -284,3 +289,23 @@ class SequenceEngine:
             await asyncio.sleep(0.1)
 
         logger.info("[SEQ] PLC seq=%d complete", seq_num)
+
+    async def _act_pusher_extend(self, p: dict):
+        assert config.PUSHER_CHANNELS is not None, \
+            "pusher_extend requires 'pusher_channels' in profile"
+        duration = p.get("duration", 2.0)
+        logger.info("[SEQ] Pusher UP (%.1fs)", duration)
+        await motion.pusher_up(self._state)
+        await asyncio.sleep(duration)
+        await motion.pusher_clear(self._state)
+        logger.info("[SEQ] Pusher UP complete")
+
+    async def _act_pusher_retract(self, p: dict):
+        assert config.PUSHER_CHANNELS is not None, \
+            "pusher_retract requires 'pusher_channels' in profile"
+        duration = p.get("duration", 2.0)
+        logger.info("[SEQ] Pusher DOWN (%.1fs)", duration)
+        await motion.pusher_down(self._state)
+        await asyncio.sleep(duration)
+        await motion.pusher_clear(self._state)
+        logger.info("[SEQ] Pusher DOWN complete")

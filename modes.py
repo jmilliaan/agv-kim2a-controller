@@ -6,7 +6,7 @@ import config
 import motion
 
 from core.pid import PIDController
-from debugging.plotter import RunRecorder
+from _debugging.plotter import RunRecorder
 
 logger = logging.getLogger(__name__)
 
@@ -26,14 +26,15 @@ async def auto_mode(state, direction="forward", engine=None):
         engine:    SequenceEngine instance (Phase 3).  Pass None until then;
                    the marker-hook calls are guarded with `if engine`.
     """
+    _orient = float(config.SENSOR_ORIENTATION)
     if direction == "forward":
         await motion.idle(state)
         await motion.set_forward(state, 0.0)
-        error_sign = -1.0        # e = -pv  (standard: positive pv → steer left)
+        error_sign = -1.0 * _orient
     else:
         await motion.idle(state)
         await motion.set_reverse(state, 0.0)
-        error_sign = 1.0         # e = +pv  (inverted: sensor is at the rear)
+        error_sign = 1.0 * _orient
 
     # Initialise PID with SLOW gains; forward mode will switch to HIGH on first
     # cycle if speed_mode == "HIGH".
@@ -106,6 +107,22 @@ async def auto_mode(state, direction="forward", engine=None):
             else:
                 target_speed = config.AUTO_TARGET_SLOW_SPEED   # reverse: fixed
 
+            # ── Lidar DI checks (no-op when profile has no lidar channels) ─────
+            _di = state.latest_di
+            if config.DI_LIDAR_STOP is not None and _di is not None and _di[config.DI_LIDAR_STOP]:
+                if not tape_was_lost:
+                    logger.warning("[%s] LIDAR STOP — obstacle detected, braking",
+                                   "AUTO" if direction == "forward" else "REVERSE")
+                    await motion.set_brake(state)
+                    current_target_speed = 0.0
+                    pid.reset()
+                    tape_was_lost = True
+                await asyncio.sleep(config.DT)
+                continue
+            if config.DI_LIDAR_SLOW is not None and _di is not None and _di[config.DI_LIDAR_SLOW]:
+                if state.speed_mode == "HIGH":
+                    state.speed_mode = "SLOW"
+
             # ── Drain sensor queue — keep only the latest frame ───────────────
             sensor = None
             while not state.sensor_queue.empty():
@@ -159,11 +176,21 @@ async def auto_mode(state, direction="forward", engine=None):
                 pv = sensor["left_mm"]
                 left_rpm, right_rpm, dbg = pid.compute(pv, base_rpm, error_sign)
 
-                left_v  = max(0.0, min(5.0, motion.rpm_to_voltage(left_rpm)))
-                right_v = max(0.0, min(5.0, motion.rpm_to_voltage(right_rpm)))
+                left_v  = max(0.0, min(config.AO_MAX_VOLTAGE, motion.rpm_to_voltage(left_rpm)))
+                right_v = max(0.0, min(config.AO_MAX_VOLTAGE, motion.rpm_to_voltage(right_rpm)))
 
                 await state.ao_queue.put((0, left_v))
                 await state.ao_queue.put((1, right_v))
+
+                state.motion_telemetry = {
+                    "left_rpm":   left_rpm,
+                    "right_rpm":  right_rpm,
+                    "pid_error":  dbg["e"],
+                    "pid_p":      dbg["p"],
+                    "pid_i":      dbg["i"],
+                    "pid_d":      dbg["d"],
+                    "pid_output": dbg["output"],
+                }
 
                 recorder.record(error_mm=dbg["e"], left_rpm=left_rpm,
                                 right_rpm=right_rpm, pid_output=dbg["output"],
@@ -263,12 +290,13 @@ async def mode_manager(state, engine=None):
 
     States: None | "manual" | "armed" | "running" | "reverse" | "emergency"
 
-    DI conventions (from parameters.json / profile)
+    DI conventions (from profile)
     ------------------------------------------------
-    DI_MODE_SWITCH : HIGH = MANUAL, LOW = AUTO
-    DI_EMERGENCY   : NO contact — True = triggered, False = safe
-    DI_START       : momentary NO — rising edge = start
-    DI_RESET       : momentary NO — rising edge = reset
+    DI_MODE_SWITCH : physical HIGH = MANUAL by default.
+                     Set MODE_SWITCH_INVERT=1 in profile to flip (HIGH = AUTO).
+    DI_EMERGENCY   : True = emergency triggered
+    DI_START       : momentary NO — rising edge = start auto
+    DI_RESET       : momentary NO — rising edge = stop / reset
 
     engine: SequenceEngine (Phase 3). Passed through to auto_mode and used for
             cancel_armed() on mode transitions. None until Phase 3 is wired up.
@@ -317,7 +345,7 @@ async def mode_manager(state, engine=None):
 
         di             = state.latest_di
         emergency_safe = not di[config.DI_EMERGENCY]
-        switch_manual  = di[config.DI_MODE_SWITCH]
+        switch_manual  = bool(di[config.DI_MODE_SWITCH]) ^ config.MODE_SWITCH_INVERT
         btn_start      = di[config.DI_START]
         btn_reset      = di[config.DI_RESET]
 

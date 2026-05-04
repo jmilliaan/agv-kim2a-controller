@@ -10,10 +10,12 @@ Access from any device on 192.168.2.x: http://192.168.2.100:5000
 
 import os
 import re
+import socket
 import subprocess
 import time
 import threading
 from flask import Flask, render_template, jsonify, request
+from werkzeug.serving import make_server
 import logging
 
 logger = logging.getLogger(__name__)
@@ -24,6 +26,8 @@ app   = Flask(__name__, template_folder=os.path.join(_here, "templates"))
 
 _state  = None   # set once by run_server()
 _engine = None   # set once by run_server()
+_config = None   # set once by run_server()
+_server = None   # werkzeug BaseWSGIServer instance
 
 _NUM_SEQ_BITS = 17
 
@@ -79,12 +83,25 @@ def _build_state_snapshot():
         "active": None, "armed": None, "cooldowns": {}
     }
 
+    # ── Motion telemetry (RPM + PID — populated during auto/reverse modes) ────
+    tel = s.motion_telemetry or {}
+    motion_tel = {
+        "left_rpm":   tel.get("left_rpm"),
+        "right_rpm":  tel.get("right_rpm"),
+        "pid_error":  tel.get("pid_error"),
+        "pid_p":      tel.get("pid_p"),
+        "pid_i":      tel.get("pid_i"),
+        "pid_d":      tel.get("pid_d"),
+        "pid_output": tel.get("pid_output"),
+    }
+
     return {
         "agv":        agv,
         "plc_writes": plc_writes,
         "plc_reads":  plc_reads,
         "sensor":     sensor,
         "sequences":  sequences,
+        "motion":     motion_tel,
     }
 
 
@@ -98,6 +115,10 @@ def index():
 @app.route("/manual")
 def manual():
     return render_template("manual.html")
+
+@app.route("/io")
+def io_monitor():
+    return render_template("io_monitor.html")
 
 @app.route("/api/manual/command", methods=["POST"])
 def api_manual_command():
@@ -177,6 +198,20 @@ def api_reverse_auto():
     return jsonify({"error": "running must be true or false"}), 400
 
 
+@app.route("/api/io")
+def api_io():
+    if _state is None or _config is None:
+        return jsonify({"error": "not initialised"}), 503
+    di = _state.latest_di
+    do = _state.latest_do
+    return jsonify({
+        "di":     [bool(b) for b in di] if di is not None else [False] * _config.NUM_DI,
+        "do":     [bool(b) for b in do] if do is not None else [False] * _config.NUM_DO,
+        "num_di": _config.NUM_DI,
+        "num_do": _config.NUM_DO,
+    })
+
+
 @app.route("/api/wifi")
 def api_wifi():
     try:
@@ -194,10 +229,27 @@ def api_wifi():
         return jsonify({"ok": False, "signal": None, "ssid": None, "error": str(e)})
 
 
+def stop_server():
+    """Signal the werkzeug server to stop serving. Safe to call from any thread."""
+    global _server
+    if _server is not None:
+        _server.shutdown()
+
+
 def run_server(state, engine=None):
-    global _state, _engine
+    global _state, _engine, _config, _server
     import config
     _state  = state
     _engine = engine
+    _config = config
+
+    _server = make_server("0.0.0.0", 5000, app)
+    # SO_REUSEADDR: allows immediate rebind after the process dies (TIME_WAIT)
+    # SO_REUSEPORT: allows a new process to grab the port while the old one is
+    #               still in teardown — useful for fast service restarts.
+    _server.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    if hasattr(socket, "SO_REUSEPORT"):
+        _server.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+
     logger.info("[Flask] Dashboard at http://%s:5000", config.LOCAL_IP)
-    app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)
+    _server.serve_forever()   # blocks until stop_server() calls shutdown()

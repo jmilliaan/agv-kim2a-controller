@@ -1,3 +1,4 @@
+import asyncio
 import config
 
 # ── Kinematic Math ────────────────────────────────────────────────────────────
@@ -90,3 +91,43 @@ async def idle(state):
     await state.do_queue.put((rch["do_fwd"],   False))
     await state.do_queue.put((rch["do_rev"],   False))
     await state.do_queue.put((rch["do_brake"], False))
+
+
+# ── Pusher (linear actuator) ──────────────────────────────────────────────────
+# Relay truth table (from wiring diagram):
+#   DO8  + DO11 → Pole1(+), Pole2(-) → UP   (extend)
+#   DO9  + DO10 → Pole1(-), Pole2(+) → DOWN (retract)
+# Fatal combinations (short-circuit): DO8+DO9 or DO10+DO11
+# Safe but inactive:                  DO8+DO10 or DO9+DO11
+#
+# The 0.2s sleep between clear and set is mandatory — it gives the de-energizing
+# relay time to physically open before the opposing relay closes.  Without it,
+# the queue can deliver both writes to the Modbus device within the same
+# scan cycle, causing a momentary short-circuit on Pole 1 or Pole 2.
+
+async def pusher_clear(state):
+    """De-energize all pusher relay channels. Safe to call at any time."""
+    if config.PUSHER_CHANNELS is None:
+        return
+    for ch in config.PUSHER_CHANNELS["extend"] + config.PUSHER_CHANNELS["retract"]:
+        await state.do_queue.put((ch, False))
+
+async def pusher_up(state):
+    """Drive the actuator UP (extend). Clears retract relays then waits 200ms before energizing extend relays."""
+    if config.PUSHER_CHANNELS is None:
+        return
+    for ch in config.PUSHER_CHANNELS["retract"]:
+        await state.do_queue.put((ch, False))
+    await asyncio.sleep(0.2)   # relay de-energization delay — do not remove
+    for ch in config.PUSHER_CHANNELS["extend"]:
+        await state.do_queue.put((ch, True))
+
+async def pusher_down(state):
+    """Drive the actuator DOWN (retract). Clears extend relays then waits 200ms before energizing retract relays."""
+    if config.PUSHER_CHANNELS is None:
+        return
+    for ch in config.PUSHER_CHANNELS["extend"]:
+        await state.do_queue.put((ch, False))
+    await asyncio.sleep(0.2)   # relay de-energization delay — do not remove
+    for ch in config.PUSHER_CHANNELS["retract"]:
+        await state.do_queue.put((ch, True))

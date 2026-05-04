@@ -1,0 +1,136 @@
+{
+  "_agv_id": "agv_tn",
+  "_description": "AGV B (TN) — base towing AGV, no SLMP/PLC, with pusher actuator and lidar",
+
+  "networking": {
+    "_comment": "LOCAL_IP is a placeholder — verify AGV B PC address before deploy",
+    "LOCAL_IP":   "192.168.2.100",
+    "DIO_IP":     "192.168.3.30",
+    "AO_IP":      "192.168.1.30",
+    "MODBUS_PORT": 502,
+    "DEVICE_ID":   1,
+    "RFID_IP":    "192.168.3.200",
+    "RFID_PORT":   2022,
+    "SLMP_IP":     null,
+    "SLMP_PORT":   null
+  },
+
+  "ao_max_voltage": 5.0,
+  "sensor_orientation": 0,
+
+  "io_mapping": {
+    "DI_FLIPPED":         0,
+    "DI_BASE":            0,
+    "DO_BASE":            0,
+    "NUM_DI":             16,
+    "NUM_DO":             16,
+    "AO_BASE":            4096,
+    "NUM_AO":             2,
+    "DI_EMERGENCY":       11,
+    "DI_FWD":             4,
+    "DI_REV":             5,
+    "DI_LEFT":            6,
+    "DI_RIGHT":           7,
+    "DI_MODE_SWITCH":     10,
+    "MODE_SWITCH_INVERT": 1,
+    "DI_START":           8,
+    "DI_RESET":           9
+  },
+
+  "motor_channels": {
+    "_comment": "DO and AO channel indices for each motor drive — same as AGV A",
+    "left":  { "do_fwd": 0, "do_rev": 1, "do_brake": 2, "do_alarm": 888, "ao_speed": 0 },
+    "right": { "do_fwd": 3, "do_rev": 4, "do_brake": 5, "do_alarm": 888, "ao_speed": 1 }
+  },
+
+  "pusher_channels": {
+    "_comment": "DO channel indices for the double-acting electric linear actuator",
+    "extend":  [8, 11],
+    "retract": [9, 10]
+  },
+
+  "hardware": {
+    "V_RANGE": 10.0,
+    "DAC_RES": 4095
+  },
+
+  "kinematics": {
+    "WHEEL_DIAMETER": 0.18,
+    "GEAR_RATIO": 30
+  },
+
+  "speeds": {
+    "MANUAL_TARGET_HIGH_SPEED":     0.4,
+    "MANUAL_TARGET_SLOW_SPEED":     0.2,
+    "AUTO_TARGET_HIGH_SPEED":       0.40,
+    "AUTO_TARGET_SLOW_SPEED":       0.20,
+    "AUTO_TARGET_EXTRA_SLOW_SPEED": 0.15,
+    "ACCEL_RATE": 0.8
+  },
+
+  "pid_tuning": {
+    "_comment_high": "Starting point from AGV B legacy code — retune on hardware",
+    "KP": 2.0,
+    "TD": 0.08,
+    "N":  20,
+    "_comment_slow": "SLOW gains — same starting point as HIGH",
+    "KP_SLOW": 2.0,
+    "TD_SLOW": 0.08,
+    "N_SLOW":  12,
+    "_comment_shared": "Shared — integral and timing constants",
+    "TI": 20,
+    "TI_DEADBAND": 25,
+    "TI_MAX": 500,
+    "DT": 0.01,
+    "_comment_sr": "Speed reduction coefficients",
+    "V_RED_COEF":      4,
+    "V_RED_COEF_SLOW": 2,
+    "OUTPUT_CLAMP_RPM": 800,
+    "SR_ALPHA": 0.15,
+    "SR_CAP":   0.55
+  },
+
+  "can_sensor": {
+    "SENSOR_COB_ID":    390,
+    "FLAG_TAPE_DETECT": 2,
+    "FLAG_LEFT_MARKER": 4,
+    "FLAG_RIGHT_MARKER": 8,
+    "FLAG_SENSOR_FAIL": 128,
+    "CAN_TIMEOUT":      0.5,
+    "CAN_NODE_ID":      6
+  },
+
+  "rfid": {
+    "RFID_INIT_CMD_HEX": "CFFF0070002415",
+    "SEQUENCE_STOP_DELAY": 4.0
+  },
+
+  "sequences": [
+    {
+      "_comment": "Pusher extend-retract cycle — replace TBD with real RFID tag hex before deploy",
+      "name": "pusher_extend_seq",
+      "trigger": { "type": "rfid", "rfid_tag": "TBD" },
+      "actions": [
+        { "type": "pusher_extend",  "duration": 2.0 },
+        { "type": "wait_seconds",   "duration": 1.0 },
+        { "type": "pusher_retract", "duration": 2.0 }
+      ],
+      "cooldown_s": 5.0,
+      "requires_mode": "running"
+    }
+  ],
+
+  "features": {
+    "_comment": "SLMP disabled — no PLC on AGV B",
+    "DIO_ENABLED":  1,
+    "CAN_ENABLED":  1,
+    "RFID_ENABLED": 1,
+    "SLMP_ENABLED": 0
+  },
+
+  "watchdog": {
+    "DI_TIMEOUT_S":   1.0,
+    "CAN_TIMEOUT_S":  1.0,
+    "RFID_TIMEOUT_S": 5.0
+  }
+}

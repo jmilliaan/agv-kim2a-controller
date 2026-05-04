@@ -19,12 +19,14 @@ class KinematicState:
         self.pending_sequence     = None    # name of armed rfid_then_marker sequence
         self.reverse_auto_request = False   # set by Flask to start reverse tape-follow
         self.web_manual_command   = None    # set by Flask remote; "forward"|"reverse"|"left"|"right"|"fwd_left"|"fwd_right"|"rvs_left"|"rvs_right"|None
+        self.motion_telemetry     = None    # dict: left_rpm, right_rpm, pid_error, pid_p/i/d, pid_output
 
 
 class PerceptionState:
     """Written by hardware drivers; read by auto_mode and sequence_engine."""
     def __init__(self):
-        self.latest_di     = None   # latest DI bits from Modbus
+        self.latest_di     = None   # latest DI bits from Modbus (list of bool)
+        self.latest_do     = None   # latest commanded DO state  (list of bool)
         self.latest_sensor = None   # last CAN frame dict from MGS1600
         self.can_last_rx   = 0.0    # epoch of last CAN message received
 
@@ -107,12 +109,22 @@ class AMRState:
     @web_manual_command.setter
     def web_manual_command(self, v): self.kinematic.web_manual_command = v
 
+    @property
+    def motion_telemetry(self): return self.kinematic.motion_telemetry
+    @motion_telemetry.setter
+    def motion_telemetry(self, v): self.kinematic.motion_telemetry = v
+
     # ── PerceptionState shims ─────────────────────────────────────────────────
 
     @property
     def latest_di(self): return self.perception.latest_di
     @latest_di.setter
     def latest_di(self, v): self.perception.latest_di = v
+
+    @property
+    def latest_do(self): return self.perception.latest_do
+    @latest_do.setter
+    def latest_do(self, v): self.perception.latest_do = v
 
     @property
     def latest_sensor(self): return self.perception.latest_sensor

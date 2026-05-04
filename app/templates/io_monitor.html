@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGV IO Monitor</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #d4d0c8;
+    color: #000;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    padding: 8px 8px 56px 8px; /* bottom pad for fixed nav */
+  }
+
+  .raised {
+    border-top:    2px solid #fff;
+    border-left:   2px solid #fff;
+    border-right:  2px solid #808080;
+    border-bottom: 2px solid #808080;
+  }
+
+  /* ── Header ── */
+  #header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #000080;
+    color: #fff;
+    padding: 5px 10px;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+  #header .title { flex: 1; }
+  #ts { font-size: 11px; color: #c0c0c0; letter-spacing: 1px; }
+
+  /* ── Two-column layout ── */
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  /* ── Panel ── */
+  .panel { background: #c0c0c0; }
+  .panel-title {
+    background: #000080;
+    color: #fff;
+    font-weight: bold;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 3px 8px;
+    text-transform: uppercase;
+  }
+  .panel-body { padding: 4px; }
+
+  /* ── IO row ── */
+  .io-row {
+    display: flex;
+    align-items: center;
+    height: 24px;
+    border-bottom: 1px solid #b0b0b0;
+    gap: 0;
+  }
+  .io-row:last-child { border-bottom: none; }
+
+  .io-ch {
+    width: 36px;
+    flex-shrink: 0;
+    font-size: 10px;
+    color: #505050;
+    padding: 0 4px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    background: #b8b4ac;
+    border-right: 1px solid #a0a0a0;
+    font-weight: bold;
+  }
+
+  .io-lamp {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin: 0 6px;
+    background: #666;
+    border: 2px solid #444;
+    box-shadow: inset 0 1px 2px #00000044;
+  }
+  .io-lamp.on-green {
+    background: radial-gradient(circle at 35% 35%, #80ff80, #00a000);
+    border-color: #005000;
+    box-shadow: 0 0 5px 1px #00cc0066, inset 0 1px 2px #ffffff44;
+  }
+  .io-lamp.on-amber {
+    background: radial-gradient(circle at 35% 35%, #ffe080, #d08000);
+    border-color: #804000;
+    box-shadow: 0 0 5px 1px #ffa00066, inset 0 1px 2px #ffffff44;
+  }
+
+  .io-name {
+    flex: 1;
+    padding: 0 4px;
+    font-size: 11px;
+    font-weight: bold;
+    color: #1a1a1a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── Bottom nav bar ── */
+  #nav-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    display: flex;
+    background: #c0c0c0;
+    border-top: 2px solid #fff;
+    padding: 4px 8px;
+    gap: 4px;
+    z-index: 100;
+  }
+  .nav-btn {
+    flex: 1;
+    padding: 6px 0;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-transform: uppercase;
+    background: #c0c0c0;
+    color: #000;
+    border-top:    2px solid #fff;
+    border-left:   2px solid #fff;
+    border-right:  2px solid #808080;
+    border-bottom: 2px solid #808080;
+  }
+  .nav-btn.active {
+    background: #000080;
+    color: #fff;
+    border-top:    2px solid #404040;
+    border-left:   2px solid #404040;
+    border-right:  2px solid #c0c0c0;
+    border-bottom: 2px solid #c0c0c0;
+  }
+  .nav-btn:active:not(.active) {
+    border-top:    2px solid #808080;
+    border-left:   2px solid #808080;
+    border-right:  2px solid #fff;
+    border-bottom: 2px solid #fff;
+  }
+</style>
+</head>
+<body>
+
+<div id="header" class="raised">
+  <span class="title">AGV IO MONITOR</span>
+  <span id="ts">—</span>
+</div>
+
+<div class="columns">
+
+  <!-- DI panel -->
+  <div class="panel raised">
+    <div class="panel-title">DIGITAL INPUTS &nbsp;[ DI ]</div>
+    <div class="panel-body" id="di-panel"></div>
+  </div>
+
+  <!-- DO panel -->
+  <div class="panel raised">
+    <div class="panel-title">DIGITAL OUTPUTS &nbsp;[ DO — COMMANDED ]</div>
+    <div class="panel-body" id="do-panel"></div>
+  </div>
+
+</div>
+
+<!-- Bottom nav bar -->
+<div id="nav-bar">
+  <button class="nav-btn" onclick="location.href='/'">HOME</button>
+  <button class="nav-btn" onclick="location.href='/manual'">MANUAL CONTROL</button>
+  <button class="nav-btn active">IO MONITOR</button>
+</div>
+
+<script>
+// ── Channel name tables — edit these to label your IO channels ──────────────
+// Index = channel number (0-based). Add names as needed; extras default to [SPARE].
+const DI_NAMES = [
+  /* 00 */ 'LIDAR AREA 1',
+  /* 01 */ 'LIDAR AREA 2',
+  /* 02 */ 'LIDAR AREA 3',
+  /* 03 */ '[SPARE]',
+  /* 04 */ '[SPARE]',
+  /* 05 */ '[SPARE]',
+  /* 06 */ '[SPARE]',
+  /* 07 */ '[SPARE]',
+  /* 08 */ 'PB START AUTO',
+  /* 09 */ 'PB RESET / STOP',
+  /* 10 */ 'SS MAN / AUTO',
+  /* 11 */ 'EPB EMERGENCY',
+  /* 12 */ '[SPARE]',
+  /* 13 */ '[SPARE]',
+  /* 14 */ '[SPARE]',
+  /* 15 */ '[SPARE]',
+];
+
+const DO_NAMES = [
+  /* 00 */ '[SPARE]',
+  /* 01 */ '[SPARE]',
+  /* 02 */ '[SPARE]',
+  /* 03 */ '[SPARE]',
+  /* 04 */ '[SPARE]',
+  /* 05 */ '[SPARE]',
+  /* 06 */ '[SPARE]',
+  /* 07 */ '[SPARE]',
+  /* 08 */ '[SPARE]',
+  /* 09 */ '[SPARE]',
+  /* 10 */ '[SPARE]',
+  /* 11 */ '[SPARE]',
+  /* 12 */ '[SPARE]',
+  /* 13 */ '[SPARE]',
+  /* 14 */ '[SPARE]',
+  /* 15 */ '[SPARE]',
+];
+
+// ── DOM helpers ──────────────────────────────────────────────────────────────
+
+function buildRows(container, count, nameTable, idPrefix) {
+  container.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const row  = document.createElement('div');
+    row.className = 'io-row';
+
+    const ch   = document.createElement('span');
+    ch.className = 'io-ch';
+    ch.textContent = String(i).padStart(2, '0');
+
+    const lamp = document.createElement('span');
+    lamp.className = 'io-lamp';
+    lamp.id = idPrefix + i;
+
+    const name = document.createElement('span');
+    name.className = 'io-name';
+    name.textContent = (nameTable[i] !== undefined ? nameTable[i] : '[SPARE]');
+
+    row.appendChild(ch);
+    row.appendChild(lamp);
+    row.appendChild(name);
+    container.appendChild(row);
+  }
+}
+
+function setLamp(id, on, cls) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'io-lamp' + (on ? (' ' + cls) : '');
+}
+
+// ── First fetch: build the rows ───────────────────────────────────────────────
+let initialised = false;
+
+function fetchIO() {
+  fetch('/api/io')
+    .then(r => r.json())
+    .then(d => {
+      if (!initialised) {
+        buildRows(document.getElementById('di-panel'), d.num_di, DI_NAMES, 'di-');
+        buildRows(document.getElementById('do-panel'), d.num_do, DO_NAMES, 'do-');
+        initialised = true;
+      }
+      d.di.forEach((v, i) => setLamp('di-' + i, v, 'on-green'));
+      d.do.forEach((v, i) => setLamp('do-' + i, v, 'on-amber'));
+      document.getElementById('ts').textContent = new Date().toLocaleTimeString();
+    })
+    .catch(() => {
+      document.getElementById('ts').textContent = 'NO CONN';
+    });
+}
+
+fetchIO();
+setInterval(fetchIO, 250);
+</script>
+</body>
+</html>

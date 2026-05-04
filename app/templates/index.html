@@ -8,52 +8,45 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    background: #d4d0c8;   /* Classic Windows/HMI gray */
+    background: #d4d0c8;
     color: #000;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 13px;
-    padding: 8px;
+    font-size: 26px;
+    padding: 16px 16px 112px 16px; /* bottom pad for fixed nav */
   }
 
-  /* ── Raised / sunken panel borders (classic HMI look) ── */
+  /* ── Raised / sunken panel borders ── */
   .raised {
-    border-top:    2px solid #fff;
-    border-left:   2px solid #fff;
-    border-right:  2px solid #808080;
-    border-bottom: 2px solid #808080;
-  }
-  .sunken {
-    border-top:    2px solid #808080;
-    border-left:   2px solid #808080;
-    border-right:  2px solid #fff;
-    border-bottom: 2px solid #fff;
+    border-top:    4px solid #fff;
+    border-left:   4px solid #fff;
+    border-right:  4px solid #808080;
+    border-bottom: 4px solid #808080;
   }
 
   /* ── Header bar ── */
   #header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    background: #000080;   /* Siemens-blue title bar */
+    gap: 24px;
+    background: #000080;
     color: #fff;
-    padding: 5px 10px;
-    margin-bottom: 8px;
+    padding: 10px 20px;
+    margin-bottom: 16px;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 28px;
     letter-spacing: 2px;
   }
   #header .title { flex: 1; }
 
-  /* Mode badge — large, prominent */
   .mode-badge {
-    padding: 2px 14px;
-    font-size: 13px;
+    padding: 4px 28px;
+    font-size: 26px;
     font-weight: bold;
     letter-spacing: 1px;
-    border-top:    2px solid #808080;
-    border-left:   2px solid #808080;
-    border-right:  2px solid #fff;
-    border-bottom: 2px solid #fff;
+    border-top:    4px solid #808080;
+    border-left:   4px solid #808080;
+    border-right:  4px solid #fff;
+    border-bottom: 4px solid #fff;
     background: #c0c0c0;
     color: #000;
   }
@@ -63,347 +56,239 @@
   .mode-reverse   { background: #8000c0; color: #fff; }
   .mode-emergency { background: #c00000; color: #fff; }
 
-  /* Emergency indicator lamp */
   .emrg-lamp {
-    display: flex; align-items: center; gap: 6px;
-    font-weight: bold; font-size: 12px; letter-spacing: 1px;
+    display: flex; align-items: center; gap: 12px;
+    font-weight: bold; font-size: 24px; letter-spacing: 1px;
     color: #606060;
   }
   .emrg-lamp .lamp {
-    width: 18px; height: 18px; border-radius: 50%;
+    width: 36px; height: 36px; border-radius: 50%;
     background: #606060;
-    border: 2px solid #404040;
+    border: 4px solid #404040;
   }
-  .emrg-lamp.active { color: #000; }
+  .emrg-lamp.active { color: #fff; }
   .emrg-lamp.active .lamp {
     background: #ff2020;
     border-color: #800000;
-    box-shadow: 0 0 6px 2px #ff000088;
+    box-shadow: 0 0 12px 4px #ff000088;
   }
 
-  /* Timestamp */
-  #ts { font-size: 11px; color: #c0c0c0; letter-spacing: 1px; }
-
-  /* ── Layout ── */
-  .columns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 8px;
+  .syserr-lamp {
+    display: flex; align-items: center; gap: 12px;
+    font-weight: bold; font-size: 24px; letter-spacing: 1px;
+    color: #606060;
+  }
+  .syserr-lamp .lamp {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #606060;
+    border: 4px solid #404040;
+  }
+  .syserr-lamp.active { color: #ff8800; }
+  .syserr-lamp.active .lamp {
+    background: #ff8800;
+    border-color: #804000;
+    box-shadow: 0 0 12px 4px #ff880088;
   }
 
-  /* Panel */
-  .panel {
-    background: #c0c0c0;
-    padding: 0;
+  #ts { font-size: 22px; color: #c0c0c0; letter-spacing: 1px; }
+
+  #wifi-indicator {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 22px; letter-spacing: 1px; color: #c0c0c0;
   }
+  #wifi-bars { display: flex; align-items: flex-end; gap: 4px; height: 28px; }
+  #wifi-bars span {
+    display: inline-block; width: 8px; background: #606060;
+    border-radius: 2px;
+  }
+  #wifi-bars span.lit { background: #80ff80; }
+
+  /* ── Panel ── */
+  .panel { background: #c0c0c0; padding: 0; }
   .panel-title {
     background: #000080;
     color: #fff;
     font-weight: bold;
-    font-size: 11px;
+    font-size: 22px;
     letter-spacing: 2px;
-    padding: 3px 8px;
+    padding: 6px 16px;
     text-transform: uppercase;
   }
-  .panel-body { padding: 8px; }
+  .panel-body { padding: 16px; }
 
-  /* Section label inside panel */
-  .section-label {
-    font-size: 10px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    color: #404040;
-    text-transform: uppercase;
-    margin: 6px 0 3px 0;
-    border-bottom: 1px solid #a0a0a0;
-    padding-bottom: 2px;
-  }
-  .section-label:first-child { margin-top: 0; }
-
-  /* ── Bit row ── */
-  .bit-row {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    height: 22px;
-    border-bottom: 1px solid #b0b0b0;
-  }
-  .bit-row:last-child { border-bottom: none; }
-
-  .bit-addr {
-    width: 46px;
-    flex-shrink: 0;
-    font-size: 10px;
-    color: #505050;
-    padding: 0 4px;
-    border-right: 1px solid #a0a0a0;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    background: #b8b4ac;
-  }
-  .bit-name {
-    flex: 1;
-    padding: 0 6px;
-    font-weight: bold;
-    font-size: 12px;
-    color: #000;
-    letter-spacing: 0.5px;
-  }
-
-  /* Indicator lamp */
+  /* ── Lamp ── */
   .lamp {
-    width: 16px; height: 16px;
+    width: 32px; height: 32px;
     border-radius: 50%;
     flex-shrink: 0;
-    margin-right: 6px;
+    margin-right: 12px;
     background: #888;
-    border: 2px solid #606060;
-    box-shadow: inset 0 1px 2px #00000044;
+    border: 4px solid #606060;
+    box-shadow: inset 0 2px 4px #00000044;
   }
   .lamp.on-green {
     background: radial-gradient(circle at 35% 35%, #80ff80, #00a000);
     border-color: #005000;
-    box-shadow: 0 0 5px 1px #00cc0066, inset 0 1px 2px #ffffff44;
+    box-shadow: 0 0 10px 2px #00cc0066, inset 0 2px 4px #ffffff44;
   }
   .lamp.on-red {
     background: radial-gradient(circle at 35% 35%, #ff8080, #cc0000);
     border-color: #800000;
-    box-shadow: 0 0 5px 1px #cc000066, inset 0 1px 2px #ffffff44;
-  }
-  .lamp.on-blue {
-    background: radial-gradient(circle at 35% 35%, #80c0ff, #0060c0);
-    border-color: #003080;
-    box-shadow: 0 0 5px 1px #0080ff66, inset 0 1px 2px #ffffff44;
+    box-shadow: 0 0 10px 2px #cc000066, inset 0 2px 4px #ffffff44;
   }
   .lamp.on-amber {
     background: radial-gradient(circle at 35% 35%, #ffe080, #d08000);
     border-color: #804000;
-    box-shadow: 0 0 5px 1px #ffa00066, inset 0 1px 2px #ffffff44;
+    box-shadow: 0 0 10px 2px #ffa00066, inset 0 2px 4px #ffffff44;
+  }
+  .lamp.on-blue {
+    background: radial-gradient(circle at 35% 35%, #80c0ff, #0060c0);
+    border-color: #003080;
+    box-shadow: 0 0 10px 2px #0080ff66, inset 0 2px 4px #ffffff44;
   }
 
-  /* ── Sequence grid ── */
-  .seq-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2px;
-    margin-top: 2px;
-  }
-  .seq-cell {
+  /* ── Sensor panel ── */
+  #sensor-panel { background: #c0c0c0; padding: 0; margin-top: 16px; }
+  #sensor-body {
+    padding: 16px 20px;
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 3px 4px;
-    background: #b8b4ac;
-    border: 1px solid #a0a0a0;
-  }
-  .seq-cell .lamp { width: 12px; height: 12px; flex-shrink: 0; margin-right: 0; }
-  .seq-cell .seq-label { display: flex; flex-direction: column; line-height: 1.2; }
-  .seq-cell .seq-name { font-size: 11px; font-weight: bold; color: #1a1a1a; }
-  .seq-cell .seq-addr { font-size: 9px; color: #606060; }
-
-  /* ── Control bar ── */
-  #ctrl {
-    background: #c0c0c0;
-    padding: 8px 10px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    gap: 40px;
     flex-wrap: wrap;
   }
-  #ctrl .ctrl-label {
-    font-size: 11px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: #000;
+  .sensor-field { display: flex; align-items: center; gap: 16px; }
+  .sensor-field-label {
+    font-size: 22px; font-weight: bold;
+    letter-spacing: 1px; text-transform: uppercase; color: #000;
   }
-
-  select {
-    background: #fff;
-    color: #000;
-    border-top:    2px solid #808080;
-    border-left:   2px solid #808080;
-    border-right:  2px solid #fff;
-    border-bottom: 2px solid #fff;
-    padding: 3px 6px;
+  #pos-display {
+    font-size: 40px; font-weight: bold;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 12px;
-    font-weight: bold;
+    letter-spacing: 2px; color: #000080;
+    background: #fff; padding: 4px 20px; min-width: 160px;
+    text-align: right;
+    border-top:    4px solid #808080;
+    border-left:   4px solid #808080;
+    border-right:  4px solid #fff;
+    border-bottom: 4px solid #fff;
   }
+  .sensor-lamp-item {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 24px; font-weight: bold; color: #404040; letter-spacing: 0.5px;
+  }
+  .sensor-lamp-item .lamp { width: 36px; height: 36px; }
 
-  button {
-    padding: 4px 18px;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 12px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    cursor: pointer;
-    /* raised border = clickable */
-    border-top:    2px solid #fff;
-    border-left:   2px solid #fff;
-    border-right:  2px solid #808080;
-    border-bottom: 2px solid #808080;
-  }
-  button:active {
-    border-top:    2px solid #808080;
-    border-left:   2px solid #808080;
-    border-right:  2px solid #fff;
-    border-bottom: 2px solid #fff;
-  }
-  #btn-set   { background: #00a000; color: #fff; }
-  #btn-clear { background: #c00000; color: #fff; }
-  #btn-remote { background: #000080; color: #fff; font-size: 11px; padding: 2px 10px; }
-  #wifi-indicator {
-    display: flex; align-items: center; gap: 5px;
-    font-size: 11px; letter-spacing: 1px; color: #c0c0c0;
-  }
-  #wifi-bars { display: flex; align-items: flex-end; gap: 2px; height: 14px; }
-  #wifi-bars span {
-    display: inline-block; width: 4px; background: #606060;
-    border-radius: 1px;
-  }
-  #wifi-bars span.lit { background: #80ff80; }
-
-  #ctrl-status {
-    font-size: 11px;
-    font-weight: bold;
-    color: #000080;
-    letter-spacing: 1px;
-  }
-
-  /* Condition indicators row */
-  #ctrl-conditions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-left: 8px;
-    padding-left: 12px;
-    border-left: 2px solid #a0a0a0;
-  }
-  .cond-item {
-    display: flex; align-items: center; gap: 4px;
-    font-size: 10px; font-weight: bold; color: #606060;
-    letter-spacing: 0.5px;
-  }
-  .cond-item .lamp { width: 10px; height: 10px; }
-
-  /* Seq request active label */
-  #seq-req-label {
-    color: #0000c0;
-    font-weight: bold;
-  }
-
-  /* Connection status strip */
-  #conn-strip {
-    display: flex;
-    gap: 2px;
-    margin-left: auto;
-    align-items: center;
-    font-size: 10px;
-    color: #c0c0c0;
-    letter-spacing: 1px;
-  }
-
-  /* System error lamp */
-  .syserr-lamp {
-    display: flex; align-items: center; gap: 6px;
-    font-weight: bold; font-size: 12px; letter-spacing: 1px;
-    color: #606060;
-  }
-  .syserr-lamp .lamp {
-    width: 18px; height: 18px; border-radius: 50%;
-    background: #606060;
-    border: 2px solid #404040;
-  }
-  .syserr-lamp.active { color: #c00000; }
-  .syserr-lamp.active .lamp {
-    background: #ff8800;
-    border-color: #804000;
-    box-shadow: 0 0 6px 2px #ff880088;
-  }
-
-  /* ── Sequence status panel ── */
-  #seq-status-panel {
-    background: #c0c0c0;
-    padding: 0;
-    margin-top: 8px;
-  }
+  /* ── Sequence engine status panel ── */
+  #seq-status-panel { background: #c0c0c0; padding: 0; margin-top: 16px; }
   #seq-status-body {
-    padding: 8px 10px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    flex-wrap: wrap;
+    padding: 16px 20px;
+    display: flex; align-items: center; gap: 40px; flex-wrap: wrap;
   }
-  .seq-status-field {
-    display: flex; align-items: center; gap: 8px;
-  }
+  .seq-status-field { display: flex; align-items: center; gap: 16px; }
   .seq-status-label {
-    font-size: 11px; font-weight: bold;
+    font-size: 22px; font-weight: bold;
     letter-spacing: 1px; text-transform: uppercase; color: #404040;
   }
   .seq-status-value {
-    font-size: 12px; font-weight: bold; color: #000080;
-    background: #fff; padding: 2px 8px; min-width: 120px;
-    border-top:    2px solid #808080;
-    border-left:   2px solid #808080;
-    border-right:  2px solid #fff;
-    border-bottom: 2px solid #fff;
+    font-size: 24px; font-weight: bold; color: #000080;
+    background: #fff; padding: 4px 16px; min-width: 240px;
+    border-top:    4px solid #808080;
+    border-left:   4px solid #808080;
+    border-right:  4px solid #fff;
+    border-bottom: 4px solid #fff;
   }
   .seq-status-value.none { color: #a0a0a0; }
 
-  /* ── Sensor panel ── */
-  #sensor-panel {
+  /* ── Motion telemetry panel ── */
+  #motion-panel { background: #c0c0c0; padding: 0; margin-top: 16px; }
+  #motion-body {
+    padding: 16px 20px;
+    display: flex; align-items: flex-start; gap: 40px; flex-wrap: wrap;
+  }
+  .motion-group { display: flex; flex-direction: column; gap: 8px; }
+  .motion-group-title {
+    font-size: 20px; font-weight: bold; letter-spacing: 1px;
+    text-transform: uppercase; color: #606060; margin-bottom: 4px;
+  }
+  .motion-row { display: flex; align-items: center; gap: 12px; }
+  .motion-label {
+    font-size: 22px; font-weight: bold; letter-spacing: 0.5px;
+    color: #404040; min-width: 72px; text-align: right;
+  }
+  .motion-value {
+    font-size: 26px; font-weight: bold;
+    font-family: 'Courier New', Courier, monospace;
+    color: #000080; background: #fff;
+    padding: 2px 12px; min-width: 140px; text-align: right;
+    border-top:    4px solid #808080;
+    border-left:   4px solid #808080;
+    border-right:  4px solid #fff;
+    border-bottom: 4px solid #fff;
+  }
+  .motion-unit {
+    font-size: 20px; color: #808080; min-width: 40px;
+  }
+
+  /* ── Bottom nav bar ── */
+  #nav-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    display: flex;
     background: #c0c0c0;
-    padding: 0;
-    margin-top: 8px;
-  }
-  #sensor-body {
-    padding: 8px 10px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-  .sensor-field {
-    display: flex;
-    align-items: center;
+    border-top: 4px solid #fff;
+    padding: 8px 16px;
     gap: 8px;
+    z-index: 100;
   }
-  .sensor-field-label {
-    font-size: 11px;
+  .nav-btn {
+    flex: 1;
+    padding: 12px 0;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 22px;
     font-weight: bold;
     letter-spacing: 1px;
+    cursor: pointer;
     text-transform: uppercase;
+    background: #c0c0c0;
     color: #000;
+    border-top:    4px solid #fff;
+    border-left:   4px solid #fff;
+    border-right:  4px solid #808080;
+    border-bottom: 4px solid #808080;
   }
-  #pos-display {
-    font-size: 20px;
-    font-weight: bold;
+  .nav-btn.active {
+    background: #000080;
+    color: #fff;
+    border-top:    4px solid #404040;
+    border-left:   4px solid #404040;
+    border-right:  4px solid #c0c0c0;
+    border-bottom: 4px solid #c0c0c0;
+  }
+  .nav-btn:active:not(.active) {
+    border-top:    4px solid #808080;
+    border-left:   4px solid #808080;
+    border-right:  4px solid #fff;
+    border-bottom: 4px solid #fff;
+  }
+
+  button {
+    padding: 8px 36px;
     font-family: 'Courier New', Courier, monospace;
-    letter-spacing: 2px;
-    color: #000080;
-    background: #fff;
-    padding: 2px 10px;
-    min-width: 80px;
-    text-align: right;
-    border-top:    2px solid #808080;
-    border-left:   2px solid #808080;
-    border-right:  2px solid #fff;
-    border-bottom: 2px solid #fff;
-  }
-  .sensor-lamp-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
+    font-size: 24px;
     font-weight: bold;
-    color: #404040;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-top:    4px solid #fff;
+    border-left:   4px solid #fff;
+    border-right:  4px solid #808080;
+    border-bottom: 4px solid #808080;
   }
-  .sensor-lamp-item .lamp { width: 18px; height: 18px; }
+  button:active {
+    border-top:    4px solid #808080;
+    border-left:   4px solid #808080;
+    border-right:  4px solid #fff;
+    border-bottom: 4px solid #fff;
+  }
 </style>
 </head>
 <body>
@@ -412,7 +297,6 @@
 <div id="header" class="raised">
   <span class="title">AGV CONTROL MONITOR &nbsp;|&nbsp; AGV1-KIM</span>
   <span id="mode-badge" class="mode-badge">MODE: —</span>
-  <a href="/manual"><button id="btn-remote">&#9776; MANUAL REMOTE</button></a>
   <div id="emrg-lamp" class="emrg-lamp">
     <div class="lamp"></div>EMERGENCY
   </div>
@@ -421,117 +305,14 @@
   </div>
   <div id="wifi-indicator">
     <div id="wifi-bars">
-      <span style="height:4px;"  id="wb0"></span>
-      <span style="height:7px;"  id="wb1"></span>
-      <span style="height:10px;" id="wb2"></span>
-      <span style="height:14px;" id="wb3"></span>
+      <span style="height:8px;"  id="wb0"></span>
+      <span style="height:14px;" id="wb1"></span>
+      <span style="height:20px;" id="wb2"></span>
+      <span style="height:28px;" id="wb3"></span>
     </div>
     <span id="wifi-label">—</span>
   </div>
-  <span id="ts" style="font-size:11px;color:#c0c0c0;letter-spacing:1px;">—</span>
-</div>
-
-<div class="columns">
-
-  <!-- LEFT: AGV → PLC writes -->
-  <div class="panel raised">
-    <div class="panel-title">AGV &rarr; PLC &nbsp;&nbsp;[ WRITE ]</div>
-    <div class="panel-body">
-
-      <div class="section-label">AGV STATUS FLAGS</div>
-
-      <div class="bit-row">
-        <span class="bit-addr">M2000</span>
-        <span class="bit-name">READY</span>
-        <span class="lamp" id="w-M2000"></span>
-      </div>
-      <div class="bit-row">
-        <span class="bit-addr">M2001</span>
-        <span class="bit-name">EMERGENCY</span>
-        <span class="lamp" id="w-M2001"></span>
-      </div>
-      <div class="bit-row">
-        <span class="bit-addr">M2002</span>
-        <span class="bit-name">TROLLEY EMERGENCY</span>
-        <span class="lamp" id="w-M2002"></span>
-      </div>
-      <div class="bit-row">
-        <span class="bit-addr">M2003</span>
-        <span class="bit-name">MANUAL</span>
-        <span class="lamp" id="w-M2003"></span>
-      </div>
-      <div class="bit-row">
-        <span class="bit-addr">M2004</span>
-        <span class="bit-name">AUTO</span>
-        <span class="lamp" id="w-M2004"></span>
-      </div>
-      <div class="bit-row">
-        <span class="bit-addr">M2005</span>
-        <span class="bit-name">RUNNING</span>
-        <span class="lamp" id="w-M2005"></span>
-      </div>
-
-      <div class="section-label">SEQUENCE REQUEST &nbsp;<span id="seq-req-label">—</span></div>
-      <div class="seq-grid" id="seq-req-grid"></div>
-
-    </div>
-  </div>
-
-  <!-- RIGHT: PLC → AGV reads -->
-  <div class="panel raised">
-    <div class="panel-title">PLC &rarr; AGV &nbsp;&nbsp;[ READ ]</div>
-    <div class="panel-body">
-
-      <div class="section-label">PLC INPUT FLAGS</div>
-
-      <div class="bit-row">
-        <span class="bit-addr">M0</span>
-        <span class="bit-name">PB START AUTO</span>
-        <span class="lamp" id="r-M0"></span>
-      </div>
-      <div class="bit-row">
-        <span class="bit-addr">M1</span>
-        <span class="bit-name">MODE: MAN</span>
-        <span class="lamp" id="r-M1"></span>
-      </div>
-      <div class="bit-row">
-        <span class="bit-addr">M2</span>
-        <span class="bit-name">MODE: AUTO</span>
-        <span class="lamp" id="r-M2"></span>
-      </div>
-      <div class="bit-row">
-        <span class="bit-addr">M3</span>
-        <span class="bit-name">EMERGENCY</span>
-        <span class="lamp" id="r-M3"></span>
-      </div>
-      <div class="bit-row">
-        <span class="bit-addr">M4</span>
-        <span class="bit-name">MASTER ON</span>
-        <span class="lamp" id="r-M4"></span>
-      </div>
-
-      <div class="section-label">SEQUENCE COMPLETE FLAGS</div>
-      <div class="seq-grid" id="seq-done-grid"></div>
-
-    </div>
-  </div>
-
-</div>
-
-<!-- Sequence control panel -->
-<div id="ctrl" class="raised">
-  <span class="ctrl-label">Sequence Request:</span>
-  <select id="seq-select">
-    <option value="null">— NONE —</option>
-  </select>
-  <button id="btn-set">SET</button>
-  <button id="btn-clear">CLEAR</button>
-  <span id="ctrl-status"></span>
-  <div id="ctrl-conditions">
-    <div class="cond-item"><span class="lamp" id="cond-master"></span>M4 MASTER ON</div>
-    <div class="cond-item"><span class="lamp" id="cond-manual"></span>M1 MANUAL MODE</div>
-    <div class="cond-item"><span class="lamp" id="cond-pulse"></span>PULSE ACTIVE</div>
-  </div>
+  <span id="ts">—</span>
 </div>
 
 <!-- Sensor panel -->
@@ -543,7 +324,7 @@
       <span id="pos-display">—</span>
       <span class="sensor-field-label" style="color:#606060;">mm</span>
     </div>
-    <div style="width:2px;height:32px;background:#a0a0a0;"></div>
+    <div style="width:4px;height:64px;background:#a0a0a0;"></div>
     <div class="sensor-lamp-item">
       <span class="lamp" id="lamp-tape"></span>TAPE
     </div>
@@ -567,12 +348,12 @@
       <span class="seq-status-label">Active:</span>
       <span id="seq-active" class="seq-status-value none">—</span>
     </div>
-    <div style="width:2px;height:28px;background:#a0a0a0;"></div>
+    <div style="width:4px;height:56px;background:#a0a0a0;"></div>
     <div class="seq-status-field">
       <span class="seq-status-label">Armed:</span>
       <span id="seq-armed" class="seq-status-value none">—</span>
     </div>
-    <div style="width:2px;height:28px;background:#a0a0a0;"></div>
+    <div style="width:4px;height:56px;background:#a0a0a0;"></div>
     <div class="seq-status-field">
       <span class="seq-status-label">Cooldowns:</span>
       <span id="seq-cooldowns" class="seq-status-value none">—</span>
@@ -580,13 +361,66 @@
   </div>
 </div>
 
+<!-- Motion telemetry panel -->
+<div id="motion-panel" class="raised">
+  <div class="panel-title">MOTION TELEMETRY &nbsp;[ RPM / PID ]</div>
+  <div id="motion-body">
+    <div class="motion-group">
+      <div class="motion-group-title">Wheel RPM</div>
+      <div class="motion-row">
+        <span class="motion-label">L:</span>
+        <span class="motion-value" id="mt-l-rpm">—</span>
+        <span class="motion-unit">rpm</span>
+      </div>
+      <div class="motion-row">
+        <span class="motion-label">R:</span>
+        <span class="motion-value" id="mt-r-rpm">—</span>
+        <span class="motion-unit">rpm</span>
+      </div>
+    </div>
+    <div style="width:4px;height:104px;background:#a0a0a0;align-self:center;"></div>
+    <div class="motion-group">
+      <div class="motion-group-title">PID</div>
+      <div class="motion-row">
+        <span class="motion-label">Err:</span>
+        <span class="motion-value" id="mt-err">—</span>
+        <span class="motion-unit">mm</span>
+      </div>
+      <div class="motion-row">
+        <span class="motion-label">Out:</span>
+        <span class="motion-value" id="mt-out">—</span>
+        <span class="motion-unit">rpm</span>
+      </div>
+    </div>
+    <div style="width:4px;height:104px;background:#a0a0a0;align-self:center;"></div>
+    <div class="motion-group">
+      <div class="motion-group-title">PID terms</div>
+      <div class="motion-row">
+        <span class="motion-label">P:</span>
+        <span class="motion-value" id="mt-p">—</span>
+        <span class="motion-unit"></span>
+      </div>
+      <div class="motion-row">
+        <span class="motion-label">I:</span>
+        <span class="motion-value" id="mt-i">—</span>
+        <span class="motion-unit"></span>
+      </div>
+      <div class="motion-row">
+        <span class="motion-label">D:</span>
+        <span class="motion-value" id="mt-d">—</span>
+        <span class="motion-unit"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Reverse auto control panel -->
-<div id="rev-panel" class="raised" style="background:#c0c0c0;padding:0;margin-top:8px;">
+<div id="rev-panel" class="raised" style="background:#c0c0c0;padding:0;margin-top:16px;">
   <div class="panel-title">REVERSE AUTO &nbsp;[ TAPE FOLLOWING — REVERSE ]</div>
-  <div style="padding:8px 10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+  <div style="padding:16px 20px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
     <button id="btn-rev-start" style="background:#006000;color:#fff;">&#9654; START REVERSE</button>
     <button id="btn-rev-stop"  style="background:#c00000;color:#fff;">&#9632; STOP REVERSE</button>
-    <div style="width:2px;height:28px;background:#a0a0a0;"></div>
+    <div style="width:4px;height:56px;background:#a0a0a0;"></div>
     <div class="sensor-lamp-item">
       <span class="lamp" id="lamp-rev-active" style="width:18px;height:18px;"></span>
       REVERSE ACTIVE
@@ -595,34 +429,14 @@
   </div>
 </div>
 
+<!-- Bottom nav bar -->
+<div id="nav-bar">
+  <button class="nav-btn active">HOME</button>
+  <button class="nav-btn" onclick="location.href='/manual'">MANUAL CONTROL</button>
+  <button class="nav-btn" onclick="location.href='/io'">IO MONITOR</button>
+</div>
+
 <script>
-const N_SEQ = 17;
-
-(function init() {
-  const sel      = document.getElementById('seq-select');
-  const reqGrid  = document.getElementById('seq-req-grid');
-  const doneGrid = document.getElementById('seq-done-grid');
-  for (let i = 0; i < N_SEQ; i++) {
-    const opt = document.createElement('option');
-    opt.value = i; opt.textContent = `SEQ ${i}`;
-    sel.appendChild(opt);
-
-    const rc = document.createElement('div');
-    rc.className = 'seq-cell';
-    rc.innerHTML = `<span class="lamp" id="w-seq${i}"></span>`
-                 + `<span class="seq-label"><span class="seq-name">SEQ ${i}</span>`
-                 + `<span class="seq-addr">M${2010+i}</span></span>`;
-    reqGrid.appendChild(rc);
-
-    const dc = document.createElement('div');
-    dc.className = 'seq-cell';
-    dc.innerHTML = `<span class="lamp" id="r-seq${i}"></span>`
-                 + `<span class="seq-label"><span class="seq-name">SEQ ${i}</span>`
-                 + `<span class="seq-addr">M${2040+i}</span></span>`;
-    doneGrid.appendChild(dc);
-  }
-})();
-
 function setLamp(el, on, cls) {
   if (!el) return;
   el.className = 'lamp' + (on ? (' ' + cls) : '');
@@ -633,8 +447,6 @@ function fetchState() {
     .then(r => r.json())
     .then(d => {
       const agv = d.agv;
-      const w   = d.plc_writes;
-      const r   = d.plc_reads;
 
       // Mode badge
       const mode  = agv.mode || null;
@@ -649,46 +461,6 @@ function fetchState() {
       // System error lamp
       const sel2 = document.getElementById('syserr-lamp');
       sel2.className = 'syserr-lamp' + (agv.system_error ? ' active' : '');
-
-      // Status write lamps (green = normal on, red = emergency on)
-      setLamp(document.getElementById('w-M2000'), w.M2000_READY,             'on-green');
-      setLamp(document.getElementById('w-M2001'), w.M2001_EMERGENCY,         'on-red');
-      setLamp(document.getElementById('w-M2002'), w.M2002_TROLLEY_EMERGENCY, 'on-red');
-      setLamp(document.getElementById('w-M2003'), w.M2003_MANUAL,            'on-blue');
-      setLamp(document.getElementById('w-M2004'), w.M2004_AUTO,              'on-blue');
-      setLamp(document.getElementById('w-M2005'), w.M2005_RUNNING,           'on-green');
-
-      // Sequence request
-      const req = agv.sequence_request;
-      document.getElementById('seq-req-label').textContent =
-        (req !== null && req !== undefined) ? `SEQ ${req}` : '—';
-      for (let i = 0; i < N_SEQ; i++) {
-        setLamp(document.getElementById(`w-seq${i}`), w[`M${2010+i}_SEQ${i}`], 'on-blue');
-      }
-
-      // PLC read lamps
-      setLamp(document.getElementById('r-M0'), r.M0_PB_START_AUTO, 'on-green');
-      setLamp(document.getElementById('r-M1'), r.M1_MODE_MAN,      'on-blue');
-      setLamp(document.getElementById('r-M2'), r.M2_MODE_AUTO,     'on-blue');
-      setLamp(document.getElementById('r-M3'), r.M3_EMERGENCY,     'on-red');
-      setLamp(document.getElementById('r-M4'), r.M4_MASTER_ON,     'on-green');
-
-      // Sequence complete lamps
-      for (let i = 0; i < N_SEQ; i++) {
-        setLamp(document.getElementById(`r-seq${i}`), r[`M${2040+i}_SEQ${i}_COMPLETE`], 'on-amber');
-      }
-
-      // Condition indicators
-      const masterOn   = r.M4_MASTER_ON;
-      const manualOn   = r.M1_MODE_MAN;
-      const pulseActive = agv.seq_pulse_active;
-      setLamp(document.getElementById('cond-master'), masterOn,   'on-green');
-      setLamp(document.getElementById('cond-manual'), manualOn,   'on-blue');
-      setLamp(document.getElementById('cond-pulse'),  pulseActive, 'on-amber');
-
-      // Disable SET while pulse is active
-      document.getElementById('btn-set').disabled = pulseActive;
-      document.getElementById('btn-set').style.opacity = pulseActive ? '0.4' : '1';
 
       // Sensor panel
       const sen = d.sensor;
@@ -711,7 +483,7 @@ function fetchState() {
       activeEl.className = 'seq-status-value' + (seqActive ? '' : ' none');
 
       const armedEl = document.getElementById('seq-armed');
-      armedEl.textContent = seqArmed || '—';
+      armedEl.textContent = seqArmed ? (Array.isArray(seqArmed) ? seqArmed.join(', ') : seqArmed) : '—';
       armedEl.className = 'seq-status-value' + (seqArmed ? '' : ' none');
 
       const cdEl = document.getElementById('seq-cooldowns');
@@ -723,7 +495,19 @@ function fetchState() {
         cdEl.className = 'seq-status-value';
       }
 
-      // Reverse auto lamp + button state
+      // Motion telemetry
+      const mt = d.motion || {};
+      function fmtRpm(v) { return v !== null && v !== undefined ? v.toFixed(1) : '—'; }
+      function fmtPid(v) { return v !== null && v !== undefined ? v.toFixed(2) : '—'; }
+      document.getElementById('mt-l-rpm').textContent = fmtRpm(mt.left_rpm);
+      document.getElementById('mt-r-rpm').textContent = fmtRpm(mt.right_rpm);
+      document.getElementById('mt-err').textContent   = fmtPid(mt.pid_error);
+      document.getElementById('mt-out').textContent   = fmtPid(mt.pid_output);
+      document.getElementById('mt-p').textContent     = fmtPid(mt.pid_p);
+      document.getElementById('mt-i').textContent     = fmtPid(mt.pid_i);
+      document.getElementById('mt-d').textContent     = fmtPid(mt.pid_d);
+
+      // Reverse auto
       const revActive = agv.reverse_auto_request || agv.mode === 'reverse';
       setLamp(document.getElementById('lamp-rev-active'), revActive, 'on-blue');
       document.getElementById('btn-rev-start').disabled = revActive || agv.mode !== 'armed';
@@ -737,41 +521,6 @@ function fetchState() {
       document.getElementById('ts').textContent = 'NO CONN';
     });
 }
-
-document.getElementById('btn-set').addEventListener('click', () => {
-  const val  = document.getElementById('seq-select').value;
-  const body = val === 'null' ? { sequence: null } : { sequence: parseInt(val) };
-  fetch('/api/sequence', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  })
-  .then(r => r.json())
-  .then(d => {
-    const st = document.getElementById('ctrl-status');
-    st.style.color = d.ok ? '#006000' : '#c00000';
-    st.textContent  = d.ok
-      ? (d.sequence !== null ? `SET → SEQ ${d.sequence}` : 'CLEARED')
-      : (d.error || 'ERROR');
-    setTimeout(() => { st.textContent = ''; }, 4000);
-  });
-});
-
-document.getElementById('btn-clear').addEventListener('click', () => {
-  document.getElementById('seq-select').value = 'null';
-  fetch('/api/sequence', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sequence: null })
-  })
-  .then(r => r.json())
-  .then(d => {
-    const st = document.getElementById('ctrl-status');
-    st.style.color  = d.ok ? '#006000' : '#c00000';
-    st.textContent  = d.ok ? 'CLEARED' : (d.error || 'ERROR');
-    setTimeout(() => { st.textContent = ''; }, 4000);
-  });
-});
 
 function postRevAuto(running) {
   fetch('/api/reverse_auto', {
@@ -795,7 +544,7 @@ function fetchWifi() {
   fetch('/api/wifi')
     .then(r => r.json())
     .then(d => {
-      const sig   = d.signal;  // 0–100 or null
+      const sig   = d.signal;
       const label = document.getElementById('wifi-label');
       const bars  = [0,1,2,3].map(i => document.getElementById('wb'+i));
       if (sig === null) {
@@ -804,7 +553,6 @@ function fetchWifi() {
         return;
       }
       label.textContent = sig + '% ' + (d.ssid || '');
-      // Light bars: 0–24→1 bar, 25–49→2, 50–74→3, 75–100→4
       const lit = sig < 25 ? 1 : sig < 50 ? 2 : sig < 75 ? 3 : 4;
       bars.forEach((b, i) => b.classList.toggle('lit', i < lit));
     })
