@@ -11,38 +11,38 @@
     background: #d4d0c8;
     color: #000;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 13px;
-    padding: 8px 8px 56px 8px; /* bottom pad for fixed nav */
+    font-size: 20px;
+    padding: 12px 12px 64px 12px; /* bottom pad for fixed nav */
   }
 
   .raised {
-    border-top:    2px solid #fff;
-    border-left:   2px solid #fff;
-    border-right:  2px solid #808080;
-    border-bottom: 2px solid #808080;
+    border-top:    3px solid #fff;
+    border-left:   3px solid #fff;
+    border-right:  3px solid #808080;
+    border-bottom: 3px solid #808080;
   }
 
   /* ── Header ── */
   #header {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 18px;
     background: #000080;
     color: #fff;
-    padding: 5px 10px;
-    margin-bottom: 8px;
+    padding: 8px 16px;
+    margin-bottom: 12px;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 20px;
     letter-spacing: 2px;
   }
   #header .title { flex: 1; }
-  #ts { font-size: 11px; color: #c0c0c0; letter-spacing: 1px; }
+  #ts { font-size: 16px; color: #c0c0c0; letter-spacing: 1px; }
 
   /* ── Two-column layout ── */
   .columns {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 12px;
   }
 
   /* ── Panel ── */
@@ -51,62 +51,62 @@
     background: #000080;
     color: #fff;
     font-weight: bold;
-    font-size: 11px;
+    font-size: 16px;
     letter-spacing: 2px;
-    padding: 3px 8px;
+    padding: 4px 12px;
     text-transform: uppercase;
   }
-  .panel-body { padding: 4px; }
+  .panel-body { padding: 6px; }
 
   /* ── IO row ── */
   .io-row {
     display: flex;
     align-items: center;
-    height: 24px;
-    border-bottom: 1px solid #b0b0b0;
+    height: 36px;
+    border-bottom: 2px solid #b0b0b0;
     gap: 0;
   }
   .io-row:last-child { border-bottom: none; }
 
   .io-ch {
-    width: 36px;
+    width: 54px;
     flex-shrink: 0;
-    font-size: 10px;
+    font-size: 16px;
     color: #505050;
-    padding: 0 4px;
+    padding: 0 6px;
     height: 100%;
     display: flex;
     align-items: center;
     background: #b8b4ac;
-    border-right: 1px solid #a0a0a0;
+    border-right: 2px solid #a0a0a0;
     font-weight: bold;
   }
 
   .io-lamp {
-    width: 14px;
-    height: 14px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     flex-shrink: 0;
-    margin: 0 6px;
+    margin: 0 8px;
     background: #666;
-    border: 2px solid #444;
-    box-shadow: inset 0 1px 2px #00000044;
+    border: 3px solid #444;
+    box-shadow: inset 0 1px 3px #00000044;
   }
   .io-lamp.on-green {
     background: radial-gradient(circle at 35% 35%, #80ff80, #00a000);
     border-color: #005000;
-    box-shadow: 0 0 5px 1px #00cc0066, inset 0 1px 2px #ffffff44;
+    box-shadow: 0 0 7px 2px #00cc0066, inset 0 1px 3px #ffffff44;
   }
   .io-lamp.on-amber {
     background: radial-gradient(circle at 35% 35%, #ffe080, #d08000);
     border-color: #804000;
-    box-shadow: 0 0 5px 1px #ffa00066, inset 0 1px 2px #ffffff44;
+    box-shadow: 0 0 7px 2px #ffa00066, inset 0 1px 3px #ffffff44;
   }
 
   .io-name {
     flex: 1;
-    padding: 0 4px;
-    font-size: 11px;
+    padding: 0 6px;
+    font-size: 16px;
     font-weight: bold;
     color: #1a1a1a;
     white-space: nowrap;
@@ -120,42 +120,57 @@
     bottom: 0; left: 0; right: 0;
     display: flex;
     background: #c0c0c0;
-    border-top: 2px solid #fff;
-    padding: 4px 8px;
-    gap: 4px;
+    border-top: 3px solid #fff;
+    padding: 6px 12px;
+    gap: 6px;
     z-index: 100;
   }
   .nav-btn {
     flex: 1;
-    padding: 6px 0;
+    padding: 8px 0;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 11px;
+    font-size: 16px;
     font-weight: bold;
     letter-spacing: 1px;
     cursor: pointer;
     text-transform: uppercase;
     background: #c0c0c0;
     color: #000;
-    border-top:    2px solid #fff;
-    border-left:   2px solid #fff;
-    border-right:  2px solid #808080;
-    border-bottom: 2px solid #808080;
+    border-top:    3px solid #fff;
+    border-left:   3px solid #fff;
+    border-right:  3px solid #808080;
+    border-bottom: 3px solid #808080;
   }
   .nav-btn.active {
     background: #000080;
     color: #fff;
-    border-top:    2px solid #404040;
-    border-left:   2px solid #404040;
-    border-right:  2px solid #c0c0c0;
-    border-bottom: 2px solid #c0c0c0;
+    border-top:    3px solid #404040;
+    border-left:   3px solid #404040;
+    border-right:  3px solid #c0c0c0;
+    border-bottom: 3px solid #c0c0c0;
   }
   .nav-btn:active:not(.active) {
-    border-top:    2px solid #808080;
-    border-left:   2px solid #808080;
-    border-right:  2px solid #fff;
-    border-bottom: 2px solid #fff;
+    border-top:    3px solid #808080;
+    border-left:   3px solid #808080;
+    border-right:  3px solid #fff;
+    border-bottom: 3px solid #fff;
+  }
+
+  /* ── Kiosk / flip mode (?flip=1) ── */
+  html.flipped {
+    transform: rotate(180deg);
+    transform-origin: 50% 50%;
   }
 </style>
+<script>
+  if (new URLSearchParams(location.search).get('flip') === '1') {
+    document.documentElement.classList.add('flipped');
+    document.querySelectorAll('[onclick]').forEach(function(el) {
+      var m = el.getAttribute('onclick').match(/location\.href='([^']+)'/);
+      if (m) el.setAttribute('onclick', "location.href='" + m[1] + "?flip=1'");
+    });
+  }
+</script>
 </head>
 <body>
 
@@ -183,8 +198,9 @@
 <!-- Bottom nav bar -->
 <div id="nav-bar">
   <button class="nav-btn" onclick="location.href='/'">HOME</button>
-  <button class="nav-btn" onclick="location.href='/manual'">MANUAL CONTROL</button>
+  <button class="nav-btn" onclick="location.href='/manual'">MANUAL</button>
   <button class="nav-btn active">IO MONITOR</button>
+  <button class="nav-btn" onclick="location.href='/params'">PARAMETERS</button>
 </div>
 
 <script>

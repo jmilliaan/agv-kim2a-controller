@@ -18,7 +18,8 @@ class KinematicState:
         self.sequence_stop        = False   # True = AGV should brake and wait
         self.pending_sequence     = None    # name of armed rfid_then_marker sequence
         self.reverse_auto_request = False   # set by Flask to start reverse tape-follow
-        self.web_manual_command   = None    # set by Flask remote; "forward"|"reverse"|"left"|"right"|"fwd_left"|"fwd_right"|"rvs_left"|"rvs_right"|None
+        self.web_manual_command    = None    # set by Flask remote; "forward"|"reverse"|"left"|"right"|"fwd_left"|"fwd_right"|"rvs_left"|"rvs_right"|None
+        self.web_manual_command_ts = 0.0    # epoch of last web command update
         self.motion_telemetry     = None    # dict: left_rpm, right_rpm, pid_error, pid_p/i/d, pid_output
 
 
@@ -108,6 +109,11 @@ class AMRState:
     def web_manual_command(self): return self.kinematic.web_manual_command
     @web_manual_command.setter
     def web_manual_command(self, v): self.kinematic.web_manual_command = v
+
+    @property
+    def web_manual_command_ts(self): return self.kinematic.web_manual_command_ts
+    @web_manual_command_ts.setter
+    def web_manual_command_ts(self, v): self.kinematic.web_manual_command_ts = v
 
     @property
     def motion_telemetry(self): return self.kinematic.motion_telemetry

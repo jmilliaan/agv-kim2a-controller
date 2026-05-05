@@ -243,7 +243,14 @@ async def manual_mode(state):
             di = await state.di_queue.get()
 
         # ── Web remote takes priority; fall back to physical DI ───────────────
+        # Auto-clear stale web commands: if the client stopped sending keepalives
+        # (network lag, tab closed, crash) treat it as a release after 500 ms.
+        _WEB_CMD_TIMEOUT_S = 0.5
         web_cmd = state.web_manual_command
+        if web_cmd is not None and (time.time() - state.web_manual_command_ts) > _WEB_CMD_TIMEOUT_S:
+            state.web_manual_command = None
+            web_cmd = None
+
         if web_cmd is not None:
             motion_state = web_cmd
         elif di is not None:

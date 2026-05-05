@@ -61,33 +61,33 @@
 
   "speeds": {
     "MANUAL_TARGET_HIGH_SPEED":     0.4,
-    "MANUAL_TARGET_SLOW_SPEED":     0.2,
-    "AUTO_TARGET_HIGH_SPEED":       0.40,
-    "AUTO_TARGET_SLOW_SPEED":       0.20,
-    "AUTO_TARGET_EXTRA_SLOW_SPEED": 0.15,
+    "MANUAL_TARGET_SLOW_SPEED":     0.15,
+    "AUTO_TARGET_HIGH_SPEED":       0.32,
+    "AUTO_TARGET_SLOW_SPEED":       0.16,
+    "AUTO_TARGET_EXTRA_SLOW_SPEED": 0.12,
     "ACCEL_RATE": 0.8
   },
 
   "pid_tuning": {
     "_comment_high": "Starting point from AGV B legacy code — retune on hardware",
-    "KP": 2.0,
-    "TD": 0.08,
-    "N":  20,
+    "KP": 1.4,
+    "TD": 0,
+    "N":  8,
     "_comment_slow": "SLOW gains — same starting point as HIGH",
-    "KP_SLOW": 2.0,
-    "TD_SLOW": 0.08,
-    "N_SLOW":  12,
+    "KP_SLOW": 1.6,
+    "TD_SLOW": 0,
+    "N_SLOW":  8,
     "_comment_shared": "Shared — integral and timing constants",
-    "TI": 20,
+    "TI": null,
     "TI_DEADBAND": 25,
     "TI_MAX": 500,
     "DT": 0.01,
     "_comment_sr": "Speed reduction coefficients",
-    "V_RED_COEF":      4,
-    "V_RED_COEF_SLOW": 2,
-    "OUTPUT_CLAMP_RPM": 800,
-    "SR_ALPHA": 0.15,
-    "SR_CAP":   0.55
+    "V_RED_COEF":      1.2,
+    "V_RED_COEF_SLOW": 0.8,
+    "OUTPUT_CLAMP_RPM": 220,
+    "SR_ALPHA": 0.08,
+    "SR_CAP":   0.25
   },
 
   "can_sensor": {

@@ -120,6 +120,12 @@ def manual():
 def io_monitor():
     return render_template("io_monitor.html")
 
+@app.route("/params")
+def params_page():
+    return render_template("params.html",
+                           agv_id=_config.AGV_ID,
+                           profile=_config._params)
+
 @app.route("/api/manual/command", methods=["POST"])
 def api_manual_command():
     if _state is None:
@@ -133,7 +139,8 @@ def api_manual_command():
     if cmd is not None and cmd not in _VALID_COMMANDS:
         return jsonify({"error": f"unknown command: {cmd}"}), 400
 
-    _state.web_manual_command = cmd
+    _state.web_manual_command    = cmd
+    _state.web_manual_command_ts = time.time()
     return jsonify({"ok": True, "command": cmd})
 
 
