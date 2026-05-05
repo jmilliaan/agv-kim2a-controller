@@ -229,6 +229,30 @@
     font-size: 16px; color: #808080; min-width: 30px;
   }
 
+  /* ── Safety panel ── */
+  #safety-panel {
+    background: #c0c0c0; padding: 0; margin-top: 12px;
+  }
+  #safety-body {
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  }
+  .safety-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 16px; font-weight: bold; letter-spacing: 0.5px;
+  }
+  .safety-lamp {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    background: #606060; border: 3px solid #404040;
+  }
+  .safety-lamp.slow   { background: radial-gradient(circle at 35% 35%, #ffe080, #d08000); border-color: #804000; box-shadow: 0 0 7px 2px #ffa00066; }
+  .safety-lamp.stop   { background: radial-gradient(circle at 35% 35%, #ff8080, #cc0000); border-color: #800000; box-shadow: 0 0 7px 2px #cc000066; }
+  .safety-lamp.bumper { background: radial-gradient(circle at 35% 35%, #ff8080, #cc0000); border-color: #800000; box-shadow: 0 0 10px 4px #ff000099; }
+  .safety-label       { color: #404040; }
+  .safety-label.active-slow   { color: #d08000; }
+  .safety-label.active-stop   { color: #cc0000; }
+  .safety-label.active-bumper { color: #cc0000; }
+
   /* ── Bottom nav bar ── */
   #nav-bar {
     position: fixed;
@@ -312,7 +336,7 @@
 
 <!-- Title bar -->
 <div id="header" class="raised">
-  <span class="title">AGV CONTROL MONITOR &nbsp;|&nbsp; AGV1-KIM</span>
+  <span class="title">AGV CONTROL MONITOR</span>
   <span id="mode-badge" class="mode-badge">MODE: —</span>
   <div id="emrg-lamp" class="emrg-lamp">
     <div class="lamp"></div>EMERGENCY
@@ -330,6 +354,25 @@
     <span id="wifi-label">—</span>
   </div>
   <span id="ts">—</span>
+</div>
+
+<!-- Safety indicators panel -->
+<div id="safety-panel" class="raised">
+  <div class="panel-title">SAFETY STATUS</div>
+  <div id="safety-body">
+    <div class="safety-item">
+      <span class="safety-lamp" id="sl-slow"></span>
+      <span class="safety-label" id="sl-slow-label">AGV SLOWING DOWN</span>
+    </div>
+    <div class="safety-item">
+      <span class="safety-lamp" id="sl-stop"></span>
+      <span class="safety-label" id="sl-stop-label">AGV LIDAR STOP</span>
+    </div>
+    <div class="safety-item">
+      <span class="safety-lamp" id="sl-bumper"></span>
+      <span class="safety-label" id="sl-bumper-label">BUMPER STOP</span>
+    </div>
+  </div>
 </div>
 
 <!-- Sensor panel -->
@@ -452,6 +495,7 @@
   <button class="nav-btn" onclick="location.href='/manual'">MANUAL</button>
   <button class="nav-btn" onclick="location.href='/io'">IO MONITOR</button>
   <button class="nav-btn" onclick="location.href='/params'">PARAMETERS</button>
+  <button class="nav-btn" onclick="location.href='/errors'">ERRORS</button>
 </div>
 
 <script>
@@ -524,6 +568,18 @@ function fetchState() {
       document.getElementById('mt-p').textContent     = fmtPid(mt.pid_p);
       document.getElementById('mt-i').textContent     = fmtPid(mt.pid_i);
       document.getElementById('mt-d').textContent     = fmtPid(mt.pid_d);
+
+      // Safety indicators
+      const sf = d.safety || {};
+      function setSafety(lampId, labelId, active, lampCls, labelCls) {
+        const lamp  = document.getElementById(lampId);
+        const label = document.getElementById(labelId);
+        if (lamp)  lamp.className  = 'safety-lamp' + (active ? (' ' + lampCls) : '');
+        if (label) label.className = 'safety-label' + (active ? (' ' + labelCls) : '');
+      }
+      setSafety('sl-slow',   'sl-slow-label',   sf.lidar_slow, 'slow',   'active-slow');
+      setSafety('sl-stop',   'sl-stop-label',   sf.lidar_stop, 'stop',   'active-stop');
+      setSafety('sl-bumper', 'sl-bumper-label', sf.bumper,     'bumper', 'active-bumper');
 
       // Reverse auto
       const revActive = agv.reverse_auto_request || agv.mode === 'reverse';

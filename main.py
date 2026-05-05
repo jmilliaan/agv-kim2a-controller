@@ -88,13 +88,13 @@ async def run():
         core_tasks.append(do_drv.run(state))
     if di_drv:
         core_tasks.append(di_drv.run(state))
-        watched.append((di_drv, config.WATCHDOG_DI_TIMEOUT_S))
+        watched.append((di_drv,   config.WATCHDOG_DI_TIMEOUT_S,   False))  # critical — blocks all modes
     if can_drv:
         core_tasks.append(can_drv.run(state))
-        watched.append((can_drv, config.WATCHDOG_CAN_TIMEOUT_S))
+        watched.append((can_drv,  config.WATCHDOG_CAN_TIMEOUT_S,  True))   # auto-only — manual still works
     if rfid_drv:
         core_tasks.append(rfid_drv.run(state))
-        watched.append((rfid_drv, config.WATCHDOG_RFID_TIMEOUT_S))
+        watched.append((rfid_drv, config.WATCHDOG_RFID_TIMEOUT_S, True))   # auto-only — manual still works
     if slmp_drv:
         core_tasks.append(slmp_drv.run(state))
 

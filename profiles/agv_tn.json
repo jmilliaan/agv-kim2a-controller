@@ -34,7 +34,10 @@
     "DI_MODE_SWITCH":     10,
     "MODE_SWITCH_INVERT": 1,
     "DI_START":           8,
-    "DI_RESET":           9
+    "DI_RESET":           9,
+    "DI_BUMPER":          13,
+    "DI_LIDAR_SLOW":      14,
+    "DI_LIDAR_STOP":      15
   },
 
   "motor_channels": {
@@ -61,20 +64,20 @@
 
   "speeds": {
     "MANUAL_TARGET_HIGH_SPEED":     0.4,
-    "MANUAL_TARGET_SLOW_SPEED":     0.15,
-    "AUTO_TARGET_HIGH_SPEED":       0.32,
-    "AUTO_TARGET_SLOW_SPEED":       0.16,
-    "AUTO_TARGET_EXTRA_SLOW_SPEED": 0.12,
-    "ACCEL_RATE": 0.8
+    "MANUAL_TARGET_SLOW_SPEED":     0.2,
+    "AUTO_TARGET_HIGH_SPEED":       0.25,
+    "AUTO_TARGET_SLOW_SPEED":       0.12,
+    "AUTO_TARGET_EXTRA_SLOW_SPEED": 0.10,
+    "ACCEL_RATE": 0.6
   },
 
   "pid_tuning": {
     "_comment_high": "Starting point from AGV B legacy code — retune on hardware",
-    "KP": 1.4,
+    "KP": 3.0,
     "TD": 0,
     "N":  8,
     "_comment_slow": "SLOW gains — same starting point as HIGH",
-    "KP_SLOW": 1.6,
+    "KP_SLOW": 3.5,
     "TD_SLOW": 0,
     "N_SLOW":  8,
     "_comment_shared": "Shared — integral and timing constants",
@@ -83,11 +86,11 @@
     "TI_MAX": 500,
     "DT": 0.01,
     "_comment_sr": "Speed reduction coefficients",
-    "V_RED_COEF":      1.2,
-    "V_RED_COEF_SLOW": 0.8,
-    "OUTPUT_CLAMP_RPM": 220,
+    "V_RED_COEF":      1.5,
+    "V_RED_COEF_SLOW": 1.0,
+    "OUTPUT_CLAMP_RPM": 22300,
     "SR_ALPHA": 0.08,
-    "SR_CAP":   0.25
+    "SR_CAP":   0.3
   },
 
   "can_sensor": {
@@ -107,16 +110,59 @@
 
   "sequences": [
     {
-      "_comment": "Pusher extend-retract cycle — replace TBD with real RFID tag hex before deploy",
-      "name": "pusher_extend_seq",
-      "trigger": { "type": "rfid", "rfid_tag": "TBD" },
+      "_comment": "Tag 10 — stop AGV, pusher DOWN, end cycle (stays stopped until RESET)",
+      "name": "tag10_end_cycle",
+      "trigger": { "type": "rfid", "rfid_tag": "000A" },
+      "requires_mode": "running",
+      "cooldown_s": 15.0,
       "actions": [
-        { "type": "pusher_extend",  "duration": 2.0 },
-        { "type": "wait_seconds",   "duration": 1.0 },
+        { "type": "stop_agv" },
         { "type": "pusher_retract", "duration": 2.0 }
-      ],
+      ]
+    },
+    {
+      "_comment": "Tag 20 — switch to SLOW speed",
+      "name": "tag20_slow_speed",
+      "trigger": { "type": "rfid", "rfid_tag": "0014" },
+      "requires_mode": "running",
       "cooldown_s": 5.0,
-      "requires_mode": "running"
+      "actions": [
+        { "type": "set_speed", "speed": "SLOW" }
+      ]
+    },
+    {
+      "_comment": "Tag 30 — switch back to HIGH speed",
+      "name": "tag30_high_speed",
+      "trigger": { "type": "rfid", "rfid_tag": "001E" },
+      "requires_mode": "running",
+      "cooldown_s": 5.0,
+      "actions": [
+        { "type": "set_speed", "speed": "HIGH" }
+      ]
+    },
+    {
+      "_comment": "Tag 40 — stop AGV, pusher DOWN, then resume",
+      "name": "tag40_stop_pusher_down",
+      "trigger": { "type": "rfid", "rfid_tag": "0028" },
+      "requires_mode": "running",
+      "cooldown_s": 10.0,
+      "actions": [
+        { "type": "stop_agv" },
+        { "type": "pusher_retract", "duration": 2.0 },
+        { "type": "resume" }
+      ]
+    },
+    {
+      "_comment": "Tag 50 — stop AGV, pusher UP, then resume",
+      "name": "tag50_stop_pusher_up",
+      "trigger": { "type": "rfid", "rfid_tag": "0032" },
+      "requires_mode": "running",
+      "cooldown_s": 10.0,
+      "actions": [
+        { "type": "stop_agv" },
+        { "type": "pusher_extend", "duration": 2.0 },
+        { "type": "resume" }
+      ]
     }
   ],
 

@@ -149,4 +149,5 @@ AO_MAX_VOLTAGE     = float(_params.get("ao_max_voltage", 10.0))
 SENSOR_ORIENTATION = int(_params.get("sensor_orientation", 1))   # 1=normal, -1=flipped
 DI_LIDAR_STOP      = _params["io_mapping"].get("DI_LIDAR_STOP", None)  # None = no lidar
 DI_LIDAR_SLOW      = _params["io_mapping"].get("DI_LIDAR_SLOW", None)
+DI_BUMPER          = _params["io_mapping"].get("DI_BUMPER",     None)  # None = no bumper
 PUSHER_CHANNELS    = _params.get("pusher_channels", None)  # None = no pusher

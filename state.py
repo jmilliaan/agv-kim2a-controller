@@ -1,4 +1,7 @@
 import asyncio
+import time
+
+_EVENT_LOG_MAX = 200
 
 
 # ── Typed state domains ───────────────────────────────────────────────────────
@@ -7,8 +10,13 @@ class SystemState:
     """Owned by mode_manager and safety_watchdog."""
     def __init__(self):
         self.current_mode     = None   # None | "manual" | "armed" | "running" | "reverse" | "emergency"
-        self.emergency_active = False
-        self.system_error     = False  # set by safety_watchdog on driver comms loss
+        self.emergency_active    = False
+        self.system_error        = False   # critical driver lost (DIO) — blocks all modes
+        self.system_error_detail = ""
+        self.sensor_error        = False   # non-critical driver lost (CAN/RFID) — blocks auto only
+        self.sensor_error_detail = ""
+        self.bumper_active       = False   # True while impact bumper is triggered
+        self.event_log           = []      # list of {ts, level, msg} — max _EVENT_LOG_MAX entries
 
 
 class KinematicState:
@@ -82,6 +90,35 @@ class AMRState:
     def system_error(self): return self.system.system_error
     @system_error.setter
     def system_error(self, v): self.system.system_error = v
+
+    @property
+    def system_error_detail(self): return self.system.system_error_detail
+    @system_error_detail.setter
+    def system_error_detail(self, v): self.system.system_error_detail = v
+
+    @property
+    def sensor_error(self): return self.system.sensor_error
+    @sensor_error.setter
+    def sensor_error(self, v): self.system.sensor_error = v
+
+    @property
+    def sensor_error_detail(self): return self.system.sensor_error_detail
+    @sensor_error_detail.setter
+    def sensor_error_detail(self, v): self.system.sensor_error_detail = v
+
+    @property
+    def bumper_active(self): return self.system.bumper_active
+    @bumper_active.setter
+    def bumper_active(self, v): self.system.bumper_active = v
+
+    @property
+    def event_log(self): return self.system.event_log
+
+    def log_event(self, level: str, msg: str):
+        """Append a timestamped event to the in-memory log (thread-safe under GIL)."""
+        self.system.event_log.append({"ts": time.time(), "level": level, "msg": msg})
+        if len(self.system.event_log) > _EVENT_LOG_MAX:
+            del self.system.event_log[0]
 
     # ── KinematicState shims ──────────────────────────────────────────────────
 

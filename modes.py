@@ -107,12 +107,45 @@ async def auto_mode(state, direction="forward", engine=None):
             else:
                 target_speed = config.AUTO_TARGET_SLOW_SPEED   # reverse: fixed
 
-            # ── Lidar DI checks (no-op when profile has no lidar channels) ─────
+            # ── DI snapshot ───────────────────────────────────────────────────
             _di = state.latest_di
+            _label = "AUTO" if direction == "forward" else "REVERSE"
+
+            # ── Impact bumper ─────────────────────────────────────────────────
+            if config.DI_BUMPER is not None and _di is not None and _di[config.DI_BUMPER]:
+                logger.warning("[%s] BUMPER HIT — braking", _label)
+                state.log_event("WARNING", f"[{_label}] BUMPER HIT — motors braked")
+                state.bumper_active = True
+                await motion.set_brake(state)
+                current_target_speed = 0.0
+                pid.reset()
+                # Hold until bumper signal clears (or emergency overrides)
+                while True:
+                    if state.emergency_active:
+                        break
+                    _di_now = state.latest_di
+                    if _di_now is None or not _di_now[config.DI_BUMPER]:
+                        break
+                    await asyncio.sleep(0.01)
+                state.bumper_active = False
+                if state.emergency_active:
+                    await asyncio.sleep(config.DT)
+                    continue
+                logger.info("[%s] BUMPER CLEARED — waiting 2 s before resume", _label)
+                state.log_event("INFO", f"[{_label}] BUMPER CLEARED — resuming in 2 s")
+                await asyncio.sleep(2.0)
+                if direction == "forward":
+                    await motion.set_forward(state, 0.0)
+                else:
+                    await motion.set_reverse(state, 0.0)
+                tape_was_lost = False
+                continue
+
+            # ── Lidar DI checks (no-op when profile has no lidar channels) ─────
             if config.DI_LIDAR_STOP is not None and _di is not None and _di[config.DI_LIDAR_STOP]:
                 if not tape_was_lost:
-                    logger.warning("[%s] LIDAR STOP — obstacle detected, braking",
-                                   "AUTO" if direction == "forward" else "REVERSE")
+                    logger.warning("[%s] LIDAR STOP — obstacle detected, braking", _label)
+                    state.log_event("WARNING", f"[{_label}] LIDAR STOP — obstacle detected")
                     await motion.set_brake(state)
                     current_target_speed = 0.0
                     pid.reset()
@@ -135,8 +168,8 @@ async def auto_mode(state, direction="forward", engine=None):
 
                 # ── Tape-loss guard ───────────────────────────────────────────
                 if not sensor["tape_detected"]:
-                    logger.warning("[%s] LOST TAPE — stopping",
-                                   "AUTO" if direction == "forward" else "REVERSE")
+                    logger.warning("[%s] LOST TAPE — stopping", _label)
+                    state.log_event("WARNING", f"[{_label}] TAPE LOST — AGV stopped")
                     await motion.set_brake(state)
                     current_target_speed = 0.0
                     pid.reset()
@@ -145,8 +178,8 @@ async def auto_mode(state, direction="forward", engine=None):
                     continue
 
                 if tape_was_lost:
-                    logger.info("[%s] TAPE REACQUIRED — resuming",
-                                "AUTO" if direction == "forward" else "REVERSE")
+                    logger.info("[%s] TAPE REACQUIRED — resuming", _label)
+                    state.log_event("INFO", f"[{_label}] TAPE REACQUIRED — resuming")
                     if direction == "forward":
                         await motion.set_forward(state, 0.0)
                     else:
@@ -208,8 +241,8 @@ async def auto_mode(state, direction="forward", engine=None):
             # ── CAN timeout ───────────────────────────────────────────────────
             if time.time() - state.can_last_rx > config.CAN_TIMEOUT:
                 if not tape_was_lost:
-                    logger.warning("[%s] CAN TIMEOUT — sensor lost, stopping",
-                                   "AUTO" if direction == "forward" else "REVERSE")
+                    logger.warning("[%s] CAN TIMEOUT — sensor lost, stopping", _label)
+                    state.log_event("ERROR", f"[{_label}] CAN TIMEOUT — sensor comms lost")
                     await motion.set_brake(state)
                     current_target_speed = 0.0
                     pid.reset()
@@ -363,14 +396,26 @@ async def mode_manager(state, engine=None):
         last_reset = btn_reset
 
         # ── System error guard (watchdog — Phase 4) ───────────────────────────
+        # Critical driver lost (DIO) — stop everything including manual
         if state.system_error and current_mode not in ("emergency", None):
-            logger.error("SYSTEM ERROR — hardware driver lost, stopping")
+            detail = state.system_error_detail or "unknown"
+            logger.error("SYSTEM ERROR — hardware driver lost [%s], stopping", detail)
+            state.log_event("ERROR", f"SYSTEM ERROR — driver lost: {detail}")
             await _cancel_active()
             await _flush_and_brake()
             _reset_sequence_state()
-            # Hold here until watchdog clears system_error
             await asyncio.sleep(0.01)
             continue
+
+        # Sensor driver lost (CAN/RFID) — only stop auto modes; manual stays up
+        if state.sensor_error and current_mode in ("running", "reverse", "armed"):
+            detail = state.sensor_error_detail or "unknown"
+            logger.warning("SENSOR ERROR — sensor driver lost [%s], returning to armed", detail)
+            await _cancel_active()
+            await _flush_and_idle()
+            _reset_sequence_state()
+            current_mode       = "armed"
+            state.current_mode = current_mode
 
         # ══════════════════════════════════════════════════════════════════════
         #  EMERGENCY
@@ -379,6 +424,7 @@ async def mode_manager(state, engine=None):
         if not emergency_safe:
             if current_mode != "emergency":
                 logger.critical("!! EMERGENCY — all motion stopped")
+                state.log_event("CRITICAL", "EMERGENCY STOP — all motion halted")
                 await _cancel_active()
                 await _flush_and_brake()
                 _reset_sequence_state()
@@ -398,6 +444,7 @@ async def mode_manager(state, engine=None):
                 continue
 
             logger.info("Emergency cleared by operator RESET.")
+            state.log_event("INFO", "Emergency cleared by operator RESET")
             state.emergency_active = False
 
             if switch_manual:

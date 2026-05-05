@@ -201,28 +201,29 @@
   <button class="nav-btn" onclick="location.href='/manual'">MANUAL</button>
   <button class="nav-btn active">IO MONITOR</button>
   <button class="nav-btn" onclick="location.href='/params'">PARAMETERS</button>
+  <button class="nav-btn" onclick="location.href='/errors'">ERRORS</button>
 </div>
 
 <script>
 // ── Channel name tables — edit these to label your IO channels ──────────────
 // Index = channel number (0-based). Add names as needed; extras default to [SPARE].
 const DI_NAMES = [
-  /* 00 */ 'LIDAR AREA 1',
-  /* 01 */ 'LIDAR AREA 2',
-  /* 02 */ 'LIDAR AREA 3',
+  /* 00 */ '[SPARE]',
+  /* 01 */ '[SPARE]',
+  /* 02 */ '[SPARE]',
   /* 03 */ '[SPARE]',
-  /* 04 */ '[SPARE]',
-  /* 05 */ '[SPARE]',
-  /* 06 */ '[SPARE]',
-  /* 07 */ '[SPARE]',
+  /* 04 */ 'PB FORWARD',
+  /* 05 */ 'PB REVERSE',
+  /* 06 */ 'PB LEFT',
+  /* 07 */ 'PB RIGHT',
   /* 08 */ 'PB START AUTO',
   /* 09 */ 'PB RESET / STOP',
   /* 10 */ 'SS MAN / AUTO',
   /* 11 */ 'EPB EMERGENCY',
   /* 12 */ '[SPARE]',
-  /* 13 */ '[SPARE]',
-  /* 14 */ '[SPARE]',
-  /* 15 */ '[SPARE]',
+  /* 13 */ 'IMPACT BUMPER',
+  /* 14 */ 'LIDAR SLOW',
+  /* 15 */ 'LIDAR STOP',
 ];
 
 const DO_NAMES = [

@@ -42,6 +42,8 @@ def _build_state_snapshot():
         "mode":                 mode,
         "emergency":            s.emergency_active,
         "system_error":         s.system_error,
+        "sensor_error":         s.sensor_error,
+        "sensor_error_detail":  s.sensor_error_detail,
         "speed_mode":           s.speed_mode,
         "sequence_stop":        s.sequence_stop,
         "sequence_request":     s.plc_sequence_request,
@@ -95,6 +97,17 @@ def _build_state_snapshot():
         "pid_output": tel.get("pid_output"),
     }
 
+    # ── Safety indicators ─────────────────────────────────────────────────────
+    di = s.latest_di or []
+    def _di_flag(ch):
+        return bool(di[ch]) if ch is not None and len(di) > ch else False
+
+    safety = {
+        "bumper":     s.bumper_active,
+        "lidar_slow": _di_flag(_config.DI_LIDAR_SLOW),
+        "lidar_stop": _di_flag(_config.DI_LIDAR_STOP),
+    }
+
     return {
         "agv":        agv,
         "plc_writes": plc_writes,
@@ -102,6 +115,7 @@ def _build_state_snapshot():
         "sensor":     sensor,
         "sequences":  sequences,
         "motion":     motion_tel,
+        "safety":     safety,
     }
 
 
@@ -125,6 +139,23 @@ def params_page():
     return render_template("params.html",
                            agv_id=_config.AGV_ID,
                            profile=_config._params)
+
+@app.route("/errors")
+def errors_page():
+    return render_template("errors.html")
+
+@app.route("/api/errors")
+def api_errors():
+    if _state is None:
+        return jsonify({"error": "not initialised"}), 503
+    return jsonify({"events": list(reversed(_state.event_log))})
+
+@app.route("/api/errors/clear", methods=["POST"])
+def api_errors_clear():
+    if _state is None:
+        return jsonify({"error": "not initialised"}), 503
+    _state.event_log.clear()
+    return jsonify({"ok": True})
 
 @app.route("/api/manual/command", methods=["POST"])
 def api_manual_command():

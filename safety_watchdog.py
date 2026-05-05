@@ -1,16 +1,14 @@
 """
 safety_watchdog.py — Hardware driver health monitor
 ====================================================
-Polls a list of (SensorDriver, timeout_s) pairs every 50 ms.
+Polls a list of (driver, timeout_s, auto_only) tuples every 50 ms.
 
-If any driver has not received data within its timeout threshold:
-  - sets state.system_error = True
-  - immediately zeroes both AO speed outputs
+  auto_only=False (critical):  DIO/Modbus — loss blocks ALL modes including manual.
+                                Emergency button can't be read without it.
+  auto_only=True  (sensor):    CAN/RFID   — loss only blocks auto/running/reverse.
+                                Manual mode stays operational.
 
-When all drivers recover:
-  - clears state.system_error
-
-mode_manager reads state.system_error and forces idle on the next cycle.
+Sets state.system_error (critical) or state.sensor_error (auto-only) accordingly.
 DO/AO writer, SLMP handler are output-only and are not monitored here.
 """
 
@@ -23,37 +21,52 @@ logger = logging.getLogger(__name__)
 
 async def safety_watchdog(state, watched: list):
     """
-    watched: list of (SensorDriver, timeout_s) tuples.
-    Example:
-        safety_watchdog(state, watched=[
-            (di_drv,   config.WATCHDOG_DI_TIMEOUT_S),
-            (can_drv,  config.WATCHDOG_CAN_TIMEOUT_S),
-            (rfid_drv, config.WATCHDOG_RFID_TIMEOUT_S),
-        ])
+    watched: list of (driver, timeout_s) or (driver, timeout_s, auto_only) tuples.
+    auto_only defaults to False when omitted (backwards-compatible).
     """
     while True:
         now = time.time()
-        fault_detail = None
+        critical_fault = None
+        sensor_fault   = None
 
-        for driver, timeout_s in watched:
+        for entry in watched:
+            driver, timeout_s = entry[0], entry[1]
+            auto_only         = entry[2] if len(entry) > 2 else False
             h = driver.get_health()
             if (now - h["last_rx"]) > timeout_s:
-                fault_detail = h["detail"]
-                break
+                if auto_only:
+                    sensor_fault = h["detail"]
+                else:
+                    critical_fault = h["detail"]
 
-        if fault_detail is not None:
+        # ── Critical fault (DIO lost) — zero outputs, block all modes ────────
+        if critical_fault is not None:
             if not state.system_error:
-                logger.error(
-                    "WATCHDOG: driver '%s' stale (no data) — forcing idle",
-                    fault_detail,
-                )
+                logger.error("WATCHDOG: critical driver '%s' lost — forcing idle", critical_fault)
+                state.log_event("ERROR", f"WATCHDOG: critical driver lost: {critical_fault} — AGV stopped")
+                state.system_error_detail = critical_fault
                 state.system_error = True
-                # Zero speed outputs immediately without waiting for mode_manager
                 await state.ao_queue.put((0, 0.0))
                 await state.ao_queue.put((1, 0.0))
         else:
             if state.system_error:
-                logger.info("WATCHDOG: all drivers recovered — clearing system_error")
+                logger.info("WATCHDOG: critical driver recovered — clearing system_error")
+                state.log_event("INFO", "WATCHDOG: critical driver recovered")
+                state.system_error_detail = ""
                 state.system_error = False
+
+        # ── Sensor fault (CAN/RFID lost) — block auto only, manual stays up ──
+        if sensor_fault is not None:
+            if not state.sensor_error:
+                logger.warning("WATCHDOG: sensor driver '%s' lost — auto mode blocked", sensor_fault)
+                state.log_event("WARNING", f"WATCHDOG: sensor lost: {sensor_fault} — manual still available")
+                state.sensor_error_detail = sensor_fault
+                state.sensor_error = True
+        else:
+            if state.sensor_error:
+                logger.info("WATCHDOG: sensor driver recovered — clearing sensor_error")
+                state.log_event("INFO", "WATCHDOG: sensor driver recovered")
+                state.sensor_error_detail = ""
+                state.sensor_error = False
 
         await asyncio.sleep(0.05)

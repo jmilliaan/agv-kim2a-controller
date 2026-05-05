@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGV Event Log</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #d4d0c8;
+    color: #000;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 20px;
+    padding: 12px 12px 64px 12px;
+  }
+
+  .raised {
+    border-top:    3px solid #fff;
+    border-left:   3px solid #fff;
+    border-right:  3px solid #808080;
+    border-bottom: 3px solid #808080;
+  }
+
+  #header {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    background: #000080;
+    color: #fff;
+    padding: 8px 16px;
+    margin-bottom: 12px;
+    font-weight: bold;
+    font-size: 20px;
+    letter-spacing: 2px;
+  }
+  #header .title { flex: 1; }
+
+  #toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+    margin-bottom: 8px;
+  }
+  #event-count {
+    font-size: 14px; color: #404040; flex: 1;
+  }
+  #btn-clear {
+    padding: 5px 20px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 15px; font-weight: bold; letter-spacing: 1px;
+    cursor: pointer; background: #c0c0c0; color: #800000;
+    border-top: 3px solid #fff; border-left: 3px solid #fff;
+    border-right: 3px solid #808080; border-bottom: 3px solid #808080;
+  }
+  #btn-clear:active {
+    border-top: 3px solid #808080; border-left: 3px solid #808080;
+    border-right: 3px solid #fff; border-bottom: 3px solid #fff;
+  }
+
+  #log-panel { background: #c0c0c0; }
+  #log-panel .panel-title {
+    background: #000080; color: #fff;
+    font-weight: bold; font-size: 16px;
+    letter-spacing: 2px; padding: 4px 12px;
+    text-transform: uppercase;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  #live-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #40ff40;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.2; } }
+
+  #log-body { padding: 0; }
+
+  .event-row {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid #a0a0a0;
+    min-height: 34px;
+  }
+  .event-row:last-child { border-bottom: none; }
+
+  .event-ts {
+    flex-shrink: 0;
+    width: 90px;
+    padding: 4px 8px;
+    font-size: 13px;
+    color: #505050;
+    background: #b8b4ac;
+    border-right: 2px solid #a0a0a0;
+    display: flex; align-items: center;
+  }
+  .event-badge {
+    flex-shrink: 0;
+    width: 90px;
+    padding: 4px 8px;
+    font-size: 13px;
+    font-weight: bold;
+    text-align: center;
+    display: flex; align-items: center; justify-content: center;
+    border-right: 2px solid #a0a0a0;
+  }
+  .badge-CRITICAL { background: #800000; color: #fff; }
+  .badge-ERROR    { background: #c00000; color: #fff; }
+  .badge-WARNING  { background: #b06000; color: #fff; }
+  .badge-INFO     { background: #005080; color: #fff; }
+
+  .event-msg {
+    flex: 1;
+    padding: 4px 10px;
+    font-size: 15px;
+    display: flex; align-items: center;
+    word-break: break-word;
+  }
+  .row-CRITICAL { background: #ffe0e0; }
+  .row-ERROR    { background: #fff0f0; }
+  .row-WARNING  { background: #fff8e0; }
+  .row-INFO     { background: #c0c0c0; }
+
+  #empty-msg {
+    padding: 20px;
+    text-align: center;
+    color: #808080;
+    font-size: 16px;
+  }
+
+  /* ── Bottom nav bar ── */
+  #nav-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    display: flex;
+    background: #c0c0c0;
+    border-top: 3px solid #fff;
+    padding: 6px 12px;
+    gap: 6px;
+    z-index: 100;
+  }
+  .nav-btn {
+    flex: 1;
+    padding: 8px 0;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 16px; font-weight: bold; letter-spacing: 1px;
+    cursor: pointer; text-transform: uppercase;
+    background: #c0c0c0; color: #000;
+    border-top:    3px solid #fff;
+    border-left:   3px solid #fff;
+    border-right:  3px solid #808080;
+    border-bottom: 3px solid #808080;
+  }
+  .nav-btn.active {
+    background: #000080; color: #fff;
+    border-top:    3px solid #404040;
+    border-left:   3px solid #404040;
+    border-right:  3px solid #c0c0c0;
+    border-bottom: 3px solid #c0c0c0;
+  }
+  .nav-btn:active:not(.active) {
+    border-top:    3px solid #808080;
+    border-left:   3px solid #808080;
+    border-right:  3px solid #fff;
+    border-bottom: 3px solid #fff;
+  }
+
+  /* ── Kiosk / flip mode (?flip=1) ── */
+  html.flipped {
+    transform: rotate(180deg);
+    transform-origin: 50% 50%;
+  }
+</style>
+<script>
+  if (new URLSearchParams(location.search).get('flip') === '1') {
+    document.documentElement.classList.add('flipped');
+    document.querySelectorAll('[onclick]').forEach(function(el) {
+      var m = el.getAttribute('onclick').match(/location\.href='([^']+)'/);
+      if (m) el.setAttribute('onclick', "location.href='" + m[1] + "?flip=1'");
+    });
+  }
+</script>
+</head>
+<body>
+
+<div id="header" class="raised">
+  <span class="title">EVENT LOG</span>
+</div>
+
+<div id="toolbar">
+  <span id="event-count">Loading...</span>
+  <button id="btn-clear" onclick="clearLog()">CLEAR LOG</button>
+</div>
+
+<div id="log-panel" class="raised">
+  <div class="panel-title">
+    <span>EVENTS &mdash; NEWEST FIRST</span>
+    <span id="live-dot"></span>
+  </div>
+  <div id="log-body">
+    <div id="empty-msg">No events recorded.</div>
+  </div>
+</div>
+
+<!-- Bottom nav bar -->
+<div id="nav-bar">
+  <button class="nav-btn" onclick="location.href='/'">HOME</button>
+  <button class="nav-btn" onclick="location.href='/manual'">MANUAL</button>
+  <button class="nav-btn" onclick="location.href='/io'">IO MONITOR</button>
+  <button class="nav-btn" onclick="location.href='/params'">PARAMETERS</button>
+  <button class="nav-btn active">ERRORS</button>
+</div>
+
+<script>
+function fmt(ts) {
+  const d = new Date(ts * 1000);
+  return d.toLocaleTimeString('en-GB', { hour12: false });
+}
+
+function renderLog(events) {
+  const body = document.getElementById('log-body');
+  const count = document.getElementById('event-count');
+
+  count.textContent = events.length + ' event' + (events.length !== 1 ? 's' : '');
+
+  if (events.length === 0) {
+    body.innerHTML = '<div id="empty-msg">No events recorded.</div>';
+    return;
+  }
+
+  body.innerHTML = events.map(function(e) {
+    const lvl = e.level || 'INFO';
+    return '<div class="event-row row-' + lvl + '">'
+      + '<span class="event-ts">' + fmt(e.ts) + '</span>'
+      + '<span class="event-badge badge-' + lvl + '">' + lvl + '</span>'
+      + '<span class="event-msg">' + e.msg.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>'
+      + '</div>';
+  }).join('');
+}
+
+function fetchLog() {
+  fetch('/api/errors')
+    .then(function(r) { return r.json(); })
+    .then(function(d) { renderLog(d.events || []); })
+    .catch(function() {
+      document.getElementById('event-count').textContent = 'Connection lost';
+    });
+}
+
+function clearLog() {
+  fetch('/api/errors/clear', { method: 'POST' })
+    .then(function() { fetchLog(); });
+}
+
+fetchLog();
+setInterval(fetchLog, 1000);
+</script>
+</body>
+</html>
