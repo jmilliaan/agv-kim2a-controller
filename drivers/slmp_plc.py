@@ -10,6 +10,11 @@ logger = logging.getLogger(__name__)
 
 _NUM_SEQ_BITS = 17
 
+_Y_LABELS = ["Y0","Y1","Y2","Y3","Y4","Y5","Y6","Y7",
+             "Y10","Y11","Y12","Y13","Y14","Y15","Y16","Y17","Y20"]
+_X_LABELS = ["X0","X1","X2","X3","X4","X5","X6","X7",
+             "X10","X11","X12","X13"]
+
 
 def _plc_sync_cycle(plc, state) -> None:
     """
@@ -55,6 +60,29 @@ def _plc_sync_cycle(plc, state) -> None:
     if req is not None:
         if time.time() >= state.plc_sequence_pulse_expire:
             state.plc_sequence_request = None
+
+    # ── Trolley manual control — writes ──────────────────────────────────────
+    wb = state.trolley.write_bits
+    # M2104–M2109: top conv (M2108 is R-only → always write 0)
+    plc.batchwrite_bitunits(headdevice="M2104", values=[
+        wb["M2104"], wb["M2105"], wb["M2106"], wb["M2107"], 0, wb["M2109"]
+    ])
+    # M2124–M2129: bottom conv (M2128 is R-only → always write 0)
+    plc.batchwrite_bitunits(headdevice="M2124", values=[
+        wb["M2124"], wb["M2125"], wb["M2126"], wb["M2127"], 0, wb["M2129"]
+    ])
+    # M2212–M2213: pusher
+    plc.batchwrite_bitunits(headdevice="M2212", values=[wb["M2212"], wb["M2213"]])
+
+    # ── Trolley manual control — reads ───────────────────────────────────────
+    state.trolley.top_m_bits = [bool(v) for v in
+        plc.batchread_bitunits(headdevice="M2104", readsize=6)]
+    state.trolley.bot_m_bits = [bool(v) for v in
+        plc.batchread_bitunits(headdevice="M2124", readsize=6)]
+    state.trolley.y_bits = [bool(v) for v in
+        plc.batchread_bitunits(headdevice="Y0", readsize=17)]
+    state.trolley.x_bits = [bool(v) for v in
+        plc.batchread_bitunits(headdevice="X0", readsize=12)]
 
 
 class SLMPDriver(ActuatorDriver):

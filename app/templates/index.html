@@ -8,12 +8,41 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    background: #d4d0c8;   /* Classic Windows/HMI gray */
+    background: #d4d0c8;
     color: #000;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: Consolas, 'Courier New', Courier, monospace;
     font-size: 13px;
     padding: 8px;
+    padding-bottom: 52px;
   }
+
+  /* ── Nav bar ── */
+  #nav-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 44px;
+    background: #1a1a6e;
+    display: flex;
+    z-index: 200;
+    border-top: 2px solid #4040a0;
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a0a0e0;
+    font-family: Consolas, 'Courier New', Courier, monospace;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-decoration: none;
+    text-transform: uppercase;
+    border-right: 1px solid #3030a0;
+  }
+  .nav-btn:last-child { border-right: none; }
+  .nav-btn.active { background: #0000c0; color: #fff; border-top: 2px solid #8080ff; }
+  .nav-btn:hover:not(.active) { background: #0000a0; color: #e0e0ff; }
 
   /* ── Raised / sunken panel borders (classic HMI look) ── */
   .raised {
@@ -228,14 +257,14 @@
     border-right:  2px solid #fff;
     border-bottom: 2px solid #fff;
     padding: 3px 6px;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: Consolas, 'Courier New', Courier, monospace;
     font-size: 12px;
     font-weight: bold;
   }
 
   button {
     padding: 4px 18px;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: Consolas, 'Courier New', Courier, monospace;
     font-size: 12px;
     font-weight: bold;
     letter-spacing: 1px;
@@ -382,7 +411,7 @@
   #pos-display {
     font-size: 20px;
     font-weight: bold;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: Consolas, 'Courier New', Courier, monospace;
     letter-spacing: 2px;
     color: #000080;
     background: #fff;
@@ -412,7 +441,6 @@
 <div id="header" class="raised">
   <span class="title">AGV CONTROL MONITOR &nbsp;|&nbsp; AGV1-KIM</span>
   <span id="mode-badge" class="mode-badge">MODE: —</span>
-  <a href="/manual"><button id="btn-remote">&#9776; MANUAL REMOTE</button></a>
   <div id="emrg-lamp" class="emrg-lamp">
     <div class="lamp"></div>EMERGENCY
   </div>
@@ -818,5 +846,13 @@ fetchWifi();
 setInterval(fetchState, 500);
 setInterval(fetchWifi, 5000);
 </script>
+
+<nav id="nav-bar">
+  <a class="nav-btn active" href="/">HOME</a>
+  <a class="nav-btn" href="/manual">MANUAL</a>
+  <a class="nav-btn" href="/io">IO</a>
+  <a class="nav-btn" href="/trolley">TROLLEY</a>
+  <a class="nav-btn" href="/params">PARAMS</a>
+</nav>
 </body>
 </html>

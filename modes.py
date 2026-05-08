@@ -281,6 +281,8 @@ async def mode_manager(state, engine=None):
 
     async def _cancel_active():
         nonlocal active_task
+        if engine is not None:
+            await engine.cancel_active()
         if active_task:
             active_task.cancel()
             try:

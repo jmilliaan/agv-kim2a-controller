@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGV — Trolley Manual Control</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #d4d0c8;
+    color: #000;
+    font-family: Consolas, 'Courier New', Courier, monospace;
+    font-size: 13px;
+    padding: 8px;
+    padding-bottom: 52px;
+    user-select: none;
+  }
+
+  /* ── Nav bar ── */
+  #nav-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 44px;
+    background: #1a1a6e;
+    display: flex;
+    z-index: 200;
+    border-top: 2px solid #4040a0;
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #a0a0e0;
+    font-family: Consolas, 'Courier New', Courier, monospace;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-decoration: none;
+    text-transform: uppercase;
+    border-right: 1px solid #3030a0;
+  }
+  .nav-btn:last-child { border-right: none; }
+  .nav-btn.active { background: #0000c0; color: #fff; border-top: 2px solid #8080ff; }
+  .nav-btn:hover:not(.active) { background: #0000a0; color: #e0e0ff; }
+
+  .raised {
+    border-top:    2px solid #fff;
+    border-left:   2px solid #fff;
+    border-right:  2px solid #808080;
+    border-bottom: 2px solid #808080;
+  }
+  .sunken {
+    border-top:    2px solid #808080;
+    border-left:   2px solid #808080;
+    border-right:  2px solid #fff;
+    border-bottom: 2px solid #fff;
+  }
+
+  #header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #000080;
+    color: #fff;
+    padding: 5px 10px;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+  #header .title { flex: 1; }
+
+  .mode-badge {
+    padding: 2px 14px;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    border-top:    2px solid #808080;
+    border-left:   2px solid #808080;
+    border-right:  2px solid #fff;
+    border-bottom: 2px solid #fff;
+    background: #c0c0c0;
+    color: #000;
+  }
+  .mode-manual    { background: #0000c0; color: #fff; }
+  .mode-armed     { background: #c0a000; color: #000; }
+  .mode-running   { background: #008000; color: #fff; }
+  .mode-reverse   { background: #8000c0; color: #fff; }
+  .mode-emergency { background: #c00000; color: #fff; }
+
+  #ts { font-size: 11px; color: #c0c0c0; letter-spacing: 1px; }
+
+  a.back-btn {
+    text-decoration: none;
+  }
+  a.back-btn button {
+    background: #404040;
+    color: #fff;
+    font-size: 11px;
+    padding: 2px 10px;
+    font-family: Consolas, 'Courier New', Courier, monospace;
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-top:    2px solid #808080;
+    border-left:   2px solid #808080;
+    border-right:  2px solid #fff;
+    border-bottom: 2px solid #fff;
+  }
+
+  /* ── Overlay ── */
+  #overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    bottom: 44px;
+    background: rgba(0,0,0,0.55);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  #overlay.active { display: flex; }
+  #overlay-box {
+    background: #c0c0c0;
+    padding: 28px 40px;
+    text-align: center;
+    border-top:    3px solid #fff;
+    border-left:   3px solid #fff;
+    border-right:  3px solid #808080;
+    border-bottom: 3px solid #808080;
+  }
+  #overlay-title {
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: #c00000;
+    margin-bottom: 10px;
+  }
+  #overlay-msg {
+    font-size: 12px;
+    color: #404040;
+    letter-spacing: 1px;
+  }
+
+  /* ── Panel ── */
+  .panel { background: #c0c0c0; padding: 0; margin-bottom: 8px; }
+  .panel-title {
+    background: #000080;
+    color: #fff;
+    font-weight: bold;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 3px 8px;
+    text-transform: uppercase;
+  }
+  .panel-body { padding: 10px; }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #404040;
+    text-transform: uppercase;
+    margin: 8px 0 4px 0;
+    border-bottom: 1px solid #a0a0a0;
+    padding-bottom: 2px;
+  }
+  .section-label:first-child { margin-top: 0; }
+
+  /* ── Control buttons ── */
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .ctrl-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 8px 14px;
+    min-width: 80px;
+    background: #c0c0c0;
+    cursor: pointer;
+    border-top:    2px solid #fff;
+    border-left:   2px solid #fff;
+    border-right:  2px solid #808080;
+    border-bottom: 2px solid #808080;
+    font-family: Consolas, 'Courier New', Courier, monospace;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #000;
+    text-align: center;
+    touch-action: none;
+  }
+  .ctrl-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .ctrl-btn.pressed {
+    border-top:    2px solid #808080;
+    border-left:   2px solid #808080;
+    border-right:  2px solid #fff;
+    border-bottom: 2px solid #fff;
+    background: #a0c0a0;
+  }
+  .ctrl-btn .btn-addr {
+    font-size: 9px;
+    color: #606060;
+    font-weight: normal;
+  }
+
+  .ctrl-btn.btn-fwd.pressed    { background: #80c080; }
+  .ctrl-btn.btn-rvs.pressed    { background: #c0a040; }
+  .ctrl-btn.btn-brk.pressed    { background: #c08080; }
+  .ctrl-btn.btn-clr.pressed    { background: #8080c0; }
+  .ctrl-btn.btn-rel.pressed    { background: #80b0c0; }
+  .ctrl-btn.btn-ext.pressed    { background: #c080c0; }
+  .ctrl-btn.btn-ret.pressed    { background: #8080c0; }
+
+  /* ── Status lamps row ── */
+  .lamp-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .lamp-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: bold;
+    color: #404040;
+    letter-spacing: 0.5px;
+  }
+  .lamp-item .addr {
+    font-size: 9px;
+    color: #808080;
+    font-weight: normal;
+  }
+
+  .lamp {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: #888;
+    border: 2px solid #606060;
+    box-shadow: inset 0 1px 2px #00000044;
+  }
+  .lamp.on-amber {
+    background: radial-gradient(circle at 35% 35%, #ffe080, #d08000);
+    border-color: #804000;
+    box-shadow: 0 0 5px 1px #ffa00066, inset 0 1px 2px #ffffff44;
+  }
+  .lamp.on-green {
+    background: radial-gradient(circle at 35% 35%, #80ff80, #00a000);
+    border-color: #005000;
+    box-shadow: 0 0 5px 1px #00cc0066, inset 0 1px 2px #ffffff44;
+  }
+  .lamp.on-red {
+    background: radial-gradient(circle at 35% 35%, #ff8080, #cc0000);
+    border-color: #800000;
+    box-shadow: 0 0 5px 1px #cc000066, inset 0 1px 2px #ffffff44;
+  }
+
+  /* ── Bit row (for inputs panel) ── */
+  .bit-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 22px;
+    border-bottom: 1px solid #b0b0b0;
+  }
+  .bit-row:last-child { border-bottom: none; }
+  .bit-addr {
+    width: 46px;
+    flex-shrink: 0;
+    font-size: 10px;
+    color: #505050;
+    padding: 0 4px;
+    border-right: 1px solid #a0a0a0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    background: #b8b4ac;
+  }
+  .bit-name {
+    flex: 1;
+    padding: 0 6px;
+    font-weight: bold;
+    font-size: 12px;
+    color: #000;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Two-column layout for inputs ── */
+  .columns-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div id="header" class="raised">
+  <span class="title">TROLLEY MANUAL CONTROL &nbsp;|&nbsp; AGV1-KIM</span>
+  <span id="mode-badge" class="mode-badge">MODE: —</span>
+  <span id="ts">—</span>
+</div>
+
+<!-- Overlay (SLMP disabled or wrong mode) -->
+<div id="overlay">
+  <div id="overlay-box">
+    <div id="overlay-title">⚠ LOCKED</div>
+    <div id="overlay-msg">—</div>
+  </div>
+</div>
+
+<!-- TOP CONVEYOR -->
+<div class="panel raised">
+  <div class="panel-title">TOP CONVEYOR</div>
+  <div class="panel-body">
+    <div class="section-label">Commands</div>
+    <div class="btn-row">
+      <button class="ctrl-btn btn-fwd" data-addr="M2104">FWD<span class="btn-addr">M2104</span></button>
+      <button class="ctrl-btn btn-rvs" data-addr="M2105">RVS<span class="btn-addr">M2105</span></button>
+      <button class="ctrl-btn btn-clr" data-addr="M2106">CLR ERR<span class="btn-addr">M2106</span></button>
+      <button class="ctrl-btn btn-brk" data-addr="M2107">BRAKE<span class="btn-addr">M2107</span></button>
+      <button class="ctrl-btn btn-rel" data-addr="M2109">BRK RELEASE<span class="btn-addr">M2109</span></button>
+    </div>
+
+    <div class="section-label">Status</div>
+    <div class="lamp-row">
+      <div class="lamp-item"><span class="lamp" id="y-Y0"></span>FWD <span class="addr">Y0</span></div>
+      <div class="lamp-item"><span class="lamp" id="y-Y1"></span>RVS <span class="addr">Y1</span></div>
+      <div class="lamp-item"><span class="lamp" id="y-Y2"></span>CLR ERROR <span class="addr">Y2</span></div>
+      <div class="lamp-item"><span class="lamp" id="y-Y3"></span>BRAKE <span class="addr">Y3</span></div>
+      <div class="lamp-item"><span class="lamp" id="m-M2108"></span>BRK LATCH <span class="addr">M2108</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM CONVEYOR -->
+<div class="panel raised">
+  <div class="panel-title">BOTTOM CONVEYOR</div>
+  <div class="panel-body">
+    <div class="section-label">Commands</div>
+    <div class="btn-row">
+      <button class="ctrl-btn btn-fwd" data-addr="M2124">FWD<span class="btn-addr">M2124</span></button>
+      <button class="ctrl-btn btn-rvs" data-addr="M2125">RVS<span class="btn-addr">M2125</span></button>
+      <button class="ctrl-btn btn-clr" data-addr="M2126">CLR ERR<span class="btn-addr">M2126</span></button>
+      <button class="ctrl-btn btn-brk" data-addr="M2127">BRAKE<span class="btn-addr">M2127</span></button>
+      <button class="ctrl-btn btn-rel" data-addr="M2129">BRK RELEASE<span class="btn-addr">M2129</span></button>
+    </div>
+
+    <div class="section-label">Status</div>
+    <div class="lamp-row">
+      <div class="lamp-item"><span class="lamp" id="y-Y4"></span>FWD <span class="addr">Y4</span></div>
+      <div class="lamp-item"><span class="lamp" id="y-Y5"></span>RVS <span class="addr">Y5</span></div>
+      <div class="lamp-item"><span class="lamp" id="y-Y6"></span>CLR ERROR <span class="addr">Y6</span></div>
+      <div class="lamp-item"><span class="lamp" id="y-Y7"></span>BRAKE <span class="addr">Y7</span></div>
+      <div class="lamp-item"><span class="lamp" id="m-M2128"></span>BRK LATCH <span class="addr">M2128</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- PUSHER -->
+<div class="panel raised">
+  <div class="panel-title">PUSHER</div>
+  <div class="panel-body">
+    <div class="section-label">Commands</div>
+    <div class="btn-row">
+      <button class="ctrl-btn btn-ext" data-addr="M2212">EXTEND<span class="btn-addr">M2212</span></button>
+      <button class="ctrl-btn btn-ret" data-addr="M2213">RETRACT<span class="btn-addr">M2213</span></button>
+    </div>
+
+    <div class="section-label">Top Pusher Status</div>
+    <div class="lamp-row" style="margin-bottom:8px;">
+      <div class="lamp-item"><span class="lamp" id="y-Y14"></span>RED (+) <span class="addr">Y14</span></div>
+      <div class="lamp-item"><span class="lamp" id="y-Y15"></span>RED (-) <span class="addr">Y15</span></div>
+      <div class="lamp-item"><span class="lamp" id="y-Y16"></span>BLACK (-) <span class="addr">Y16</span></div>
+      <div class="lamp-item"><span class="lamp" id="y-Y17"></span>BLACK (+) <span class="addr">Y17</span></div>
+    </div>
+
+    <div class="section-label">Bottom Pusher Status</div>
+    <div class="lamp-row" style="margin-bottom:8px;">
+      <div class="lamp-item"><span class="lamp" id="y-Y10"></span>RED (+) <span class="addr">Y10</span></div>
+      <div class="lamp-item"><span class="lamp" id="y-Y11"></span>RED (-) <span class="addr">Y11</span></div>
+      <div class="lamp-item"><span class="lamp" id="y-Y12"></span>BLACK (-) <span class="addr">Y12</span></div>
+      <div class="lamp-item"><span class="lamp" id="y-Y13"></span>BLACK (+) <span class="addr">Y13</span></div>
+    </div>
+
+    <div class="section-label">General</div>
+    <div class="lamp-row">
+      <div class="lamp-item"><span class="lamp" id="y-Y20"></span>PL READY <span class="addr">Y20</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- INPUTS (X) -->
+<div class="panel raised">
+  <div class="panel-title">INPUTS [ X — READ ONLY ]</div>
+  <div class="panel-body">
+    <div class="columns-2">
+      <div>
+        <div class="bit-row"><span class="bit-addr">X0</span><span class="bit-name">PB START AUTO</span><span class="lamp" id="x-X0"></span></div>
+        <div class="bit-row"><span class="bit-addr">X1</span><span class="bit-name">SS MAN/AUTO</span><span class="lamp" id="x-X1"></span></div>
+        <div class="bit-row"><span class="bit-addr">X2</span><span class="bit-name">EPB TROLLEY</span><span class="lamp" id="x-X2"></span></div>
+        <div class="bit-row"><span class="bit-addr">X3</span><span class="bit-name">[SPARE]</span><span class="lamp" id="x-X3"></span></div>
+        <div class="bit-row"><span class="bit-addr">X4</span><span class="bit-name">PRX1.TOP.FRONT.RIGHT</span><span class="lamp" id="x-X4"></span></div>
+        <div class="bit-row"><span class="bit-addr">X5</span><span class="bit-name">PRX2.TOP.REAR.RIGHT</span><span class="lamp" id="x-X5"></span></div>
+      </div>
+      <div>
+        <div class="bit-row"><span class="bit-addr">X6</span><span class="bit-name">PRX3.TOP.REAR.LEFT</span><span class="lamp" id="x-X6"></span></div>
+        <div class="bit-row"><span class="bit-addr">X7</span><span class="bit-name">PRX4.TOP.FRONT.LEFT</span><span class="lamp" id="x-X7"></span></div>
+        <div class="bit-row"><span class="bit-addr">X10</span><span class="bit-name">PRX5.BOT.FRONT.RIGHT</span><span class="lamp" id="x-X10"></span></div>
+        <div class="bit-row"><span class="bit-addr">X11</span><span class="bit-name">PRX6.BOT.REAR.RIGHT</span><span class="lamp" id="x-X11"></span></div>
+        <div class="bit-row"><span class="bit-addr">X12</span><span class="bit-name">PRX7.BOT.REAR.LEFT</span><span class="lamp" id="x-X12"></span></div>
+        <div class="bit-row"><span class="bit-addr">X13</span><span class="bit-name">PRX8.BOT.FRONT.LEFT</span><span class="lamp" id="x-X13"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<nav id="nav-bar">
+  <a class="nav-btn" href="/">HOME</a>
+  <a class="nav-btn" href="/manual">MANUAL</a>
+  <a class="nav-btn" href="/io">IO</a>
+  <a class="nav-btn active" href="/trolley">TROLLEY</a>
+  <a class="nav-btn" href="/params">PARAMS</a>
+</nav>
+
+<script>
+function setLamp(id, on, cls) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'lamp' + (on ? (' ' + cls) : '');
+}
+
+// ── Overlay logic ────────────────────────────────────────────────────────────
+function updateOverlay(slmpEnabled, agvMode) {
+  const overlay = document.getElementById('overlay');
+  const msg     = document.getElementById('overlay-msg');
+  const btns    = document.querySelectorAll('.ctrl-btn');
+
+  if (!slmpEnabled) {
+    overlay.classList.add('active');
+    msg.textContent = 'SLMP is disabled. Enable it first.';
+    btns.forEach(b => b.disabled = true);
+  } else if (agvMode !== 'manual') {
+    overlay.classList.add('active');
+    msg.textContent = 'AGV must be in MANUAL mode to use trolley control.';
+    btns.forEach(b => b.disabled = true);
+  } else {
+    overlay.classList.remove('active');
+    btns.forEach(b => b.disabled = false);
+  }
+}
+
+// ── State polling ────────────────────────────────────────────────────────────
+function fetchTrolleyState() {
+  fetch('/api/trolley/state')
+    .then(r => r.json())
+    .then(d => {
+      // Mode badge
+      const mode  = d.agv_mode || null;
+      const badge = document.getElementById('mode-badge');
+      badge.textContent = 'MODE: ' + (mode ? mode.toUpperCase() : '—');
+      badge.className   = 'mode-badge' + (mode ? (' mode-' + mode) : '');
+
+      updateOverlay(d.slmp_enabled, d.agv_mode);
+
+      // Y lamps (amber = output active)
+      const y = d.y_bits || {};
+      Object.entries(y).forEach(([k, v]) => setLamp('y-' + k, v, 'on-amber'));
+
+      // X lamps (green = input active)
+      const x = d.x_bits || {};
+      Object.entries(x).forEach(([k, v]) => setLamp('x-' + k, v, 'on-green'));
+
+      // M bits (BRK LATCH lamps — amber)
+      const tm = d.top_m_bits || {};
+      const bm = d.bot_m_bits || {};
+      setLamp('m-M2108', tm['M2108'], 'on-amber');
+      setLamp('m-M2128', bm['M2128'], 'on-amber');
+
+      document.getElementById('ts').textContent = new Date().toLocaleTimeString();
+    })
+    .catch(() => {
+      document.getElementById('ts').textContent = 'NO CONN';
+    });
+}
+
+// ── Button press/release ─────────────────────────────────────────────────────
+function writeAddr(address, value) {
+  fetch('/api/trolley/write', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ address, value }),
+  }).catch(() => {});
+}
+
+function bindButtons() {
+  document.querySelectorAll('.ctrl-btn').forEach(btn => {
+    const addr = btn.dataset.addr;
+
+    function press(e) {
+      e.preventDefault();
+      if (btn.disabled) return;
+      btn.classList.add('pressed');
+      writeAddr(addr, 1);
+    }
+    function release(e) {
+      e.preventDefault();
+      btn.classList.remove('pressed');
+      writeAddr(addr, 0);
+    }
+
+    btn.addEventListener('mousedown',   press);
+    btn.addEventListener('mouseup',     release);
+    btn.addEventListener('mouseleave',  release);
+    btn.addEventListener('touchstart',  press,   { passive: false });
+    btn.addEventListener('touchend',    release, { passive: false });
+    btn.addEventListener('touchcancel', release, { passive: false });
+  });
+}
+
+bindButtons();
+fetchTrolleyState();
+setInterval(fetchTrolleyState, 500);
+</script>
+</body>
+</html>

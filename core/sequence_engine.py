@@ -49,6 +49,9 @@ class SequenceEngine:
         # name of currently executing sequence (one at a time)
         self._active_sequence: str | None = None
 
+        # asyncio Task for the running sequence — cancelled on mode transitions
+        self._active_task: asyncio.Task | None = None
+
         # ── Built-in action registry ──────────────────────────────────────────
         self._actions: dict = {
             "set_speed":         self._act_set_speed,
@@ -82,7 +85,7 @@ class SequenceEngine:
             if trig["type"] == "rfid" and trig["rfid_tag"] == tag_hex:
                 if not self._check_preconditions(seq, now):
                     continue
-                asyncio.create_task(self._run_sequence(seq))
+                self._active_task = asyncio.create_task(self._run_sequence(seq))
 
             elif trig["type"] == "rfid_then_marker" and trig["rfid_tag"] == tag_hex:
                 if not self._check_preconditions(seq, now):
@@ -107,7 +110,7 @@ class SequenceEngine:
                 self._state.pending_sequence = None
                 logger.info("[SEQ] Marker '%s' detected — launching '%s'", side, name)
                 # skip set_speed + wait_marker steps (already done during approach)
-                asyncio.create_task(self._run_sequence(seq, skip_approach=True))
+                self._active_task = asyncio.create_task(self._run_sequence(seq, skip_approach=True))
 
         # Check pure marker-triggered sequences
         for seq in self._sequences:
@@ -115,7 +118,18 @@ class SequenceEngine:
             if trig["type"] == "marker" and trig.get("marker_side") == side:
                 if not self._check_preconditions(seq, now):
                     continue
-                asyncio.create_task(self._run_sequence(seq))
+                self._active_task = asyncio.create_task(self._run_sequence(seq))
+
+    async def cancel_active(self):
+        """Cancel the currently running sequence task, if any.
+        Called by mode_manager on emergency, manual switch, or stop."""
+        if self._active_task and not self._active_task.done():
+            self._active_task.cancel()
+            try:
+                await self._active_task
+            except (asyncio.CancelledError, Exception):
+                pass
+        self._active_task = None
 
     def cancel_armed(self):
         """Disarm all pending rfid_then_marker sequences.
@@ -272,13 +286,9 @@ class SequenceEngine:
                 raise asyncio.CancelledError()
             await asyncio.sleep(0.1)
 
-        # Phase B: wait for complete flag to go HIGH (PLC work done)
-        logger.info("[SEQ] Waiting PLC seq=%d done (flag HIGH)", seq_num)
-        deadline = time.time() + done_timeout
+        # Phase B: wait indefinitely for PLC complete flag to go HIGH
+        logger.info("[SEQ] Waiting PLC seq=%d done (flag HIGH) — no timeout", seq_num)
         while not self._state.plc_sequence_complete[seq_num]:
-            if time.time() > deadline:
-                logger.warning("[SEQ] PLC seq=%d done timeout — resuming anyway", seq_num)
-                return
             if self._state.current_mode != "running":
                 raise asyncio.CancelledError()
             await asyncio.sleep(0.1)

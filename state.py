@@ -25,6 +25,7 @@ class PerceptionState:
     """Written by hardware drivers; read by auto_mode and sequence_engine."""
     def __init__(self):
         self.latest_di     = None   # latest DI bits from Modbus
+        self.latest_do     = {}     # {channel_no: bool} commanded DO state, updated by DOWriter
         self.latest_sensor = None   # last CAN frame dict from MGS1600
         self.can_last_rx   = 0.0    # epoch of last CAN message received
 
@@ -36,6 +37,20 @@ class PLCState:
         self.plc_sequence_request      = None   # int 0-16 → sets M201x; None → all LOW
         self.plc_sequence_pulse_expire = 0.0    # epoch after which request bit is cleared
         self.plc_sequence_complete     = [False] * 17  # M2040–M2056
+
+
+class TrolleyState:
+    """Owned by slmp_handler; read by Flask trolley dashboard."""
+    def __init__(self):
+        self.y_bits     = [False] * 17  # Y0–Y20 (octal), indices 0–16
+        self.x_bits     = [False] * 12  # X0–X13 (octal), indices 0–11
+        self.top_m_bits = [False] * 6   # M2104–M2109
+        self.bot_m_bits = [False] * 6   # M2124–M2129
+        self.write_bits = {             # set by Flask; written to PLC each cycle
+            "M2104": 0, "M2105": 0, "M2106": 0, "M2107": 0, "M2109": 0,
+            "M2124": 0, "M2125": 0, "M2126": 0, "M2127": 0, "M2129": 0,
+            "M2212": 0, "M2213": 0,
+        }
 
 
 # ── Shared state object ───────────────────────────────────────────────────────
@@ -62,6 +77,7 @@ class AMRState:
         self.kinematic  = KinematicState()
         self.perception = PerceptionState()
         self.plc        = PLCState()
+        self.trolley    = TrolleyState()
 
     # ── SystemState shims ─────────────────────────────────────────────────────
 
@@ -113,6 +129,11 @@ class AMRState:
     def latest_di(self): return self.perception.latest_di
     @latest_di.setter
     def latest_di(self, v): self.perception.latest_di = v
+
+    @property
+    def latest_do(self): return self.perception.latest_do
+    @latest_do.setter
+    def latest_do(self, v): self.perception.latest_do = v
 
     @property
     def latest_sensor(self): return self.perception.latest_sensor

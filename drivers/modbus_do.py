@@ -24,6 +24,7 @@ class DOWriter(ActuatorDriver):
                     address=config.DO_BASE + channel_no,
                     value=bool(active_state),
                     device_id=config.DEVICE_ID)
+                state.latest_do[channel_no] = bool(active_state)
 
             except Exception as e:
                 logger.error("DO Writer error: %s. Reconnecting...", e)

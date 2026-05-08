@@ -49,11 +49,11 @@
   },
 
   "speeds": {
-    "MANUAL_TARGET_HIGH_SPEED": 0.4,
-    "MANUAL_TARGET_SLOW_SPEED": 0.2,
-    "AUTO_TARGET_HIGH_SPEED": 0.40,
-    "AUTO_TARGET_SLOW_SPEED": 0.20,
-    "AUTO_TARGET_EXTRA_SLOW_SPEED": 0.15,
+    "MANUAL_TARGET_HIGH_SPEED": 0.30,
+    "MANUAL_TARGET_SLOW_SPEED": 0.15,
+    "AUTO_TARGET_HIGH_SPEED": 0.30,
+    "AUTO_TARGET_SLOW_SPEED": 0.16,
+    "AUTO_TARGET_EXTRA_SLOW_SPEED": 0.10,
     "ACCEL_RATE": 0.8
   },
 
@@ -63,7 +63,7 @@
     "TD": 0.12,
     "N": 20,
     "_comment_slow": "SLOW / EXTRA_SLOW gains — tuned for 0.25m/s, proven stable",
-    "KP_SLOW": 2.2,
+    "KP_SLOW": 2.1,
     "TD_SLOW": 0.14,
     "N_SLOW": 12,
     "_comment_shared": "Shared — integral and timing constants",
@@ -136,10 +136,10 @@
       },
       "actions": [
         { "type": "set_speed",        "speed": "SLOW" },
-        { "type": "wait_marker",      "side": "left", "timeout": 15.0 },
+        { "type": "wait_marker",      "side": "left", "timeout": 30.0 },
         { "type": "stop_agv" },
         { "type": "plc_request",      "seq_num": 0, "pulse_duration": 1.0 },
-        { "type": "wait_plc_complete","seq_num": 0, "clear_timeout": 5.0, "done_timeout": 30.0 },
+        { "type": "wait_plc_complete","seq_num": 0, "clear_timeout": 10.0, "done_timeout": 180.0 },
         { "type": "resume",           "speed": "HIGH" }
       ],
       "cooldown_s": 10.0,
@@ -247,7 +247,7 @@
     "DIO_ENABLED":  1,
     "CAN_ENABLED":  1,
     "RFID_ENABLED": 1,
-    "SLMP_ENABLED": 0
+    "SLMP_ENABLED": 1
   },
 
   "watchdog": {
@@ -303,5 +303,52 @@
     "M2054":{ "description": "SEQUENCE.14.COMPLETE",       "permission": "R" },
     "M2055":{ "description": "SEQUENCE.15.COMPLETE",       "permission": "R" },
     "M2056":{ "description": "SEQUENCE.16.COMPLETE",       "permission": "R" }
+  },
+
+  "slmp_manual": {
+    "_comment": "Manual trolley control registers — available in AGV MANUAL mode only",
+    "M2212": { "description": "MAN REQ PUSHER EXTEND",        "permission": "R/W", "ui": "button" },
+    "M2213": { "description": "MAN REQ PUSHER RETRACT",       "permission": "R/W", "ui": "button" },
+    "M2104": { "description": "MAN REQ TOP CONV FWD",         "permission": "R/W", "ui": "button" },
+    "M2105": { "description": "MAN REQ TOP CONV RVS",         "permission": "R/W", "ui": "button" },
+    "M2106": { "description": "MAN REQ TOP CONV CLR",         "permission": "R/W", "ui": "button" },
+    "M2107": { "description": "MAN REQ TOP CONV BRK",         "permission": "R/W", "ui": "button" },
+    "M2108": { "description": "MAN REQ TOP CONV BRK LATCH",   "permission": "R",   "ui": "lamp-amber" },
+    "M2109": { "description": "MAN REQ TOP CONV BRK RELEASE", "permission": "R/W", "ui": "button" },
+    "M2124": { "description": "MAN REQ BOTTOM CONV FWD",      "permission": "R/W", "ui": "button" },
+    "M2125": { "description": "MAN REQ BOTTOM CONV RVS",      "permission": "R/W", "ui": "button" },
+    "M2126": { "description": "MAN REQ BOTTOM CONV CLR",      "permission": "R/W", "ui": "button" },
+    "M2127": { "description": "MAN REQ BOTTOM CONV BRK",      "permission": "R/W", "ui": "button" },
+    "M2128": { "description": "MAN REQ BOTTOM CONV BRK LATCH","permission": "R",   "ui": "lamp-amber" },
+    "M2129": { "description": "MAN REQ BOTTOM CONV BRK RELEASE","permission":"R/W", "ui": "button" },
+    "Y0":    { "description": "TOP CONV FWD",                 "permission": "R",   "ui": "lamp-amber" },
+    "Y1":    { "description": "TOP CONV RVS",                 "permission": "R",   "ui": "lamp-amber" },
+    "Y2":    { "description": "TOP CONV CLEAR ERROR",         "permission": "R",   "ui": "lamp-amber" },
+    "Y3":    { "description": "TOP CONV BRAKE",               "permission": "R",   "ui": "lamp-amber" },
+    "Y4":    { "description": "BOTTOM CONV FWD",              "permission": "R",   "ui": "lamp-amber" },
+    "Y5":    { "description": "BOTTOM CONV RVS",              "permission": "R",   "ui": "lamp-amber" },
+    "Y6":    { "description": "BOTTOM CONV CLEAR ERROR",      "permission": "R",   "ui": "lamp-amber" },
+    "Y7":    { "description": "BOTTOM CONV BRAKE",            "permission": "R",   "ui": "lamp-amber" },
+    "Y10":   { "description": "BOTTOM PUSHER RED (+)",        "permission": "R",   "ui": "lamp-amber" },
+    "Y11":   { "description": "BOTTOM PUSHER RED (-)",        "permission": "R",   "ui": "lamp-amber" },
+    "Y12":   { "description": "BOTTOM PUSHER BLACK (-)",      "permission": "R",   "ui": "lamp-amber" },
+    "Y13":   { "description": "BOTTOM PUSHER BLACK (+)",      "permission": "R",   "ui": "lamp-amber" },
+    "Y14":   { "description": "TOP PUSHER RED (+)",           "permission": "R",   "ui": "lamp-amber" },
+    "Y15":   { "description": "TOP PUSHER RED (-)",           "permission": "R",   "ui": "lamp-amber" },
+    "Y16":   { "description": "TOP PUSHER BLACK (-)",         "permission": "R",   "ui": "lamp-amber" },
+    "Y17":   { "description": "TOP PUSHER BLACK (+)",         "permission": "R",   "ui": "lamp-amber" },
+    "Y20":   { "description": "PL READY",                     "permission": "R",   "ui": "lamp-amber" },
+    "X0":    { "description": "PB START AUTO",                "permission": "R",   "ui": "lamp-green" },
+    "X1":    { "description": "SS MAN/AUTO",                  "permission": "R",   "ui": "lamp-green" },
+    "X2":    { "description": "EPB TROLLEY",                  "permission": "R",   "ui": "lamp-green" },
+    "X3":    { "description": "[SPARE]",                      "permission": "R",   "ui": "lamp-green" },
+    "X4":    { "description": "PRX1.TOP.FRONT.RIGHT",         "permission": "R",   "ui": "lamp-green" },
+    "X5":    { "description": "PRX2.TOP.REAR.RIGHT",          "permission": "R",   "ui": "lamp-green" },
+    "X6":    { "description": "PRX3.TOP.REAR.LEFT",           "permission": "R",   "ui": "lamp-green" },
+    "X7":    { "description": "PRX4.TOP.FRONT.LEFT",          "permission": "R",   "ui": "lamp-green" },
+    "X10":   { "description": "PRX5.BOT.FRONT.RIGHT",        "permission": "R",   "ui": "lamp-green" },
+    "X11":   { "description": "PRX6.BOT.REAR.RIGHT",         "permission": "R",   "ui": "lamp-green" },
+    "X12":   { "description": "PRX7.BOT.REAR.LEFT",          "permission": "R",   "ui": "lamp-green" },
+    "X13":   { "description": "PRX8.BOT.FRONT.LEFT",         "permission": "R",   "ui": "lamp-green" }
   }
 }
