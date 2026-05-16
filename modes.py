@@ -99,6 +99,9 @@ async def auto_mode(state, direction="forward", engine=None):
                     if state.speed_mode == "HIGH":
                         pid.update_gains(config.KP, config.TD, config.N,
                                          config.V_RED_COEF)
+                    elif state.speed_mode == "EXTRA_SLOW":
+                        pid.update_gains(config.KP_EXTRA_SLOW, config.TD_EXTRA_SLOW,
+                                         config.N_EXTRA_SLOW, config.V_RED_COEF_EXTRA_SLOW)
                     else:
                         pid.update_gains(config.KP_SLOW, config.TD_SLOW,
                                          config.N_SLOW, config.V_RED_COEF_SLOW)
@@ -165,6 +168,11 @@ async def auto_mode(state, direction="forward", engine=None):
                 await state.ao_queue.put((0, left_v))
                 await state.ao_queue.put((1, right_v))
 
+                state.left_rpm     = left_rpm
+                state.right_rpm    = right_rpm
+                state.pid_output   = dbg["output"]
+                state.target_speed = current_target_speed
+
                 recorder.record(error_mm=dbg["e"], left_rpm=left_rpm,
                                 right_rpm=right_rpm, pid_output=dbg["output"],
                                 d_term=dbg["d"])
@@ -216,6 +224,10 @@ async def manual_mode(state):
             di = await state.di_queue.get()
 
         # ── Web remote takes priority; fall back to physical DI ───────────────
+        # Auto-expire stale web command (network lag / dropped connection safety)
+        if state.web_manual_command is not None and time.time() > state.web_manual_expire:
+            state.web_manual_command = None
+
         web_cmd = state.web_manual_command
         if web_cmd is not None:
             motion_state = web_cmd
@@ -387,6 +399,7 @@ async def mode_manager(state, engine=None):
         # ══════════════════════════════════════════════════════════════════════
 
         if current_mode is None:
+            await _flush_and_idle()   # force Modbus DO/AO writers to connect & init outputs
             if switch_manual:
                 logger.info("Startup: MANUAL")
                 active_task        = asyncio.create_task(manual_mode(state))

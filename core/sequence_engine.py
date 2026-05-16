@@ -92,7 +92,7 @@ class SequenceEngine:
                     continue
                 # Arm: slow down for approach, record armed state
                 self._armed[seq["name"]] = seq
-                self._state.speed_mode       = "SLOW"
+                self._state.speed_mode       = "EXTRA_SLOW"
                 self._state.pending_sequence = seq["name"]
                 logger.info("[SEQ] Armed '%s' — slowing for marker approach", seq["name"])
 

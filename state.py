@@ -19,6 +19,7 @@ class KinematicState:
         self.pending_sequence     = None    # name of armed rfid_then_marker sequence
         self.reverse_auto_request = False   # set by Flask to start reverse tape-follow
         self.web_manual_command   = None    # set by Flask remote; "forward"|"reverse"|"left"|"right"|"fwd_left"|"fwd_right"|"rvs_left"|"rvs_right"|None
+        self.web_manual_expire    = 0.0     # epoch after which web_manual_command is treated as None
 
 
 class PerceptionState:
@@ -28,6 +29,11 @@ class PerceptionState:
         self.latest_do     = {}     # {channel_no: bool} commanded DO state, updated by DOWriter
         self.latest_sensor = None   # last CAN frame dict from MGS1600
         self.can_last_rx   = 0.0    # epoch of last CAN message received
+        # Motion telemetry — written by auto_mode each PID cycle
+        self.left_rpm      = 0.0
+        self.right_rpm     = 0.0
+        self.pid_output    = 0.0
+        self.target_speed  = 0.0    # current ramp target in m/s
 
 
 class PLCState:
@@ -123,6 +129,11 @@ class AMRState:
     @web_manual_command.setter
     def web_manual_command(self, v): self.kinematic.web_manual_command = v
 
+    @property
+    def web_manual_expire(self): return self.kinematic.web_manual_expire
+    @web_manual_expire.setter
+    def web_manual_expire(self, v): self.kinematic.web_manual_expire = v
+
     # ── PerceptionState shims ─────────────────────────────────────────────────
 
     @property
@@ -144,6 +155,26 @@ class AMRState:
     def can_last_rx(self): return self.perception.can_last_rx
     @can_last_rx.setter
     def can_last_rx(self, v): self.perception.can_last_rx = v
+
+    @property
+    def left_rpm(self): return self.perception.left_rpm
+    @left_rpm.setter
+    def left_rpm(self, v): self.perception.left_rpm = v
+
+    @property
+    def right_rpm(self): return self.perception.right_rpm
+    @right_rpm.setter
+    def right_rpm(self, v): self.perception.right_rpm = v
+
+    @property
+    def pid_output(self): return self.perception.pid_output
+    @pid_output.setter
+    def pid_output(self, v): self.perception.pid_output = v
+
+    @property
+    def target_speed(self): return self.perception.target_speed
+    @target_speed.setter
+    def target_speed(self, v): self.perception.target_speed = v
 
     # ── PLCState shims ────────────────────────────────────────────────────────
 

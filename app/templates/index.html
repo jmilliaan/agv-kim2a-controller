@@ -11,16 +11,16 @@
     background: #d4d0c8;
     color: #000;
     font-family: Consolas, 'Courier New', Courier, monospace;
-    font-size: 13px;
-    padding: 8px;
-    padding-bottom: 52px;
+    font-size: 16px;
+    padding: 10px;
+    padding-bottom: 65px;
   }
 
   /* ── Nav bar ── */
   #nav-bar {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: 44px;
+    height: 55px;
     background: #1a1a6e;
     display: flex;
     z-index: 200;
@@ -33,7 +33,7 @@
     justify-content: center;
     color: #a0a0e0;
     font-family: Consolas, 'Courier New', Courier, monospace;
-    font-size: 11px;
+    font-size: 14px;
     font-weight: bold;
     letter-spacing: 1px;
     text-decoration: none;
@@ -62,21 +62,21 @@
   #header {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 15px;
     background: #000080;   /* Siemens-blue title bar */
     color: #fff;
-    padding: 5px 10px;
-    margin-bottom: 8px;
+    padding: 6px 12px;
+    margin-bottom: 10px;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 18px;
     letter-spacing: 2px;
   }
   #header .title { flex: 1; }
 
   /* Mode badge — large, prominent */
   .mode-badge {
-    padding: 2px 14px;
-    font-size: 13px;
+    padding: 2px 18px;
+    font-size: 16px;
     font-weight: bold;
     letter-spacing: 1px;
     border-top:    2px solid #808080;
@@ -94,12 +94,12 @@
 
   /* Emergency indicator lamp */
   .emrg-lamp {
-    display: flex; align-items: center; gap: 6px;
-    font-weight: bold; font-size: 12px; letter-spacing: 1px;
+    display: flex; align-items: center; gap: 8px;
+    font-weight: bold; font-size: 15px; letter-spacing: 1px;
     color: #606060;
   }
   .emrg-lamp .lamp {
-    width: 18px; height: 18px; border-radius: 50%;
+    width: 22px; height: 22px; border-radius: 50%;
     background: #606060;
     border: 2px solid #404040;
   }
@@ -107,18 +107,18 @@
   .emrg-lamp.active .lamp {
     background: #ff2020;
     border-color: #800000;
-    box-shadow: 0 0 6px 2px #ff000088;
+    box-shadow: 0 0 8px 2px #ff000088;
   }
 
   /* Timestamp */
-  #ts { font-size: 11px; color: #c0c0c0; letter-spacing: 1px; }
+  #ts { font-size: 14px; color: #c0c0c0; letter-spacing: 1px; }
 
   /* ── Layout ── */
   .columns {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 10px;
+    margin-bottom: 10px;
   }
 
   /* Panel */
@@ -130,21 +130,21 @@
     background: #000080;
     color: #fff;
     font-weight: bold;
-    font-size: 11px;
+    font-size: 14px;
     letter-spacing: 2px;
-    padding: 3px 8px;
+    padding: 4px 10px;
     text-transform: uppercase;
   }
-  .panel-body { padding: 8px; }
+  .panel-body { padding: 10px; }
 
   /* Section label inside panel */
   .section-label {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: bold;
     letter-spacing: 1px;
     color: #404040;
     text-transform: uppercase;
-    margin: 6px 0 3px 0;
+    margin: 8px 0 4px 0;
     border-bottom: 1px solid #a0a0a0;
     padding-bottom: 2px;
   }
@@ -155,17 +155,17 @@
     display: flex;
     align-items: center;
     gap: 0;
-    height: 22px;
+    height: 28px;
     border-bottom: 1px solid #b0b0b0;
   }
   .bit-row:last-child { border-bottom: none; }
 
   .bit-addr {
-    width: 46px;
+    width: 58px;
     flex-shrink: 0;
-    font-size: 10px;
+    font-size: 12px;
     color: #505050;
-    padding: 0 4px;
+    padding: 0 5px;
     border-right: 1px solid #a0a0a0;
     height: 100%;
     display: flex;
@@ -174,19 +174,19 @@
   }
   .bit-name {
     flex: 1;
-    padding: 0 6px;
+    padding: 0 8px;
     font-weight: bold;
-    font-size: 12px;
+    font-size: 15px;
     color: #000;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
   }
 
   /* Indicator lamp */
   .lamp {
-    width: 16px; height: 16px;
+    width: 20px; height: 20px;
     border-radius: 50%;
     flex-shrink: 0;
-    margin-right: 6px;
+    margin-right: 8px;
     background: #888;
     border: 2px solid #606060;
     box-shadow: inset 0 1px 2px #00000044;
@@ -194,22 +194,22 @@
   .lamp.on-green {
     background: radial-gradient(circle at 35% 35%, #80ff80, #00a000);
     border-color: #005000;
-    box-shadow: 0 0 5px 1px #00cc0066, inset 0 1px 2px #ffffff44;
+    box-shadow: 0 0 6px 1px #00cc0066, inset 0 1px 2px #ffffff44;
   }
   .lamp.on-red {
     background: radial-gradient(circle at 35% 35%, #ff8080, #cc0000);
     border-color: #800000;
-    box-shadow: 0 0 5px 1px #cc000066, inset 0 1px 2px #ffffff44;
+    box-shadow: 0 0 6px 1px #cc000066, inset 0 1px 2px #ffffff44;
   }
   .lamp.on-blue {
     background: radial-gradient(circle at 35% 35%, #80c0ff, #0060c0);
     border-color: #003080;
-    box-shadow: 0 0 5px 1px #0080ff66, inset 0 1px 2px #ffffff44;
+    box-shadow: 0 0 6px 1px #0080ff66, inset 0 1px 2px #ffffff44;
   }
   .lamp.on-amber {
     background: radial-gradient(circle at 35% 35%, #ffe080, #d08000);
     border-color: #804000;
-    box-shadow: 0 0 5px 1px #ffa00066, inset 0 1px 2px #ffffff44;
+    box-shadow: 0 0 6px 1px #ffa00066, inset 0 1px 2px #ffffff44;
   }
 
   /* ── Sequence grid ── */
@@ -222,27 +222,27 @@
   .seq-cell {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 3px 4px;
+    gap: 5px;
+    padding: 4px 5px;
     background: #b8b4ac;
     border: 1px solid #a0a0a0;
   }
-  .seq-cell .lamp { width: 12px; height: 12px; flex-shrink: 0; margin-right: 0; }
+  .seq-cell .lamp { width: 15px; height: 15px; flex-shrink: 0; margin-right: 0; }
   .seq-cell .seq-label { display: flex; flex-direction: column; line-height: 1.2; }
-  .seq-cell .seq-name { font-size: 11px; font-weight: bold; color: #1a1a1a; }
-  .seq-cell .seq-addr { font-size: 9px; color: #606060; }
+  .seq-cell .seq-name { font-size: 14px; font-weight: bold; color: #1a1a1a; }
+  .seq-cell .seq-addr { font-size: 11px; color: #606060; }
 
   /* ── Control bar ── */
   #ctrl {
     background: #c0c0c0;
-    padding: 8px 10px;
+    padding: 10px 12px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     flex-wrap: wrap;
   }
   #ctrl .ctrl-label {
-    font-size: 11px;
+    font-size: 14px;
     font-weight: bold;
     letter-spacing: 1px;
     text-transform: uppercase;
@@ -256,16 +256,16 @@
     border-left:   2px solid #808080;
     border-right:  2px solid #fff;
     border-bottom: 2px solid #fff;
-    padding: 3px 6px;
+    padding: 4px 8px;
     font-family: Consolas, 'Courier New', Courier, monospace;
-    font-size: 12px;
+    font-size: 15px;
     font-weight: bold;
   }
 
   button {
-    padding: 4px 18px;
+    padding: 5px 22px;
     font-family: Consolas, 'Courier New', Courier, monospace;
-    font-size: 12px;
+    font-size: 15px;
     font-weight: bold;
     letter-spacing: 1px;
     cursor: pointer;
@@ -283,20 +283,20 @@
   }
   #btn-set   { background: #00a000; color: #fff; }
   #btn-clear { background: #c00000; color: #fff; }
-  #btn-remote { background: #000080; color: #fff; font-size: 11px; padding: 2px 10px; }
+  #btn-remote { background: #000080; color: #fff; font-size: 14px; padding: 2px 12px; }
   #wifi-indicator {
-    display: flex; align-items: center; gap: 5px;
-    font-size: 11px; letter-spacing: 1px; color: #c0c0c0;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 14px; letter-spacing: 1px; color: #c0c0c0;
   }
-  #wifi-bars { display: flex; align-items: flex-end; gap: 2px; height: 14px; }
+  #wifi-bars { display: flex; align-items: flex-end; gap: 2px; height: 18px; }
   #wifi-bars span {
-    display: inline-block; width: 4px; background: #606060;
+    display: inline-block; width: 5px; background: #606060;
     border-radius: 1px;
   }
   #wifi-bars span.lit { background: #80ff80; }
 
   #ctrl-status {
-    font-size: 11px;
+    font-size: 14px;
     font-weight: bold;
     color: #000080;
     letter-spacing: 1px;
@@ -305,18 +305,18 @@
   /* Condition indicators row */
   #ctrl-conditions {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     align-items: center;
-    margin-left: 8px;
-    padding-left: 12px;
+    margin-left: 10px;
+    padding-left: 15px;
     border-left: 2px solid #a0a0a0;
   }
   .cond-item {
-    display: flex; align-items: center; gap: 4px;
-    font-size: 10px; font-weight: bold; color: #606060;
-    letter-spacing: 0.5px;
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: bold; color: #606060;
+    letter-spacing: 0.6px;
   }
-  .cond-item .lamp { width: 10px; height: 10px; }
+  .cond-item .lamp { width: 12px; height: 12px; }
 
   /* Seq request active label */
   #seq-req-label {
@@ -330,19 +330,19 @@
     gap: 2px;
     margin-left: auto;
     align-items: center;
-    font-size: 10px;
+    font-size: 12px;
     color: #c0c0c0;
     letter-spacing: 1px;
   }
 
   /* System error lamp */
   .syserr-lamp {
-    display: flex; align-items: center; gap: 6px;
-    font-weight: bold; font-size: 12px; letter-spacing: 1px;
+    display: flex; align-items: center; gap: 8px;
+    font-weight: bold; font-size: 15px; letter-spacing: 1px;
     color: #606060;
   }
   .syserr-lamp .lamp {
-    width: 18px; height: 18px; border-radius: 50%;
+    width: 22px; height: 22px; border-radius: 50%;
     background: #606060;
     border: 2px solid #404040;
   }
@@ -350,32 +350,32 @@
   .syserr-lamp.active .lamp {
     background: #ff8800;
     border-color: #804000;
-    box-shadow: 0 0 6px 2px #ff880088;
+    box-shadow: 0 0 8px 2px #ff880088;
   }
 
   /* ── Sequence status panel ── */
   #seq-status-panel {
     background: #c0c0c0;
     padding: 0;
-    margin-top: 8px;
+    margin-top: 10px;
   }
   #seq-status-body {
-    padding: 8px 10px;
+    padding: 10px 12px;
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 25px;
     flex-wrap: wrap;
   }
   .seq-status-field {
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: 10px;
   }
   .seq-status-label {
-    font-size: 11px; font-weight: bold;
+    font-size: 14px; font-weight: bold;
     letter-spacing: 1px; text-transform: uppercase; color: #404040;
   }
   .seq-status-value {
-    font-size: 12px; font-weight: bold; color: #000080;
-    background: #fff; padding: 2px 8px; min-width: 120px;
+    font-size: 15px; font-weight: bold; color: #000080;
+    background: #fff; padding: 2px 10px; min-width: 150px;
     border-top:    2px solid #808080;
     border-left:   2px solid #808080;
     border-right:  2px solid #fff;
@@ -387,36 +387,36 @@
   #sensor-panel {
     background: #c0c0c0;
     padding: 0;
-    margin-top: 8px;
+    margin-top: 10px;
   }
   #sensor-body {
-    padding: 8px 10px;
+    padding: 10px 12px;
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 25px;
     flex-wrap: wrap;
   }
   .sensor-field {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
   }
   .sensor-field-label {
-    font-size: 11px;
+    font-size: 14px;
     font-weight: bold;
     letter-spacing: 1px;
     text-transform: uppercase;
     color: #000;
   }
   #pos-display {
-    font-size: 20px;
+    font-size: 25px;
     font-weight: bold;
     font-family: Consolas, 'Courier New', Courier, monospace;
     letter-spacing: 2px;
     color: #000080;
     background: #fff;
-    padding: 2px 10px;
-    min-width: 80px;
+    padding: 2px 12px;
+    min-width: 100px;
     text-align: right;
     border-top:    2px solid #808080;
     border-left:   2px solid #808080;
@@ -426,13 +426,13 @@
   .sensor-lamp-item {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 12px;
+    gap: 8px;
+    font-size: 15px;
     font-weight: bold;
     color: #404040;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
   }
-  .sensor-lamp-item .lamp { width: 18px; height: 18px; }
+  .sensor-lamp-item .lamp { width: 22px; height: 22px; }
 </style>
 </head>
 <body>
@@ -584,6 +584,28 @@
     <div class="sensor-lamp-item">
       <span class="lamp" id="lamp-fail"></span>SENSOR FAIL
     </div>
+    <div style="width:2px;height:32px;background:#a0a0a0;"></div>
+    <div class="sensor-field">
+      <span class="sensor-field-label">Speed:</span>
+      <span id="speed-mode-display" style="font-size:13px;font-weight:bold;color:#000080;background:#fff;padding:2px 8px;border-top:2px solid #808080;border-left:2px solid #808080;border-right:2px solid #fff;border-bottom:2px solid #fff;">—</span>
+      <span id="target-speed-display" style="font-size:13px;font-weight:bold;color:#000080;background:#fff;padding:2px 8px;border-top:2px solid #808080;border-left:2px solid #808080;border-right:2px solid #fff;border-bottom:2px solid #fff;">—</span>
+      <span class="sensor-field-label" style="color:#606060;">m/s</span>
+    </div>
+    <div style="width:2px;height:32px;background:#a0a0a0;"></div>
+    <div class="sensor-field">
+      <span class="sensor-field-label">PID:</span>
+      <span id="pid-output-display" style="font-size:13px;font-weight:bold;color:#600060;background:#fff;padding:2px 8px;min-width:60px;text-align:right;border-top:2px solid #808080;border-left:2px solid #808080;border-right:2px solid #fff;border-bottom:2px solid #fff;">—</span>
+      <span class="sensor-field-label" style="color:#606060;">rpm</span>
+    </div>
+    <div style="width:2px;height:32px;background:#a0a0a0;"></div>
+    <div class="sensor-field">
+      <span class="sensor-field-label">L-RPM:</span>
+      <span id="left-rpm-display" style="font-size:13px;font-weight:bold;color:#004080;background:#fff;padding:2px 8px;min-width:60px;text-align:right;border-top:2px solid #808080;border-left:2px solid #808080;border-right:2px solid #fff;border-bottom:2px solid #fff;">—</span>
+    </div>
+    <div class="sensor-field">
+      <span class="sensor-field-label">R-RPM:</span>
+      <span id="right-rpm-display" style="font-size:13px;font-weight:bold;color:#004080;background:#fff;padding:2px 8px;min-width:60px;text-align:right;border-top:2px solid #808080;border-left:2px solid #808080;border-right:2px solid #fff;border-bottom:2px solid #fff;">—</span>
+    </div>
   </div>
 </div>
 
@@ -624,7 +646,7 @@
 </div>
 
 <script>
-const N_SEQ = 17;
+const N_SEQ = 9;
 
 (function init() {
   const sel      = document.getElementById('seq-select');
@@ -726,6 +748,13 @@ function fetchState() {
       setLamp(document.getElementById('lamp-lm'),   sen && sen.left_marker,    'on-amber');
       setLamp(document.getElementById('lamp-rm'),   sen && sen.right_marker,   'on-amber');
       setLamp(document.getElementById('lamp-fail'), sen && sen.sensor_failure, 'on-red');
+
+      // Motion telemetry
+      document.getElementById('speed-mode-display').textContent  = (sen && sen.speed_mode)   || '—';
+      document.getElementById('target-speed-display').textContent = (sen && sen.target_speed != null) ? sen.target_speed.toFixed(3) : '—';
+      document.getElementById('pid-output-display').textContent  = (sen && sen.pid_output  != null) ? (sen.pid_output > 0 ? '+' : '') + sen.pid_output.toFixed(1) : '—';
+      document.getElementById('left-rpm-display').textContent    = (sen && sen.left_rpm    != null) ? sen.left_rpm.toFixed(1)   : '—';
+      document.getElementById('right-rpm-display').textContent   = (sen && sen.right_rpm   != null) ? sen.right_rpm.toFixed(1)  : '—';
 
       // Sequence engine status
       const seqs = d.sequences || {};

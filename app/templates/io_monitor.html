@@ -10,9 +10,9 @@
     background: #d4d0c8;
     color: #000;
     font-family: Consolas, 'Courier New', Courier, monospace;
-    font-size: 13px;
-    padding: 8px;
-    padding-bottom: 52px;
+    font-size: 16px;
+    padding: 10px;
+    padding-bottom: 65px;
   }
 
   .raised {
@@ -25,21 +25,21 @@
   #header {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 15px;
     background: #000080;
     color: #fff;
-    padding: 5px 10px;
-    margin-bottom: 8px;
+    padding: 6px 12px;
+    margin-bottom: 10px;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 18px;
     letter-spacing: 2px;
   }
   #header .title { flex: 1; }
-  #ts { font-size: 11px; color: #c0c0c0; letter-spacing: 1px; }
+  #ts { font-size: 14px; color: #c0c0c0; letter-spacing: 1px; }
 
   .mode-badge {
-    padding: 2px 14px;
-    font-size: 13px;
+    padding: 2px 18px;
+    font-size: 16px;
     font-weight: bold;
     letter-spacing: 1px;
     border-top:    2px solid #808080;
@@ -57,7 +57,7 @@
   .columns {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 10px;
   }
 
   .panel { background: #c0c0c0; padding: 0; }
@@ -65,9 +65,9 @@
     background: #000080;
     color: #fff;
     font-weight: bold;
-    font-size: 11px;
+    font-size: 14px;
     letter-spacing: 2px;
-    padding: 3px 8px;
+    padding: 4px 10px;
     text-transform: uppercase;
   }
   .panel-body { padding: 0; }
@@ -75,17 +75,17 @@
   .io-row {
     display: flex;
     align-items: center;
-    height: 24px;
+    height: 30px;
     border-bottom: 1px solid #b0b0b0;
   }
   .io-row:last-child { border-bottom: none; }
 
   .io-idx {
-    width: 32px;
+    width: 40px;
     flex-shrink: 0;
-    font-size: 10px;
+    font-size: 12px;
     color: #505050;
-    padding: 0 4px;
+    padding: 0 5px;
     border-right: 1px solid #a0a0a0;
     height: 100%;
     display: flex;
@@ -94,19 +94,19 @@
   }
   .io-name {
     flex: 1;
-    padding: 0 8px;
-    font-size: 12px;
+    padding: 0 10px;
+    font-size: 15px;
     font-weight: bold;
     color: #000;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
   }
   .io-name.spare { color: #909090; font-weight: normal; font-style: italic; }
 
   .lamp {
-    width: 16px; height: 16px;
+    width: 20px; height: 20px;
     border-radius: 50%;
     flex-shrink: 0;
-    margin-right: 6px;
+    margin-right: 8px;
     background: #666;
     border: 2px solid #444;
     box-shadow: inset 0 1px 2px #00000044;
@@ -114,14 +114,14 @@
   .lamp.on {
     background: radial-gradient(circle at 35% 35%, #ffee80, #c8a000);
     border-color: #806000;
-    box-shadow: 0 0 5px 2px #ffc00066, inset 0 1px 2px #ffffff44;
+    box-shadow: 0 0 6px 2px #ffc00066, inset 0 1px 2px #ffffff44;
   }
 
   /* ── Nav bar ── */
   #nav-bar {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: 44px;
+    height: 55px;
     background: #1a1a6e;
     display: flex;
     z-index: 200;
@@ -134,7 +134,7 @@
     justify-content: center;
     color: #a0a0e0;
     font-family: Consolas, 'Courier New', Courier, monospace;
-    font-size: 11px;
+    font-size: 14px;
     font-weight: bold;
     letter-spacing: 1px;
     text-decoration: none;

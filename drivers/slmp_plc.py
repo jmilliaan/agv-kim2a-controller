@@ -8,7 +8,7 @@ from drivers.base import ActuatorDriver
 
 logger = logging.getLogger(__name__)
 
-_NUM_SEQ_BITS = 17
+_NUM_SEQ_BITS = 9
 
 _Y_LABELS = ["Y0","Y1","Y2","Y3","Y4","Y5","Y6","Y7",
              "Y10","Y11","Y12","Y13","Y14","Y15","Y16","Y17","Y20"]

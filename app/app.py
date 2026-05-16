@@ -25,7 +25,7 @@ app   = Flask(__name__, template_folder=os.path.join(_here, "templates"))
 _state  = None   # set once by run_server()
 _engine = None   # set once by run_server()
 
-_NUM_SEQ_BITS = 17
+_NUM_SEQ_BITS = 9
 
 _Y_LABELS = ["Y0","Y1","Y2","Y3","Y4","Y5","Y6","Y7",
              "Y10","Y11","Y12","Y13","Y14","Y15","Y16","Y17","Y20"]
@@ -119,6 +119,11 @@ def _build_state_snapshot():
         "left_marker":    raw["left_marker"]     if raw else False,
         "right_marker":   raw["right_marker"]    if raw else False,
         "sensor_failure": raw["sensor_failure"]  if raw else False,
+        "left_rpm":       round(s.left_rpm,  1),
+        "right_rpm":      round(s.right_rpm, 1),
+        "pid_output":     round(s.pid_output, 1),
+        "target_speed":   round(s.target_speed, 3),
+        "speed_mode":     s.speed_mode,
     }
 
     # ── Sequence engine status ────────────────────────────────────────────────
@@ -160,6 +165,7 @@ def api_manual_command():
         return jsonify({"error": f"unknown command: {cmd}"}), 400
 
     _state.web_manual_command = cmd
+    _state.web_manual_expire  = time.time() + 0.4   # 400 ms watchdog
     return jsonify({"ok": True, "command": cmd})
 
 

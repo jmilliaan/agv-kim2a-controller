@@ -53,7 +53,7 @@
     "MANUAL_TARGET_SLOW_SPEED": 0.15,
     "AUTO_TARGET_HIGH_SPEED": 0.30,
     "AUTO_TARGET_SLOW_SPEED": 0.16,
-    "AUTO_TARGET_EXTRA_SLOW_SPEED": 0.10,
+    "AUTO_TARGET_EXTRA_SLOW_SPEED": 0.12,
     "ACCEL_RATE": 0.8
   },
 
@@ -62,10 +62,14 @@
     "KP": 1.4,
     "TD": 0.12,
     "N": 20,
-    "_comment_slow": "SLOW / EXTRA_SLOW gains — tuned for 0.25m/s, proven stable",
+    "_comment_slow": "SLOW gains — tuned for 0.16m/s",
     "KP_SLOW": 2.1,
     "TD_SLOW": 0.14,
     "N_SLOW": 12,
+    "_comment_extra_slow": "EXTRA_SLOW gains — tuned for 0.12m/s, gentle straight-line following for sequence approach",
+    "KP_EXTRA_SLOW": 0.8,
+    "TD_EXTRA_SLOW": 0.08,
+    "N_EXTRA_SLOW": 4,
     "_comment_shared": "Shared — integral and timing constants",
     "TI": 20,
     "TI_DEADBAND": 25,
@@ -74,6 +78,7 @@
     "_comment_sr": "Speed reduction coefficients — split by speed mode",
     "V_RED_COEF": 4,
     "V_RED_COEF_SLOW": 2,
+    "V_RED_COEF_EXTRA_SLOW": 0,
     "OUTPUT_CLAMP_RPM": 800,
     "SR_ALPHA": 0.15,
     "SR_CAP": 0.55
@@ -116,6 +121,16 @@
       "requires_mode": "running"
     },
     {
+      "_comment": "Slow down zone (alt tag) — RFID-only trigger",
+      "name": "speed_zone_slow_alt",
+      "trigger": { "type": "rfid", "rfid_tag": "001C" },
+      "actions": [
+        { "type": "set_speed", "speed": "SLOW" }
+      ],
+      "cooldown_s": 0.0,
+      "requires_mode": "running"
+    },
+    {
       "_comment": "Timed checkpoint stop — RFID-only trigger",
       "name": "checkpoint_stop",
       "trigger": { "type": "rfid", "rfid_tag": "000C" },
@@ -135,11 +150,11 @@
         "approach_timeout": 15.0
       },
       "actions": [
-        { "type": "set_speed",        "speed": "SLOW" },
+        { "type": "set_speed",        "speed": "EXTRA_SLOW" },
         { "type": "wait_marker",      "side": "left", "timeout": 30.0 },
         { "type": "stop_agv" },
         { "type": "plc_request",      "seq_num": 0, "pulse_duration": 1.0 },
-        { "type": "wait_plc_complete","seq_num": 0, "clear_timeout": 10.0, "done_timeout": 180.0 },
+        { "type": "wait_plc_complete","seq_num": 0, "clear_timeout": 10.0 },
         { "type": "resume",           "speed": "HIGH" }
       ],
       "cooldown_s": 10.0,
@@ -154,11 +169,11 @@
         "approach_timeout": 15.0
       },
       "actions": [
-        { "type": "set_speed",        "speed": "SLOW" },
+        { "type": "set_speed",        "speed": "EXTRA_SLOW" },
         { "type": "wait_marker",      "side": "left", "timeout": 15.0 },
         { "type": "stop_agv" },
         { "type": "plc_request",      "seq_num": 1, "pulse_duration": 1.0 },
-        { "type": "wait_plc_complete","seq_num": 1, "clear_timeout": 5.0, "done_timeout": 30.0 },
+        { "type": "wait_plc_complete","seq_num": 1, "clear_timeout": 5.0 },
         { "type": "resume",           "speed": "HIGH" }
       ],
       "cooldown_s": 10.0,
@@ -278,14 +293,6 @@
     "M2016":{ "description": "AGV.REQ.SEQUENCE.6",         "permission": "R/W" },
     "M2017":{ "description": "AGV.REQ.SEQUENCE.7",         "permission": "R/W" },
     "M2018":{ "description": "AGV.REQ.SEQUENCE.8",         "permission": "R/W" },
-    "M2019":{ "description": "AGV.REQ.SEQUENCE.9",         "permission": "R/W" },
-    "M2020":{ "description": "AGV.REQ.SEQUENCE.10",        "permission": "R/W" },
-    "M2021":{ "description": "AGV.REQ.SEQUENCE.11",        "permission": "R/W" },
-    "M2022":{ "description": "AGV.REQ.SEQUENCE.12",        "permission": "R/W" },
-    "M2023":{ "description": "AGV.REQ.SEQUENCE.13",        "permission": "R/W" },
-    "M2024":{ "description": "AGV.REQ.SEQUENCE.14",        "permission": "R/W" },
-    "M2025":{ "description": "AGV.REQ.SEQUENCE.15",        "permission": "R/W" },
-    "M2026":{ "description": "AGV.REQ.SEQUENCE.16",        "permission": "R/W" },
     "M2040":{ "description": "SEQUENCE.0.COMPLETE",        "permission": "R" },
     "M2041":{ "description": "SEQUENCE.1.COMPLETE",        "permission": "R" },
     "M2042":{ "description": "SEQUENCE.2.COMPLETE",        "permission": "R" },
@@ -294,15 +301,7 @@
     "M2045":{ "description": "SEQUENCE.5.COMPLETE",        "permission": "R" },
     "M2046":{ "description": "SEQUENCE.6.COMPLETE",        "permission": "R" },
     "M2047":{ "description": "SEQUENCE.7.COMPLETE",        "permission": "R" },
-    "M2048":{ "description": "SEQUENCE.8.COMPLETE",        "permission": "R" },
-    "M2049":{ "description": "SEQUENCE.9.COMPLETE",        "permission": "R" },
-    "M2050":{ "description": "SEQUENCE.10.COMPLETE",       "permission": "R" },
-    "M2051":{ "description": "SEQUENCE.11.COMPLETE",       "permission": "R" },
-    "M2052":{ "description": "SEQUENCE.12.COMPLETE",       "permission": "R" },
-    "M2053":{ "description": "SEQUENCE.13.COMPLETE",       "permission": "R" },
-    "M2054":{ "description": "SEQUENCE.14.COMPLETE",       "permission": "R" },
-    "M2055":{ "description": "SEQUENCE.15.COMPLETE",       "permission": "R" },
-    "M2056":{ "description": "SEQUENCE.16.COMPLETE",       "permission": "R" }
+    "M2048":{ "description": "SEQUENCE.8.COMPLETE",        "permission": "R" }
   },
 
   "slmp_manual": {
