@@ -359,7 +359,10 @@ async def mode_manager(state, engine=None):
             if current_mode != "emergency":
                 logger.critical("!! EMERGENCY — all motion stopped")
                 await _cancel_active()
-                await _flush_and_brake()
+                if current_mode == "manual":
+                    await _flush_and_idle()   # manual: cut power only, no brakes
+                else:
+                    await _flush_and_brake()  # auto/armed: brake to hold position
                 _reset_sequence_state()
                 state.emergency_active = True
                 current_mode           = "emergency"

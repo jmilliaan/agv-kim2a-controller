@@ -26,7 +26,28 @@ Output
 import logging
 import logging.handlers
 import os
+from collections import deque
 from datetime import datetime
+
+# In-memory ring buffer for WARNING+ records — read by the Flask /errors page
+_error_log: deque = deque(maxlen=500)
+
+
+class _MemoryLogHandler(logging.Handler):
+    """Appends WARNING and above records to the module-level deque."""
+    def emit(self, record: logging.LogRecord) -> None:
+        _error_log.append({
+            "time":    self.formatTime(record, "%Y-%m-%d %H:%M:%S")
+                       + f".{record.msecs:03.0f}",
+            "level":   record.levelname,
+            "logger":  record.name,
+            "message": record.getMessage(),
+        })
+
+
+def get_error_log() -> list:
+    """Return a copy of the in-memory error/warning log (newest last)."""
+    return list(_error_log)
 
 
 def setup_logging(
@@ -63,10 +84,14 @@ def setup_logging(
     console_handler.setLevel(console_level)
     console_handler.setFormatter(fmt)
 
+    memory_handler = _MemoryLogHandler()
+    memory_handler.setLevel(logging.WARNING)
+
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)   # root captures all; handlers filter
     root.addHandler(file_handler)
     root.addHandler(console_handler)
+    root.addHandler(memory_handler)
 
     # Silence third-party library noise
     logging.getLogger("werkzeug").setLevel(logging.ERROR)

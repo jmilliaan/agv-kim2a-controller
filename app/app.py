@@ -14,6 +14,7 @@ import subprocess
 import time
 import threading
 from flask import Flask, render_template, jsonify, request
+from logger import get_error_log
 import logging
 
 logger = logging.getLogger(__name__)
@@ -228,6 +229,16 @@ def api_reverse_auto():
         return jsonify({"ok": True, "running": False})
 
     return jsonify({"error": "running must be true or false"}), 400
+
+
+@app.route("/errors")
+def errors():
+    return render_template("errors.html")
+
+
+@app.route("/api/errors")
+def api_errors():
+    return jsonify(get_error_log())
 
 
 @app.route("/io")

@@ -11,9 +11,9 @@
     background: #d4d0c8;
     color: #000;
     font-family: Consolas, 'Courier New', Courier, monospace;
-    font-size: 16px;
-    padding: 10px;
-    padding-bottom: 65px;
+    font-size: 25px;
+    padding: 15px;
+    padding-bottom: 101px;
     user-select: none;
   }
 
@@ -21,7 +21,7 @@
   #nav-bar {
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: 55px;
+    height: 86px;
     background: #1a1a6e;
     display: flex;
     z-index: 200;
@@ -34,12 +34,12 @@
     justify-content: center;
     color: #a0a0e0;
     font-family: Consolas, 'Courier New', Courier, monospace;
-    font-size: 14px;
+    font-size: 32px;
     font-weight: bold;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
     text-decoration: none;
     text-transform: uppercase;
-    border-right: 1px solid #3030a0;
+    border-right: 2px solid #3030a0;
   }
   .nav-btn:last-child { border-right: none; }
   .nav-btn.active { background: #0000c0; color: #fff; border-top: 2px solid #8080ff; }
@@ -61,20 +61,20 @@
   #header {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 24px;
     background: #000080;
     color: #fff;
-    padding: 6px 12px;
-    margin-bottom: 10px;
+    padding: 10px 19px;
+    margin-bottom: 15px;
     font-weight: bold;
-    font-size: 18px;
+    font-size: 28px;
     letter-spacing: 2px;
   }
   #header .title { flex: 1; }
 
   .mode-badge {
-    padding: 2px 18px;
-    font-size: 16px;
+    padding: 2px 28px;
+    font-size: 25px;
     font-weight: bold;
     letter-spacing: 1px;
     border-top:    2px solid #808080;
@@ -90,7 +90,7 @@
   .mode-reverse   { background: #8000c0; color: #fff; }
   .mode-emergency { background: #c00000; color: #fff; }
 
-  #ts { font-size: 14px; color: #c0c0c0; letter-spacing: 1px; }
+  #ts { font-size: 22px; color: #c0c0c0; letter-spacing: 1px; }
 
   a.back-btn {
     text-decoration: none;
@@ -98,8 +98,8 @@
   a.back-btn button {
     background: #404040;
     color: #fff;
-    font-size: 14px;
-    padding: 2px 12px;
+    font-size: 22px;
+    padding: 2px 19px;
     font-family: Consolas, 'Courier New', Courier, monospace;
     font-weight: bold;
     letter-spacing: 1px;
@@ -115,7 +115,7 @@
     display: none;
     position: fixed;
     top: 0; left: 0; right: 0;
-    bottom: 55px;
+    bottom: 86px;
     background: rgba(0,0,0,0.55);
     z-index: 100;
     align-items: center;
@@ -124,46 +124,46 @@
   #overlay.active { display: flex; }
   #overlay-box {
     background: #c0c0c0;
-    padding: 35px 50px;
+    padding: 55px 78px;
     text-align: center;
-    border-top:    4px solid #fff;
-    border-left:   4px solid #fff;
-    border-right:  4px solid #808080;
-    border-bottom: 4px solid #808080;
+    border-top:    6px solid #fff;
+    border-left:   6px solid #fff;
+    border-right:  6px solid #808080;
+    border-bottom: 6px solid #808080;
   }
   #overlay-title {
-    font-size: 20px;
+    font-size: 31px;
     font-weight: bold;
     letter-spacing: 2px;
     color: #c00000;
-    margin-bottom: 12px;
+    margin-bottom: 19px;
   }
   #overlay-msg {
-    font-size: 15px;
+    font-size: 24px;
     color: #404040;
     letter-spacing: 1px;
   }
 
   /* ── Panel ── */
-  .panel { background: #c0c0c0; padding: 0; margin-bottom: 10px; }
+  .panel { background: #c0c0c0; padding: 0; margin-bottom: 15px; }
   .panel-title {
     background: #000080;
     color: #fff;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 22px;
     letter-spacing: 2px;
-    padding: 4px 10px;
+    padding: 6px 15px;
     text-transform: uppercase;
   }
-  .panel-body { padding: 12px; }
+  .panel-body { padding: 19px; }
 
   .section-label {
-    font-size: 12px;
+    font-size: 19px;
     font-weight: bold;
     letter-spacing: 1px;
     color: #404040;
     text-transform: uppercase;
-    margin: 10px 0 5px 0;
+    margin: 15px 0 8px 0;
     border-bottom: 1px solid #a0a0a0;
     padding-bottom: 2px;
   }
@@ -172,19 +172,19 @@
   /* ── Control buttons ── */
   .btn-row {
     display: flex;
-    gap: 10px;
+    gap: 15px;
     align-items: center;
     flex-wrap: wrap;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
   }
 
   .ctrl-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 10px 18px;
-    min-width: 100px;
+    gap: 6px;
+    padding: 15px 28px;
+    min-width: 156px;
     background: #c0c0c0;
     cursor: pointer;
     border-top:    2px solid #fff;
@@ -192,7 +192,7 @@
     border-right:  2px solid #808080;
     border-bottom: 2px solid #808080;
     font-family: Consolas, 'Courier New', Courier, monospace;
-    font-size: 14px;
+    font-size: 22px;
     font-weight: bold;
     letter-spacing: 1px;
     color: #000;
@@ -211,7 +211,7 @@
     background: #a0c0a0;
   }
   .ctrl-btn .btn-addr {
-    font-size: 11px;
+    font-size: 18px;
     color: #606060;
     font-weight: normal;
   }
@@ -227,27 +227,27 @@
   /* ── Status lamps row ── */
   .lamp-row {
     display: flex;
-    gap: 12px;
+    gap: 19px;
     flex-wrap: wrap;
     align-items: center;
   }
   .lamp-item {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 14px;
+    gap: 10px;
+    font-size: 22px;
     font-weight: bold;
     color: #404040;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.10px;
   }
   .lamp-item .addr {
-    font-size: 11px;
+    font-size: 18px;
     color: #808080;
     font-weight: normal;
   }
 
   .lamp {
-    width: 20px; height: 20px;
+    width: 31px; height: 31px;
     border-radius: 50%;
     flex-shrink: 0;
     background: #888;
@@ -257,17 +257,17 @@
   .lamp.on-amber {
     background: radial-gradient(circle at 35% 35%, #ffe080, #d08000);
     border-color: #804000;
-    box-shadow: 0 0 6px 1px #ffa00066, inset 0 1px 2px #ffffff44;
+    box-shadow: 0 0 10px 1px #ffa00066, inset 0 1px 2px #ffffff44;
   }
   .lamp.on-green {
     background: radial-gradient(circle at 35% 35%, #80ff80, #00a000);
     border-color: #005000;
-    box-shadow: 0 0 6px 1px #00cc0066, inset 0 1px 2px #ffffff44;
+    box-shadow: 0 0 10px 1px #00cc0066, inset 0 1px 2px #ffffff44;
   }
   .lamp.on-red {
     background: radial-gradient(circle at 35% 35%, #ff8080, #cc0000);
     border-color: #800000;
-    box-shadow: 0 0 6px 1px #cc000066, inset 0 1px 2px #ffffff44;
+    box-shadow: 0 0 10px 1px #cc000066, inset 0 1px 2px #ffffff44;
   }
 
   /* ── Bit row (for inputs panel) ── */
@@ -275,16 +275,16 @@
     display: flex;
     align-items: center;
     gap: 0;
-    height: 28px;
+    height: 44px;
     border-bottom: 1px solid #b0b0b0;
   }
   .bit-row:last-child { border-bottom: none; }
   .bit-addr {
-    width: 58px;
+    width: 90px;
     flex-shrink: 0;
-    font-size: 12px;
+    font-size: 19px;
     color: #505050;
-    padding: 0 5px;
+    padding: 0 8px;
     border-right: 1px solid #a0a0a0;
     height: 100%;
     display: flex;
@@ -293,26 +293,28 @@
   }
   .bit-name {
     flex: 1;
-    padding: 0 8px;
+    padding: 0 12px;
     font-weight: bold;
-    font-size: 15px;
+    font-size: 24px;
     color: #000;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.10px;
   }
 
   /* ── Two-column layout for inputs ── */
   .columns-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 15px;
   }
+  .nav-btn.errors-btn { color: #ff8080; }
+  .nav-btn.errors-btn.active { background: #800000; color: #fff; border-top: 2px solid #ff8080; }
 </style>
 </head>
 <body>
 
 <!-- Header -->
 <div id="header" class="raised">
-  <span class="title">TROLLEY MANUAL CONTROL &nbsp;|&nbsp; AGV1-KIM</span>
+  <span class="title">TROLLEY MANUAL CONTROL</span>
   <span id="mode-badge" class="mode-badge">MODE: —</span>
   <span id="ts">—</span>
 </div>
@@ -437,6 +439,7 @@
   <a class="nav-btn" href="/io">IO</a>
   <a class="nav-btn active" href="/trolley">TROLLEY</a>
   <a class="nav-btn" href="/params">PARAMS</a>
+  <a class="nav-btn errors-btn" href="/errors">ERRORS</a>
 </nav>
 
 <script>
