@@ -68,6 +68,39 @@ async def set_reverse_right(state, v_fast, v_slow):
     # both wheels reverse, left (outer) faster than right (inner)
     await _drive(state, False, v_fast, False, v_slow)
 
+async def update_voltages(state, left_v: float, right_v: float):
+    """AO-only speed update. Direction relays unchanged.
+
+    Use during smooth acceleration: the direction was set by a prior set_* call,
+    so re-issuing DO writes every cycle would flood the DO queue (each Modbus
+    coil write is ~10 ms). This helper queues only the two AO writes.
+    """
+    lch = config.MOTOR_CHANNELS["left"]
+    rch = config.MOTOR_CHANNELS["right"]
+    await state.ao_queue.put((lch["ao_speed"], left_v))
+    await state.ao_queue.put((rch["ao_speed"], right_v))
+
+async def set_cat1_stop(state, decel_wait: float = 0.3):
+    """Category 1 stop (IEC 60204-1): zero the speed reference so the drive
+    decelerates on its own ramp, then apply the mechanical brake after
+    decel_wait seconds once the AGV has slowed to a standstill.
+    Use for: emergency transitions, LiDAR inner zone, impact bumper.
+    """
+    lch = config.MOTOR_CHANNELS["left"]
+    rch = config.MOTOR_CHANNELS["right"]
+    # Phase 1 — command zero speed; drive decelerates on its internal ramp
+    await state.ao_queue.put((lch["ao_speed"], 0.0))
+    await state.ao_queue.put((rch["ao_speed"], 0.0))
+    # Phase 2 — wait for the AGV to reach standstill
+    await asyncio.sleep(decel_wait)
+    # Phase 3 — apply mechanical brake and clear direction commands
+    await state.do_queue.put((lch["do_fwd"],   False))
+    await state.do_queue.put((lch["do_rev"],   False))
+    await state.do_queue.put((lch["do_brake"], True))
+    await state.do_queue.put((rch["do_fwd"],   False))
+    await state.do_queue.put((rch["do_rev"],   False))
+    await state.do_queue.put((rch["do_brake"], True))
+
 async def set_brake(state):
     lch = config.MOTOR_CHANNELS["left"]
     rch = config.MOTOR_CHANNELS["right"]

@@ -60,6 +60,22 @@ async def auto_mode(state, direction="forward", engine=None):
     recorder = RunRecorder()
     recorder.start()
 
+    # ── Loop-rate / queue-depth diagnostics ───────────────────────────────────
+    # Tracks actual cycle time and queue backlog so we can decide whether
+    # lowering DT (e.g. 0.1 → 0.05) is bottlenecked by the controller or by
+    # the AO writer / sensor publish rate. Logs a summary every ~2 s.
+    _diag_loop      = asyncio.get_event_loop()
+    _diag_last_t    = _diag_loop.time()
+    _diag_max_dt    = 0.0
+    _diag_sum_dt    = 0.0
+    _diag_n         = 0
+    _diag_max_sf    = 0   # max sensor frames drained per cycle (= sensor rate / PID rate)
+    _diag_sum_sf    = 0   # avg sensor frames per cycle
+    _diag_zero_sf   = 0   # cycles with 0 frames (sensor starvation — bad)
+    _diag_max_aq    = 0   # ao_queue post-enqueue depth
+    _diag_max_dq    = 0   # do_queue post-enqueue depth
+    _diag_log_every = 20   # cycles between summary lines (~2 s at DT=0.1)
+
     try:
         while True:
 
@@ -88,11 +104,11 @@ async def auto_mode(state, direction="forward", engine=None):
             # ── Target speed and PID gain selection ───────────────────────────
             if direction == "forward":
                 if state.speed_mode == "EXTRA_SLOW":
-                    target_speed = config.AUTO_TARGET_EXTRA_SLOW_SPEED
+                    target_speed = state.auto_extra_slow_speed
                 elif state.speed_mode == "SLOW":
-                    target_speed = config.AUTO_TARGET_SLOW_SPEED
+                    target_speed = state.auto_slow_speed
                 else:
-                    target_speed = config.AUTO_TARGET_HIGH_SPEED
+                    target_speed = state.auto_high_speed
 
                 # Only switch gains when speed_mode actually changes — avoids
                 # redundant recomputation of the derivative filter coefficient.
@@ -105,7 +121,7 @@ async def auto_mode(state, direction="forward", engine=None):
                                          config.N_SLOW, config.V_RED_COEF_SLOW)
                     last_speed_mode = state.speed_mode
             else:
-                target_speed = config.AUTO_TARGET_SLOW_SPEED   # reverse: fixed
+                target_speed = state.auto_slow_speed   # reverse: fixed
 
             # ── DI snapshot ───────────────────────────────────────────────────
             _di = state.latest_di
@@ -113,10 +129,10 @@ async def auto_mode(state, direction="forward", engine=None):
 
             # ── Impact bumper ─────────────────────────────────────────────────
             if config.DI_BUMPER is not None and _di is not None and _di[config.DI_BUMPER]:
-                logger.warning("[%s] BUMPER HIT — braking", _label)
-                state.log_event("WARNING", f"[{_label}] BUMPER HIT — motors braked")
+                logger.warning("[%s] BUMPER HIT — Cat 1 stop", _label)
+                state.log_event("WARNING", f"[{_label}] BUMPER HIT — Cat 1 protective stop")
                 state.bumper_active = True
-                await motion.set_brake(state)
+                await motion.set_cat1_stop(state)  # Cat 1: decel then brake
                 current_target_speed = 0.0
                 pid.reset()
                 # Hold until bumper signal clears (or emergency overrides)
@@ -142,24 +158,29 @@ async def auto_mode(state, direction="forward", engine=None):
                 continue
 
             # ── Lidar DI checks (no-op when profile has no lidar channels) ─────
-            if config.DI_LIDAR_STOP is not None and _di is not None and _di[config.DI_LIDAR_STOP]:
+            # Outer zone (DI_LIDAR_OUTER): dashboard indicator only — no speed change.
+            # Middle zone (DI_LIDAR_SLOW): switch to SLOW speed.
+            # Inner zone (DI_LIDAR_STOP): Cat 1 protective stop — decel then brake.
+            if state.lidar_stop_enabled and config.DI_LIDAR_STOP is not None and _di is not None and _di[config.DI_LIDAR_STOP]:
                 if not tape_was_lost:
-                    logger.warning("[%s] LIDAR STOP — obstacle detected, braking", _label)
-                    state.log_event("WARNING", f"[{_label}] LIDAR STOP — obstacle detected")
-                    await motion.set_brake(state)
+                    logger.warning("[%s] LIDAR INNER — obstacle, Cat 1 stop", _label)
+                    state.log_event("WARNING", f"[{_label}] LIDAR INNER DETECT — protective stop")
+                    await motion.set_cat1_stop(state)  # Cat 1: decel then brake
                     current_target_speed = 0.0
                     pid.reset()
                     tape_was_lost = True
                 await asyncio.sleep(config.DT)
                 continue
-            if config.DI_LIDAR_SLOW is not None and _di is not None and _di[config.DI_LIDAR_SLOW]:
+            if state.lidar_slow_enabled and config.DI_LIDAR_SLOW is not None and _di is not None and _di[config.DI_LIDAR_SLOW]:
                 if state.speed_mode == "HIGH":
                     state.speed_mode = "SLOW"
 
             # ── Drain sensor queue — keep only the latest frame ───────────────
             sensor = None
+            _sensor_frames_this_cycle = 0
             while not state.sensor_queue.empty():
                 sensor = await state.sensor_queue.get()
+                _sensor_frames_this_cycle += 1
 
             if sensor is not None:
 
@@ -170,7 +191,7 @@ async def auto_mode(state, direction="forward", engine=None):
                 if not sensor["tape_detected"]:
                     logger.warning("[%s] LOST TAPE — stopping", _label)
                     state.log_event("WARNING", f"[{_label}] TAPE LOST — AGV stopped")
-                    await motion.set_brake(state)
+                    await motion.idle(state)   # no mechanical brake — Cat 2 hold
                     current_target_speed = 0.0
                     pid.reset()
                     tape_was_lost = True
@@ -251,6 +272,38 @@ async def auto_mode(state, direction="forward", engine=None):
                 await asyncio.sleep(config.DT)
                 continue
 
+            # ── Diagnostics: actual cycle time + sensor rate + queue depths ───
+            _now = _diag_loop.time()
+            _dt  = _now - _diag_last_t
+            _diag_last_t = _now
+            _diag_sum_dt += _dt
+            if _dt > _diag_max_dt: _diag_max_dt = _dt
+            _sf = _sensor_frames_this_cycle  # captured before drain wiped queue
+            _diag_sum_sf += _sf
+            if _sf > _diag_max_sf: _diag_max_sf = _sf
+            if _sf == 0: _diag_zero_sf += 1
+            _aq = state.ao_queue.qsize()
+            _dq = state.do_queue.qsize()
+            if _aq > _diag_max_aq: _diag_max_aq = _aq
+            if _dq > _diag_max_dq: _diag_max_dq = _dq
+            _diag_n += 1
+            if _diag_n >= _diag_log_every:
+                _avg_ms = (_diag_sum_dt / _diag_n) * 1000.0
+                _max_ms = _diag_max_dt * 1000.0
+                _avg_sf = _diag_sum_sf / _diag_n
+                logger.info(
+                    "[DIAG] cycle avg=%.1fms max=%.1fms (target=%.0fms) | "
+                    "sensor frames/cycle avg=%.1f max=%d zero=%d/%d | "
+                    "qmax ao=%d do=%d",
+                    _avg_ms, _max_ms, config.DT * 1000.0,
+                    _avg_sf, _diag_max_sf, _diag_zero_sf, _diag_n,
+                    _diag_max_aq, _diag_max_dq,
+                )
+                _diag_sum_dt = _diag_max_dt = 0.0
+                _diag_sum_sf = _diag_max_sf = _diag_zero_sf = 0
+                _diag_max_aq = _diag_max_dq = 0
+                _diag_n      = 0
+
             await asyncio.sleep(config.DT)
 
     finally:
@@ -264,12 +317,29 @@ async def auto_mode(state, direction="forward", engine=None):
 async def manual_mode(state):
     """Handles pendant jogging and web remote.
     Web remote (state.web_manual_command) takes priority over physical DI buttons.
-    Emergency is fully owned by mode_manager — this task does not check it."""
-    v_high = motion.rpm_to_voltage(motion.mps_to_rpm(config.MANUAL_TARGET_HIGH_SPEED))
-    v_slow = motion.rpm_to_voltage(motion.mps_to_rpm(config.MANUAL_TARGET_SLOW_SPEED))
-    current_motion = None
+    Emergency is fully owned by mode_manager — this task does not check it.
 
-    while True:
+    Acceleration model:
+        - Button held: ramp current speed from 0 toward target at MANUAL_ACCEL_RATE.
+        - Button released (state → idle): instant stop, no deceleration ramp.
+    The ramp is implemented as a 0..1 fraction multiplied into the target
+    voltages, so diagonal moves preserve their inner/outer wheel speed ratio.
+    """
+    v_high_max = motion.rpm_to_voltage(motion.mps_to_rpm(config.MANUAL_TARGET_HIGH_SPEED))
+    v_slow_max = motion.rpm_to_voltage(motion.mps_to_rpm(config.MANUAL_TARGET_SLOW_SPEED))
+
+    # Cycle period of this task (matches the asyncio.sleep at the bottom).
+    _CYCLE_S = 0.01
+    # Fraction increment per cycle: how much of "0 to MANUAL_TARGET_HIGH_SPEED"
+    # we cover each tick. Reaching full speed takes ~HIGH/ACCEL seconds.
+    _ramp_step = (config.MANUAL_ACCEL_RATE / config.MANUAL_TARGET_HIGH_SPEED) * _CYCLE_S
+    fraction = 0.0     # 0..1, scales target voltages during ramp-up
+
+    current_motion = None
+    _pusher_task   = None   # track active pusher task to prevent concurrent relay firing
+
+    try:
+      while True:
         # ── Drain DI queue — keep only the latest frame ───────────────────────
         di = None
         while not state.di_queue.empty():
@@ -305,20 +375,76 @@ async def manual_mode(state):
             await asyncio.sleep(0.01)
             continue
 
-        if motion_state != current_motion:
-            logger.debug("Manual: %s", motion_state.upper())
-            if   motion_state == "fwd_left":  await motion.set_forward_left(state, v_high, v_slow)
-            elif motion_state == "fwd_right": await motion.set_forward_right(state, v_high, v_slow)
-            elif motion_state == "rvs_left":  await motion.set_reverse_left(state, v_high, v_slow)
-            elif motion_state == "rvs_right": await motion.set_reverse_right(state, v_high, v_slow)
-            elif motion_state == "forward":   await motion.set_forward(state, v_high)
-            elif motion_state == "reverse":   await motion.set_reverse(state, v_high)
-            elif motion_state == "left":      await motion.set_left(state, v_slow)
-            elif motion_state == "right":     await motion.set_right(state, v_slow)
-            elif motion_state == "idle":      await motion.idle(state)
-            current_motion = motion_state
+        # ── Map motion_state to (left_target_v, right_target_v) and direction setup.
+        # On state change: issue the full set_* helper (which sets DO direction
+        # AND AO=0) so the ramp always starts from zero voltage.
+        # While the same state is held: re-issue AO-only updates each cycle until
+        # fraction reaches 1.0, then stop emitting writes.
+        if motion_state == "idle":
+            if current_motion != "idle":
+                logger.debug("Manual: IDLE (instant stop, no decel)")
+                await motion.idle(state)
+                fraction = 0.0
+                current_motion = "idle"
+        else:
+            if motion_state != current_motion:
+                logger.debug("Manual: %s (ramp-up at %.2f m/s^2)",
+                             motion_state.upper(), config.MANUAL_ACCEL_RATE)
+                fraction = 0.0
+                # Issue full set_* at zero voltage to lock in the DO direction
+                # without imparting motion. Subsequent cycles just bump AO.
+                if   motion_state == "fwd_left":  await motion.set_forward_left(state, 0.0, 0.0)
+                elif motion_state == "fwd_right": await motion.set_forward_right(state, 0.0, 0.0)
+                elif motion_state == "rvs_left":  await motion.set_reverse_left(state, 0.0, 0.0)
+                elif motion_state == "rvs_right": await motion.set_reverse_right(state, 0.0, 0.0)
+                elif motion_state == "forward":   await motion.set_forward(state, 0.0)
+                elif motion_state == "reverse":   await motion.set_reverse(state, 0.0)
+                elif motion_state == "left":      await motion.set_left(state, 0.0)
+                elif motion_state == "right":     await motion.set_right(state, 0.0)
+                current_motion = motion_state
+
+            # Advance the ramp; only emit AO writes while still climbing.
+            if fraction < 1.0:
+                fraction = min(1.0, fraction + _ramp_step)
+                v_h = v_high_max * fraction
+                v_s = v_slow_max * fraction
+                # Wheel voltage mapping per motion_state.
+                # See motion.py set_* helpers for the (left, right) convention.
+                if   motion_state == "fwd_left":  left_v, right_v = v_s, v_h
+                elif motion_state == "fwd_right": left_v, right_v = v_h, v_s
+                elif motion_state == "rvs_left":  left_v, right_v = v_s, v_h
+                elif motion_state == "rvs_right": left_v, right_v = v_h, v_s
+                elif motion_state == "forward":   left_v, right_v = v_h, v_h
+                elif motion_state == "reverse":   left_v, right_v = v_h, v_h
+                elif motion_state == "left":      left_v, right_v = v_s, v_s
+                elif motion_state == "right":     left_v, right_v = v_s, v_s
+                else:                              left_v, right_v = 0.0, 0.0
+                await motion.update_voltages(state, left_v, right_v)
+
+        # ── Web pusher request (hold: up/down energises, clear de-energises) ───
+        pusher_req = state.web_pusher_request
+        if pusher_req is not None:
+            state.web_pusher_request = None
+            # Cancel any in-flight task first — prevents the 200ms relay delay
+            # from re-energising relays after a clear has been requested.
+            if _pusher_task and not _pusher_task.done():
+                _pusher_task.cancel()
+            if pusher_req == "up":
+                logger.info("[MANUAL] Pusher UP — hold")
+                _pusher_task = asyncio.create_task(motion.pusher_up(state))
+            elif pusher_req == "down":
+                logger.info("[MANUAL] Pusher DOWN — hold")
+                _pusher_task = asyncio.create_task(motion.pusher_down(state))
+            elif pusher_req == "clear":
+                logger.info("[MANUAL] Pusher CLEAR — released")
+                _pusher_task = asyncio.create_task(motion.pusher_clear(state))
 
         await asyncio.sleep(0.01)
+
+    except asyncio.CancelledError:
+        if _pusher_task and not _pusher_task.done():
+            _pusher_task.cancel()
+        raise
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -342,13 +468,46 @@ async def mode_manager(state, engine=None):
             cancel_armed() on mode transitions. None until Phase 3 is wired up.
     """
 
-    current_mode = None
-    active_task  = None
-    last_start   = False
-    last_reset   = False
+    current_mode  = None
+    active_task   = None
+    startup_task  = None   # ARMED→running pusher-up routine (deterministic start-from-home)
+    last_start    = False
+    last_reset    = False
+
+    # Hardened start-from-home: when RFID sequences are enabled, every START
+    # press deterministically drives the pusher UP and holds the AGV for 5 s,
+    # regardless of which (or whether any) tag is read. This replaces the
+    # previous behavior where pusher-up depended on a tag10-departure sequence
+    # firing — which could miss when the AGV was already sitting on the tag at
+    # start time, or when the cooldown/at_home flag wasn't aligned.
+    START_FROM_HOME_HOLD_S = 5.0
+
+    async def _start_from_home_routine():
+        try:
+            await motion.pusher_up(state)
+            await asyncio.sleep(START_FROM_HOME_HOLD_S)
+            state.at_home = False
+        finally:
+            # Always release the hold even if cancelled — never leave the bot
+            # frozen with sequence_stop=True after a reset.
+            state.sequence_stop = False
+
+    async def _cancel_startup():
+        nonlocal startup_task
+        if startup_task and not startup_task.done():
+            startup_task.cancel()
+            try:
+                await startup_task
+            except asyncio.CancelledError:
+                pass
+        startup_task = None
 
     async def _cancel_active():
         nonlocal active_task
+        # Always cancel the start-from-home task too — its lifetime is bounded
+        # by the active auto task, and we never want it to keep sequence_stop
+        # held after a reset / emergency / end-cycle.
+        await _cancel_startup()
         if active_task:
             active_task.cancel()
             try:
@@ -369,14 +528,16 @@ async def mode_manager(state, engine=None):
             state.do_queue.get_nowait()
         while not state.ao_queue.empty():
             state.ao_queue.get_nowait()
-        await motion.set_brake(state)
+        await motion.set_cat1_stop(state)  # Cat 1: speed ref→0, then brake after decel
 
     def _reset_sequence_state():
-        state.speed_mode       = "HIGH"
+        state.speed_mode       = "SLOW"
         state.sequence_stop    = False
         state.pending_sequence = None
         if engine is not None:
             engine.cancel_armed()
+            engine.cancel_active_sequence()
+            engine.cancel_cooldowns()
 
     while True:
         if state.latest_di is None:
@@ -404,6 +565,19 @@ async def mode_manager(state, engine=None):
             await _cancel_active()
             await _flush_and_brake()
             _reset_sequence_state()
+            await asyncio.sleep(0.01)
+            continue
+
+        # ── End-cycle request (sequence-triggered return to ARMED) ───────────
+        if state.end_cycle_request and current_mode == "running":
+            logger.info("END CYCLE — sequence requested return to ARMED")
+            state.log_event("INFO", "End cycle — returning to ARMED")
+            state.end_cycle_request = False
+            await _cancel_active()
+            await _flush_and_idle()
+            _reset_sequence_state()
+            current_mode       = "armed"
+            state.current_mode = current_mode
             await asyncio.sleep(0.01)
             continue
 
@@ -498,17 +672,49 @@ async def mode_manager(state, engine=None):
             latest_sensor = None
             while not state.sensor_queue.empty():
                 latest_sensor = state.sensor_queue.get_nowait()
+
+            logger.info(
+                "START pressed — sensor_queue had data: %s | sensor_error: %s "
+                "| can_last_rx: %.2fs ago | di[START]=%s",
+                latest_sensor is not None,
+                state.sensor_error,
+                time.time() - state.can_last_rx,
+                btn_start,
+            )
+
             if latest_sensor is not None:
                 tape_present = latest_sensor.get("tape_detected", False)
+                logger.info(
+                    "START sensor frame — tape_detected: %s | left_mm: %s "
+                    "| sensor_failure: %s",
+                    latest_sensor.get("tape_detected"),
+                    latest_sensor.get("left_mm"),
+                    latest_sensor.get("sensor_failure"),
+                )
                 await state.sensor_queue.put(latest_sensor)
-
-            if not tape_present:
-                logger.warning("START ignored — tape not detected. Place AGV on tape first.")
             else:
-                logger.info("START — launching AUTO mode.")
+                logger.warning(
+                    "START ignored — sensor queue empty. "
+                    "CAN sensor may be offline or no frame received yet."
+                )
+
+            if latest_sensor is not None and not tape_present:
+                logger.warning("START ignored — tape not detected. Place AGV on tape first.")
+            elif tape_present:
+                logger.info("START — tape confirmed, launching AUTO mode.")
+                # If RFID sequences are enabled, hold the AGV in place from the
+                # very first cycle of auto_mode so the pusher-up routine can run
+                # before any motion. Set sequence_stop BEFORE launching auto_mode.
+                if state.rfid_enabled:
+                    state.sequence_stop = True
                 active_task        = asyncio.create_task(auto_mode(state, engine=engine))
                 current_mode       = "running"
                 state.current_mode = current_mode
+                if state.rfid_enabled:
+                    logger.info("START from home — pusher UP, holding %.1fs", START_FROM_HOME_HOLD_S)
+                    state.log_event("INFO",
+                        f"START from home — pusher UP, holding {START_FROM_HOME_HOLD_S:.1f}s")
+                    startup_task = asyncio.create_task(_start_from_home_routine())
 
         elif current_mode == "armed" and state.reverse_auto_request:
             tape_present  = False

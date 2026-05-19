@@ -45,6 +45,8 @@ class RFIDReader(SensorDriver):
                         packet = "CF" + packet
                         if len(packet) >= 34:
                             tag = packet[26:30]
+                            if tag == "3130":          # startup echo artifact — not a real tag
+                                continue
                             logger.info("RFID tag read: %s (dec=%d)", tag, int(tag, 16))
                             await state.rfid_queue.put(tag)
                             self._record_rx()

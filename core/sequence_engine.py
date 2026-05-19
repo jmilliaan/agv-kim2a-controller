@@ -49,8 +49,9 @@ class SequenceEngine:
         # and are waiting for their marker
         self._armed: dict = {}
 
-        # name of currently executing sequence (one at a time)
-        self._active_sequence: str | None = None
+        # name and task of currently executing sequence (one at a time)
+        self._active_sequence: str | None       = None
+        self._active_task:  asyncio.Task | None = None
 
         # ── Built-in action registry ──────────────────────────────────────────
         self._actions: dict = {
@@ -64,6 +65,8 @@ class SequenceEngine:
             "wait_plc_complete": self._act_wait_plc_complete,
             "pusher_extend":     self._act_pusher_extend,
             "pusher_retract":    self._act_pusher_retract,
+            "end_cycle":         self._act_end_cycle,
+            "set_at_home":       self._act_set_at_home,
         }
 
     # ── Plugin point ─────────────────────────────────────────────────────────
@@ -87,7 +90,7 @@ class SequenceEngine:
             if trig["type"] == "rfid" and trig["rfid_tag"] == tag_hex:
                 if not self._check_preconditions(seq, now):
                     continue
-                asyncio.create_task(self._run_sequence(seq))
+                self._active_task = asyncio.create_task(self._run_sequence(seq))
 
             elif trig["type"] == "rfid_then_marker" and trig["rfid_tag"] == tag_hex:
                 if not self._check_preconditions(seq, now):
@@ -112,7 +115,7 @@ class SequenceEngine:
                 self._state.pending_sequence = None
                 logger.info("[SEQ] Marker '%s' detected — launching '%s'", side, name)
                 # skip set_speed + wait_marker steps (already done during approach)
-                asyncio.create_task(self._run_sequence(seq, skip_approach=True))
+                self._active_task = asyncio.create_task(self._run_sequence(seq, skip_approach=True))
 
         # Check pure marker-triggered sequences
         for seq in self._sequences:
@@ -120,7 +123,7 @@ class SequenceEngine:
             if trig["type"] == "marker" and trig.get("marker_side") == side:
                 if not self._check_preconditions(seq, now):
                     continue
-                asyncio.create_task(self._run_sequence(seq))
+                self._active_task = asyncio.create_task(self._run_sequence(seq))
 
     def cancel_armed(self):
         """Disarm all pending rfid_then_marker sequences.
@@ -130,6 +133,27 @@ class SequenceEngine:
             logger.info("[SEQ] Disarming %d pending sequence(s)", len(self._armed))
         self._armed.clear()
         self._state.pending_sequence = None
+
+    def cancel_active_sequence(self):
+        """Cancel the currently running sequence task, if any.
+        Called by mode_manager on emergency, manual switch, or reset so a
+        sequence in progress does not outlive the mode that started it."""
+        if self._active_task and not self._active_task.done():
+            logger.info("[SEQ] Cancelling active sequence '%s' due to mode change",
+                        self._active_sequence)
+            self._active_task.cancel()
+        self._active_task     = None
+        self._active_sequence = None
+        self._state.sequence_stop = False
+
+    def cancel_cooldowns(self):
+        """Clear all sequence cooldowns.
+        Called by mode_manager on reset, manual switch, or emergency so tags
+        that were recently read don't stay suppressed into the next run."""
+        if self._cooldowns:
+            logger.info("[SEQ] Clearing %d cooldown(s): %s",
+                        len(self._cooldowns), list(self._cooldowns.keys()))
+        self._cooldowns.clear()
 
     # ── Status (for dashboard) ────────────────────────────────────────────────
 
@@ -149,12 +173,18 @@ class SequenceEngine:
     # ── Internal helpers ──────────────────────────────────────────────────────
 
     def _check_preconditions(self, seq: dict, now: float) -> bool:
-        """Returns True if the sequence may fire (mode + cooldown checks)."""
+        """Returns True if the sequence may fire (mode + at_home + cooldown checks)."""
         required_mode = seq.get("requires_mode")
         if required_mode and self._state.current_mode != required_mode:
             logger.debug("[SEQ] '%s' ignored — mode is '%s', need '%s'",
                          seq["name"], self._state.current_mode, required_mode)
             return False
+
+        if "requires_at_home" in seq:
+            if seq["requires_at_home"] != self._state.at_home:
+                logger.debug("[SEQ] '%s' ignored — requires_at_home=%s but state.at_home=%s",
+                             seq["name"], seq["requires_at_home"], self._state.at_home)
+                return False
 
         cooldown_exp = self._cooldowns.get(seq["name"], 0.0)
         if now < cooldown_exp:
@@ -205,10 +235,11 @@ class SequenceEngine:
         except SequenceTimeout as exc:
             logger.warning("[SEQ] '%s' timed out (%s) — resuming", name, exc)
             self._state.sequence_stop = False
-            self._state.speed_mode    = "HIGH"
+            self._state.speed_mode    = "SLOW"
 
         finally:
             self._active_sequence = None
+            self._active_task     = None
             self._cooldowns[name] = time.time() + seq.get("cooldown_s", 0.0)
 
     # ── Built-in action handlers ──────────────────────────────────────────────
@@ -309,3 +340,15 @@ class SequenceEngine:
         await asyncio.sleep(duration)
         await motion.pusher_clear(self._state)
         logger.info("[SEQ] Pusher DOWN complete")
+
+    async def _act_end_cycle(self, p: dict):
+        """Signal mode_manager to return to ARMED immediately.
+        Used as the last action of the home-arrival sequence."""
+        logger.info("[SEQ] end_cycle — requesting return to ARMED")
+        self._state.end_cycle_request = True
+
+    async def _act_set_at_home(self, p: dict):
+        """Set state.at_home flag to control which tag-10 sequence fires next."""
+        value = bool(p.get("value", True))
+        logger.info("[SEQ] set_at_home → %s", value)
+        self._state.at_home = value

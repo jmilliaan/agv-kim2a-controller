@@ -1,0 +1,1694 @@
+2026-05-12 09:45:49.468 [INFO    ] _debugging.plotter: [PLOT] Recording started.
+2026-05-12 09:45:49.468 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:49.469 [DEBUG   ] modes: [SLOW] Target=0.03m/s e=+14.0mm P=+30.8 I=+0.0 D=-30.8 out=+0.0 L=75.6 R=75.6rpm Vred=4.0rpm
+2026-05-12 09:45:49.520 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:49.520 [DEBUG   ] modes: [SLOW] Target=0.05m/s e=+14.0mm P=+30.8 I=+0.0 D=-15.4 out=+15.4 L=170.3 R=139.5rpm Vred=4.3rpm
+2026-05-12 09:45:49.572 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:49.572 [DEBUG   ] modes: [SLOW] Target=0.08m/s e=+15.0mm P=+33.0 I=+0.0 D=-9.9 out=+23.1 L=256.2 R=210.0rpm Vred=5.6rpm
+2026-05-12 09:45:49.623 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:49.623 [DEBUG   ] modes: [SLOW] Target=0.10m/s e=+15.0mm P=+33.0 I=+0.0 D=-5.0 out=+28.0 L=340.6 R=284.5rpm Vred=5.8rpm
+2026-05-12 09:45:49.675 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:49.675 [DEBUG   ] modes: [SLOW] Target=0.12m/s e=+15.0mm P=+33.0 I=+0.0 D=-2.5 out=+30.5 L=422.4 R=361.4rpm Vred=6.0rpm
+2026-05-12 09:45:49.726 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:49.726 [DEBUG   ] modes: [SLOW] Target=0.15m/s e=+15.0mm P=+33.0 I=+0.0 D=-1.2 out=+31.8 L=503.1 R=439.6rpm Vred=6.1rpm
+2026-05-12 09:45:49.778 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:49.778 [DEBUG   ] modes: [SLOW] Target=0.17m/s e=+15.0mm P=+33.0 I=+0.0 D=-0.6 out=+32.4 L=583.2 R=518.4rpm Vred=6.3rpm
+2026-05-12 09:45:49.829 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:49.830 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+15.0mm P=+33.0 I=+0.0 D=-0.3 out=+32.7 L=662.9 R=597.5rpm Vred=6.4rpm
+2026-05-12 09:45:49.880 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:49.881 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+0.0 D=+2.0 out=+32.8 L=662.0 R=596.3rpm Vred=7.4rpm
+2026-05-12 09:45:49.932 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:49.933 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+0.0 D=+1.0 out=+31.8 L=661.0 R=597.4rpm Vred=7.4rpm
+2026-05-12 09:45:49.984 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:49.984 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+0.0 D=+0.5 out=+31.3 L=660.6 R=598.0rpm Vred=7.4rpm
+2026-05-12 09:45:50.035 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.036 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+0.0 D=+0.3 out=+31.1 L=660.4 R=598.2rpm Vred=7.3rpm
+2026-05-12 09:45:50.086 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.087 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+0.0 D=+0.1 out=+30.9 L=660.3 R=598.4rpm Vred=7.3rpm
+2026-05-12 09:45:50.138 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.139 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+0.0 D=+0.1 out=+30.9 L=660.2 R=598.5rpm Vred=7.3rpm
+2026-05-12 09:45:50.190 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.191 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+0.0 D=+0.0 out=+30.8 L=660.2 R=598.6rpm Vred=7.2rpm
+2026-05-12 09:45:50.242 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.243 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+13.0mm P=+28.6 I=+0.0 D=+2.2 out=+30.8 L=659.3 R=597.6rpm Vred=8.2rpm
+2026-05-12 09:45:50.294 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.295 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+13.0mm P=+28.6 I=+0.0 D=+1.1 out=+29.7 L=658.3 R=598.9rpm Vred=8.0rpm
+2026-05-12 09:45:50.346 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.347 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+13.0mm P=+28.6 I=+0.0 D=+0.6 out=+29.2 L=657.9 R=599.6rpm Vred=7.8rpm
+2026-05-12 09:45:50.397 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.398 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+12.0mm P=+26.4 I=+0.0 D=+2.5 out=+28.9 L=656.8 R=599.1rpm Vred=8.7rpm
+2026-05-12 09:45:50.449 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.449 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+11.0mm P=+24.2 I=+0.0 D=+3.4 out=+27.6 L=654.9 R=599.6rpm Vred=9.3rpm
+2026-05-12 09:45:50.449 [INFO    ] modes: [DIAG] cycle avg=49.1ms max=52.6ms (target=50ms) | sensor frames/cycle avg=4.2 max=5 zero=0/20 | qmax ao=6 do=12
+2026-05-12 09:45:50.502 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.502 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+0.0 D=+3.9 out=+25.9 L=652.6 R=600.8rpm Vred=9.9rpm
+2026-05-12 09:45:50.554 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.554 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+0.0 D=+4.2 out=+24.0 L=650.2 R=602.3rpm Vred=10.4rpm
+2026-05-12 09:45:50.606 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.606 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.0 D=+4.3 out=+21.9 L=647.8 R=604.0rpm Vred=10.7rpm
+2026-05-12 09:45:50.657 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.658 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+0.0 D=+4.3 out=+19.7 L=645.4 R=605.9rpm Vred=11.0rpm
+2026-05-12 09:45:50.709 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.709 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.0 D=+4.4 out=+17.6 L=643.0 R=607.8rpm Vred=11.2rpm
+2026-05-12 09:45:50.759 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.760 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.0 D=+4.4 out=+15.4 L=640.7 R=609.9rpm Vred=11.3rpm
+2026-05-12 09:45:50.811 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.811 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+0.2 D=+4.4 out=+13.4 L=638.6 R=611.8rpm Vred=11.4rpm
+2026-05-12 09:45:50.863 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.863 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=+0.3 D=+6.6 out=+11.3 L=635.6 R=612.9rpm Vred=12.4rpm
+2026-05-12 09:45:50.914 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.914 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+0.3 D=+7.7 out=+8.0 L=631.5 R=615.5rpm Vred=13.1rpm
+2026-05-12 09:45:50.965 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:50.965 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=+0.3 D=+6.0 out=+4.1 L=627.9 R=619.6rpm Vred=12.9rpm
+2026-05-12 09:45:51.016 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.016 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=+0.1 D=+7.4 out=+0.9 L=623.8 R=622.0rpm Vred=13.7rpm
+2026-05-12 09:45:51.068 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.068 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-4.0mm P=-8.8 I=-0.1 D=+5.9 out=-3.0 L=620.1 R=626.1rpm Vred=13.6rpm
+2026-05-12 09:45:51.120 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.120 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-5.0mm P=-11.0 I=-0.1 D=+5.2 out=-6.0 L=617.2 R=629.1rpm Vred=13.4rpm
+2026-05-12 09:45:51.173 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.173 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-7.0mm P=-15.4 I=-0.1 D=+7.0 out=-8.5 L=613.6 R=630.7rpm Vred=14.5rpm
+2026-05-12 09:45:51.224 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.224 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=-0.1 D=+5.7 out=-12.0 L=610.2 R=634.2rpm Vred=14.4rpm
+2026-05-12 09:45:51.275 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.276 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=-0.1 D=+5.0 out=-14.9 L=607.3 R=637.1rpm Vred=14.4rpm
+2026-05-12 09:45:51.327 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.327 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=-0.1 D=+4.7 out=-17.4 L=604.8 R=639.5rpm Vred=14.5rpm
+2026-05-12 09:45:51.379 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.379 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=-0.1 D=+4.6 out=-19.7 L=602.3 R=641.8rpm Vred=14.6rpm
+2026-05-12 09:45:51.430 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.431 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=-0.1 D=+4.5 out=-22.0 L=599.9 R=643.9rpm Vred=14.7rpm
+2026-05-12 09:45:51.481 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.482 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=-0.1 D=+4.4 out=-24.3 L=597.5 R=646.0rpm Vred=14.9rpm
+2026-05-12 09:45:51.482 [INFO    ] modes: [DIAG] cycle avg=51.6ms max=53.1ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:45:51.533 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.534 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=-0.1 D=+4.4 out=-26.5 L=595.0 R=648.0rpm Vred=15.1rpm
+2026-05-12 09:45:51.585 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.585 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=-0.1 D=+4.4 out=-28.7 L=592.6 R=650.0rpm Vred=15.3rpm
+2026-05-12 09:45:51.636 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.636 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=-0.1 D=+2.2 out=-30.9 L=591.2 R=653.0rpm Vred=14.6rpm
+2026-05-12 09:45:51.688 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.688 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=-0.1 D=+3.3 out=-32.0 L=589.7 R=653.7rpm Vred=14.9rpm
+2026-05-12 09:45:51.739 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.739 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-17.0mm P=-37.4 I=-0.1 D=+3.9 out=-33.7 L=587.7 R=655.0rpm Vred=15.3rpm
+2026-05-12 09:45:51.789 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.790 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-18.0mm P=-39.6 I=-0.1 D=+4.1 out=-35.6 L=585.4 R=656.6rpm Vred=15.6rpm
+2026-05-12 09:45:51.841 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.841 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=-0.1 D=+4.3 out=-37.6 L=582.9 R=658.2rpm Vred=16.0rpm
+2026-05-12 09:45:51.892 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.893 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=-0.1 D=+2.1 out=-39.8 L=581.5 R=661.0rpm Vred=15.4rpm
+2026-05-12 09:45:51.944 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.944 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-20.0mm P=-44.0 I=-0.1 D=+3.3 out=-40.8 L=579.9 R=661.6rpm Vred=15.8rpm
+2026-05-12 09:45:51.994 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:51.995 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-20.0mm P=-44.0 I=-0.1 D=+1.6 out=-42.5 L=578.9 R=663.8rpm Vred=15.3rpm
+2026-05-12 09:45:52.045 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.046 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-20.0mm P=-44.0 I=-0.1 D=+0.8 out=-43.3 L=578.6 R=665.2rpm Vred=14.7rpm
+2026-05-12 09:45:52.097 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.098 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-21.0mm P=-46.2 I=-0.1 D=+2.6 out=-43.7 L=577.6 R=665.0rpm Vred=15.3rpm
+2026-05-12 09:45:52.148 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.149 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-21.0mm P=-46.2 I=-0.1 D=+1.3 out=-45.0 L=576.8 R=666.8rpm Vred=14.8rpm
+2026-05-12 09:45:52.199 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.200 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-21.0mm P=-46.2 I=-0.1 D=+0.7 out=-45.7 L=576.6 R=667.9rpm Vred=14.4rpm
+2026-05-12 09:45:52.251 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.251 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-22.0mm P=-48.4 I=-0.1 D=+2.5 out=-46.0 L=575.6 R=667.6rpm Vred=15.1rpm
+2026-05-12 09:45:52.302 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.302 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-22.0mm P=-48.4 I=-0.1 D=+1.3 out=-47.2 L=574.7 R=669.2rpm Vred=14.6rpm
+2026-05-12 09:45:52.354 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.354 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-23.0mm P=-50.6 I=-0.1 D=+2.8 out=-47.9 L=573.4 R=669.2rpm Vred=15.3rpm
+2026-05-12 09:45:52.405 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.406 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-23.0mm P=-50.6 I=-0.1 D=+1.4 out=-49.3 L=572.4 R=671.0rpm Vred=14.9rpm
+2026-05-12 09:45:52.457 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.457 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-23.0mm P=-50.6 I=-0.1 D=+0.7 out=-50.0 L=572.0 R=672.0rpm Vred=14.6rpm
+2026-05-12 09:45:52.508 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.508 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-24.0mm P=-52.8 I=-0.1 D=+2.6 out=-50.4 L=570.9 R=671.6rpm Vred=15.3rpm
+2026-05-12 09:45:52.509 [INFO    ] modes: [DIAG] cycle avg=51.3ms max=52.3ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:45:52.560 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.560 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-24.0mm P=-52.8 I=-0.1 D=+1.3 out=-51.6 L=570.0 R=673.2rpm Vred=15.0rpm
+2026-05-12 09:45:52.611 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.612 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-24.0mm P=-52.8 I=-0.1 D=+0.6 out=-52.3 L=569.6 R=674.2rpm Vred=14.7rpm
+2026-05-12 09:45:52.663 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.664 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-24.0mm P=-52.8 I=-0.1 D=+0.3 out=-52.6 L=569.6 R=674.8rpm Vred=14.4rpm
+2026-05-12 09:45:52.714 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.715 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-24.0mm P=-52.8 I=-0.1 D=+0.2 out=-52.8 L=569.7 R=675.2rpm Vred=14.2rpm
+2026-05-12 09:45:52.766 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.766 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-24.0mm P=-52.8 I=-0.1 D=+0.1 out=-52.8 L=569.8 R=675.5rpm Vred=14.0rpm
+2026-05-12 09:45:52.817 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.817 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-24.0mm P=-52.8 I=-0.1 D=+0.0 out=-52.9 L=570.0 R=675.7rpm Vred=13.8rpm
+2026-05-12 09:45:52.868 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.868 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-24.0mm P=-52.8 I=-0.1 D=+0.0 out=-52.9 L=570.1 R=675.9rpm Vred=13.6rpm
+2026-05-12 09:45:52.919 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.920 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-23.0mm P=-50.6 I=-0.1 D=-2.2 out=-52.9 L=569.3 R=675.1rpm Vred=14.4rpm
+2026-05-12 09:45:52.971 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:52.972 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-23.0mm P=-50.6 I=-0.1 D=-1.1 out=-51.8 L=570.7 R=674.3rpm Vred=14.1rpm
+2026-05-12 09:45:53.023 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.024 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-23.0mm P=-50.6 I=-0.1 D=-0.5 out=-51.3 L=571.5 R=674.0rpm Vred=13.8rpm
+2026-05-12 09:45:53.075 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.076 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-23.0mm P=-50.6 I=-0.1 D=-0.3 out=-51.0 L=572.0 R=674.0rpm Vred=13.6rpm
+2026-05-12 09:45:53.127 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.127 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-23.0mm P=-50.6 I=-0.1 D=-0.1 out=-50.8 L=572.4 R=674.1rpm Vred=13.4rpm
+2026-05-12 09:45:53.178 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.179 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-22.0mm P=-48.4 I=-0.1 D=-2.3 out=-50.8 L=571.7 R=673.2rpm Vred=14.2rpm
+2026-05-12 09:45:53.230 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.231 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-22.0mm P=-48.4 I=-0.1 D=-1.1 out=-49.6 L=573.1 R=672.4rpm Vred=13.8rpm
+2026-05-12 09:45:53.282 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.283 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-22.0mm P=-48.4 I=-0.1 D=-0.6 out=-49.1 L=574.0 R=672.1rpm Vred=13.6rpm
+2026-05-12 09:45:53.335 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.335 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-21.0mm P=-46.2 I=-0.1 D=-2.5 out=-48.8 L=573.6 R=671.2rpm Vred=14.3rpm
+2026-05-12 09:45:53.386 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.387 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-21.0mm P=-46.2 I=-0.1 D=-1.2 out=-47.6 L=575.2 R=670.3rpm Vred=13.9rpm
+2026-05-12 09:45:53.438 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.438 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-21.0mm P=-46.2 I=-0.1 D=-0.6 out=-46.9 L=576.2 R=670.0rpm Vred=13.5rpm
+2026-05-12 09:45:53.489 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.489 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-20.0mm P=-44.0 I=-0.1 D=-2.5 out=-46.6 L=575.8 R=669.1rpm Vred=14.2rpm
+2026-05-12 09:45:53.540 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.540 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-20.0mm P=-44.0 I=-0.1 D=-1.3 out=-45.4 L=577.5 R=668.2rpm Vred=13.8rpm
+2026-05-12 09:45:53.540 [INFO    ] modes: [DIAG] cycle avg=51.6ms max=52.3ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:45:53.592 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.592 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=-0.1 D=-2.8 out=-44.7 L=577.5 R=667.0rpm Vred=14.3rpm
+2026-05-12 09:45:53.643 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.643 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-18.0mm P=-39.6 I=-0.1 D=-3.6 out=-43.3 L=578.5 R=665.1rpm Vred=14.8rpm
+2026-05-12 09:45:53.694 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.694 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-18.0mm P=-39.6 I=-0.1 D=-1.8 out=-41.5 L=580.9 R=663.9rpm Vred=14.2rpm
+2026-05-12 09:45:53.746 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.746 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-18.0mm P=-39.6 I=-0.1 D=-0.9 out=-40.6 L=582.3 R=663.5rpm Vred=13.7rpm
+2026-05-12 09:45:53.799 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.800 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-17.0mm P=-37.4 I=-0.1 D=-2.7 out=-40.2 L=582.3 R=662.6rpm Vred=14.2rpm
+2026-05-12 09:45:53.851 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.851 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=-0.1 D=-3.5 out=-38.8 L=583.2 R=660.9rpm Vred=14.6rpm
+2026-05-12 09:45:53.902 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.903 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=-0.1 D=-4.0 out=-37.1 L=584.7 R=658.8rpm Vred=14.9rpm
+2026-05-12 09:45:53.955 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:53.955 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=-0.1 D=-2.0 out=-35.1 L=587.4 R=657.6rpm Vred=14.1rpm
+2026-05-12 09:45:54.006 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.006 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=-0.1 D=-3.2 out=-34.1 L=588.1 R=656.3rpm Vred=14.4rpm
+2026-05-12 09:45:54.057 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.058 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=-0.1 D=-3.8 out=-32.5 L=589.5 R=654.5rpm Vred=14.6rpm
+2026-05-12 09:45:54.109 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.110 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=-0.1 D=-4.1 out=-30.6 L=591.3 R=652.5rpm Vred=14.8rpm
+2026-05-12 09:45:54.161 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.161 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=-0.1 D=-2.0 out=-28.6 L=594.2 R=651.3rpm Vred=13.9rpm
+2026-05-12 09:45:54.214 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.215 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=-0.1 D=-3.2 out=-27.5 L=595.0 R=650.1rpm Vred=14.0rpm
+2026-05-12 09:45:54.265 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.266 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=-0.1 D=-3.8 out=-25.9 L=596.6 R=648.4rpm Vred=14.1rpm
+2026-05-12 09:45:54.317 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.317 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=-0.1 D=-4.1 out=-24.0 L=598.4 R=646.5rpm Vred=14.2rpm
+2026-05-12 09:45:54.368 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.368 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=-0.1 D=-4.3 out=-22.0 L=600.5 R=644.4rpm Vred=14.2rpm
+2026-05-12 09:45:54.419 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.419 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=-0.1 D=-2.1 out=-19.8 L=603.6 R=643.3rpm Vred=13.1rpm
+2026-05-12 09:45:54.471 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.471 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-6.0mm P=-13.2 I=-0.1 D=-5.5 out=-18.8 L=603.7 R=641.3rpm Vred=14.1rpm
+2026-05-12 09:45:54.522 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.522 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-5.0mm P=-11.0 I=-0.1 D=-4.9 out=-16.0 L=606.6 R=638.7rpm Vred=14.0rpm
+2026-05-12 09:45:54.574 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.574 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-4.0mm P=-8.8 I=-0.3 D=-4.7 out=-13.8 L=609.1 R=636.6rpm Vred=13.8rpm
+2026-05-12 09:45:54.574 [INFO    ] modes: [DIAG] cycle avg=51.7ms max=53.1ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:45:54.625 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.626 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-4.0mm P=-8.8 I=-0.6 D=-2.3 out=-11.7 L=612.3 R=635.7rpm Vred=12.6rpm
+2026-05-12 09:45:54.677 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.677 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=-0.7 D=-3.4 out=-10.7 L=613.5 R=634.8rpm Vred=12.5rpm
+2026-05-12 09:45:54.728 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.729 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-2.0mm P=-4.4 I=-0.8 D=-3.9 out=-9.1 L=615.2 R=633.4rpm Vred=12.3rpm
+2026-05-12 09:45:54.780 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.781 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=-0.9 D=-4.1 out=-7.2 L=617.2 R=631.7rpm Vred=12.2rpm
+2026-05-12 09:45:54.832 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.832 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=-0.9 D=-4.3 out=-5.2 L=619.5 R=629.8rpm Vred=11.9rpm
+2026-05-12 09:45:54.884 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.884 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=-0.8 D=-4.3 out=-3.0 L=621.9 R=627.8rpm Vred=11.8rpm
+2026-05-12 09:45:54.935 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.936 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=-0.7 D=-4.4 out=-0.7 L=624.2 R=625.6rpm Vred=11.7rpm
+2026-05-12 09:45:54.987 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:54.988 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=-0.6 D=-4.4 out=+1.7 L=626.6 R=623.3rpm Vred=11.7rpm
+2026-05-12 09:45:55.039 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.040 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=-0.3 D=-4.4 out=+4.1 L=629.0 R=620.8rpm Vred=11.7rpm
+2026-05-12 09:45:55.091 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.092 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=-0.1 D=-2.2 out=+6.5 L=632.4 R=619.4rpm Vred=10.8rpm
+2026-05-12 09:45:55.143 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.144 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+0.1 D=-1.1 out=+7.8 L=634.6 R=618.9rpm Vred=9.9rpm
+2026-05-12 09:45:55.195 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.196 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.1 D=-2.7 out=+8.4 L=634.8 R=618.1rpm Vred=10.1rpm
+2026-05-12 09:45:55.247 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.247 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.1 D=-3.6 out=+9.7 L=635.9 R=616.5rpm Vred=10.4rpm
+2026-05-12 09:45:55.299 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.299 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.1 D=-1.8 out=+11.5 L=638.5 R=615.4rpm Vred=9.7rpm
+2026-05-12 09:45:55.351 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.352 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+0.1 D=-3.1 out=+12.4 L=639.0 R=614.1rpm Vred=10.1rpm
+2026-05-12 09:45:55.403 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.403 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+0.1 D=-1.5 out=+14.0 L=641.2 R=613.3rpm Vred=9.4rpm
+2026-05-12 09:45:55.454 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.455 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=-3.0 out=+14.7 L=641.5 R=612.0rpm Vred=9.9rpm
+2026-05-12 09:45:55.506 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.506 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=-1.5 out=+16.2 L=643.6 R=611.1rpm Vred=9.3rpm
+2026-05-12 09:45:55.557 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.557 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+0.1 D=-2.9 out=+17.0 L=643.8 R=609.9rpm Vred=9.8rpm
+2026-05-12 09:45:55.608 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.608 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+0.1 D=-3.7 out=+18.4 L=644.7 R=607.9rpm Vred=10.3rpm
+2026-05-12 09:45:55.609 [INFO    ] modes: [DIAG] cycle avg=51.7ms max=52.5ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:45:55.660 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.660 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+0.1 D=-1.8 out=+20.3 L=647.1 R=606.6rpm Vred=9.8rpm
+2026-05-12 09:45:55.712 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.712 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+11.0mm P=+24.2 I=+0.1 D=-3.1 out=+21.2 L=647.5 R=605.1rpm Vred=10.4rpm
+2026-05-12 09:45:55.763 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.763 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+11.0mm P=+24.2 I=+0.1 D=-1.6 out=+22.8 L=649.5 R=604.0rpm Vred=9.9rpm
+2026-05-12 09:45:55.814 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.815 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+12.0mm P=+26.4 I=+0.1 D=-3.0 out=+23.5 L=649.7 R=602.6rpm Vred=10.5rpm
+2026-05-12 09:45:55.866 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.866 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+12.0mm P=+26.4 I=+0.1 D=-1.5 out=+25.0 L=651.6 R=601.6rpm Vred=10.0rpm
+2026-05-12 09:45:55.917 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.917 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+13.0mm P=+28.6 I=+0.1 D=-2.9 out=+25.8 L=651.7 R=600.2rpm Vred=10.7rpm
+2026-05-12 09:45:55.967 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:55.968 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+13.0mm P=+28.6 I=+0.1 D=-1.5 out=+27.2 L=653.6 R=599.1rpm Vred=10.3rpm
+2026-05-12 09:45:56.019 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.019 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+0.1 D=-2.9 out=+28.0 L=653.7 R=597.7rpm Vred=10.9rpm
+2026-05-12 09:45:56.070 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.071 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+0.1 D=-1.5 out=+29.4 L=655.5 R=596.6rpm Vred=10.5rpm
+2026-05-12 09:45:56.122 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.123 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+0.1 D=-0.7 out=+30.2 L=656.6 R=596.3rpm Vred=10.2rpm
+2026-05-12 09:45:56.175 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.175 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+15.0mm P=+33.0 I=+0.1 D=-2.6 out=+30.5 L=656.2 R=595.2rpm Vred=10.9rpm
+2026-05-12 09:45:56.226 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.227 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+15.0mm P=+33.0 I=+0.1 D=-1.3 out=+31.8 L=657.9 R=594.2rpm Vred=10.6rpm
+2026-05-12 09:45:56.278 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.279 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+16.0mm P=+35.2 I=+0.1 D=-2.8 out=+32.5 L=657.8 R=592.8rpm Vred=11.3rpm
+2026-05-12 09:45:56.330 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.331 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+16.0mm P=+35.2 I=+0.1 D=-1.4 out=+33.9 L=659.5 R=591.7rpm Vred=11.0rpm
+2026-05-12 09:45:56.382 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.382 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+16.0mm P=+35.2 I=+0.1 D=-0.7 out=+34.6 L=660.5 R=591.3rpm Vred=10.7rpm
+2026-05-12 09:45:56.434 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.434 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+16.0mm P=+35.2 I=+0.1 D=-0.4 out=+35.0 L=661.2 R=591.2rpm Vred=10.4rpm
+2026-05-12 09:45:56.486 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.486 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+16.0mm P=+35.2 I=+0.1 D=-0.2 out=+35.1 L=661.6 R=591.3rpm Vred=10.2rpm
+2026-05-12 09:45:56.537 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.537 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+16.0mm P=+35.2 I=+0.1 D=-0.1 out=+35.2 L=661.9 R=591.4rpm Vred=10.0rpm
+2026-05-12 09:45:56.588 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.588 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+17.0mm P=+37.4 I=+0.1 D=-2.2 out=+35.3 L=661.1 R=590.5rpm Vred=10.8rpm
+2026-05-12 09:45:56.639 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.639 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+17.0mm P=+37.4 I=+0.1 D=-1.1 out=+36.4 L=662.4 R=589.6rpm Vred=10.6rpm
+2026-05-12 09:45:56.640 [INFO    ] modes: [DIAG] cycle avg=51.6ms max=52.6ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:45:56.691 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.692 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+17.0mm P=+37.4 I=+0.1 D=-0.6 out=+36.9 L=663.2 R=589.3rpm Vred=10.4rpm
+2026-05-12 09:45:56.743 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.743 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+17.0mm P=+37.4 I=+0.1 D=-0.3 out=+37.2 L=663.7 R=589.2rpm Vred=10.2rpm
+2026-05-12 09:45:56.794 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.795 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+17.0mm P=+37.4 I=+0.1 D=-0.1 out=+37.4 L=664.0 R=589.2rpm Vred=10.0rpm
+2026-05-12 09:45:56.846 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.847 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+17.0mm P=+37.4 I=+0.1 D=-0.1 out=+37.4 L=664.2 R=589.3rpm Vred=9.9rpm
+2026-05-12 09:45:56.898 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.899 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+17.0mm P=+37.4 I=+0.1 D=-0.0 out=+37.5 L=664.4 R=589.4rpm Vred=9.7rpm
+2026-05-12 09:45:56.901 [INFO    ] drivers.rfid_tcp: RFID tag read: 001E (dec=30)
+2026-05-12 09:45:56.902 [DEBUG   ] rfid_processor: [RFID] Tag read: 001E
+2026-05-12 09:45:56.950 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:56.951 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+17.0mm P=+37.4 I=+0.1 D=-0.0 out=+37.5 L=664.5 R=589.5rpm Vred=9.6rpm
+2026-05-12 09:45:57.002 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.002 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+17.0mm P=+37.4 I=+0.1 D=-0.0 out=+37.5 L=664.6 R=589.6rpm Vred=9.5rpm
+2026-05-12 09:45:57.053 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.054 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+17.0mm P=+37.4 I=+0.1 D=-0.0 out=+37.5 L=664.7 R=589.7rpm Vred=9.4rpm
+2026-05-12 09:45:57.077 [INFO    ] drivers.rfid_tcp: RFID tag read: 001E (dec=30)
+2026-05-12 09:45:57.078 [DEBUG   ] rfid_processor: [RFID] Tag read: 001E
+2026-05-12 09:45:57.104 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.105 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+17.0mm P=+37.4 I=+0.1 D=-0.0 out=+37.5 L=664.8 R=589.8rpm Vred=9.3rpm
+2026-05-12 09:45:57.156 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.156 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+17.0mm P=+37.4 I=+0.1 D=-0.0 out=+37.5 L=664.9 R=589.9rpm Vred=9.2rpm
+2026-05-12 09:45:57.207 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.208 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+17.0mm P=+37.4 I=+0.1 D=-0.0 out=+37.5 L=665.0 R=590.0rpm Vred=9.2rpm
+2026-05-12 09:45:57.259 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.260 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+17.0mm P=+37.4 I=+0.1 D=-0.0 out=+37.5 L=665.0 R=590.0rpm Vred=9.1rpm
+2026-05-12 09:45:57.311 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.312 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+16.0mm P=+35.2 I=+0.1 D=+2.2 out=+37.5 L=664.2 R=589.1rpm Vred=10.0rpm
+2026-05-12 09:45:57.362 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.363 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+16.0mm P=+35.2 I=+0.1 D=+1.1 out=+36.4 L=663.2 R=590.4rpm Vred=9.8rpm
+2026-05-12 09:45:57.415 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.416 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+16.0mm P=+35.2 I=+0.1 D=+0.5 out=+35.9 L=662.9 R=591.2rpm Vred=9.6rpm
+2026-05-12 09:45:57.467 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.467 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+15.0mm P=+33.0 I=+0.1 D=+2.5 out=+35.6 L=661.8 R=590.6rpm Vred=10.4rpm
+2026-05-12 09:45:57.519 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.520 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+15.0mm P=+33.0 I=+0.1 D=+1.2 out=+34.3 L=660.9 R=592.2rpm Vred=10.1rpm
+2026-05-12 09:45:57.570 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.571 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+0.1 D=+2.8 out=+33.7 L=659.6 R=592.1rpm Vred=10.8rpm
+2026-05-12 09:45:57.621 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.622 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+0.1 D=+1.4 out=+32.3 L=658.5 R=593.9rpm Vred=10.4rpm
+2026-05-12 09:45:57.673 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.674 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+13.0mm P=+28.6 I=+0.1 D=+2.9 out=+31.6 L=657.2 R=594.0rpm Vred=11.0rpm
+2026-05-12 09:45:57.675 [INFO    ] modes: [DIAG] cycle avg=51.8ms max=53.2ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:45:57.726 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.727 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+13.0mm P=+28.6 I=+0.1 D=+1.5 out=+30.2 L=656.2 R=595.9rpm Vred=10.6rpm
+2026-05-12 09:45:57.779 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.782 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+12.0mm P=+26.4 I=+0.1 D=+2.9 out=+29.4 L=654.9 R=596.1rpm Vred=11.1rpm
+2026-05-12 09:45:57.823 [INFO    ] drivers.rfid_tcp: RFID tag read: 001E (dec=30)
+2026-05-12 09:45:57.830 [DEBUG   ] rfid_processor: [RFID] Tag read: 001E
+2026-05-12 09:45:57.833 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.833 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+11.0mm P=+24.2 I=+0.1 D=+3.7 out=+28.0 L=653.0 R=597.1rpm Vred=11.6rpm
+2026-05-12 09:45:57.884 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.884 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+0.1 D=+4.0 out=+26.1 L=650.9 R=598.6rpm Vred=11.9rpm
+2026-05-12 09:45:57.936 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.937 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+0.1 D=+4.2 out=+24.1 L=648.6 R=600.3rpm Vred=12.2rpm
+2026-05-12 09:45:57.988 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:57.989 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=+4.3 out=+22.0 L=646.3 R=602.3rpm Vred=12.3rpm
+2026-05-12 09:45:58.040 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.040 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+0.1 D=+4.4 out=+19.9 L=644.0 R=604.3rpm Vred=12.5rpm
+2026-05-12 09:45:58.092 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.092 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+0.1 D=+2.2 out=+17.7 L=642.7 R=607.4rpm Vred=11.6rpm
+2026-05-12 09:45:58.143 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.144 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.1 D=+3.3 out=+16.6 L=641.5 R=608.3rpm Vred=11.7rpm
+2026-05-12 09:45:58.195 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.195 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.1 D=+3.8 out=+15.0 L=639.8 R=609.9rpm Vred=11.8rpm
+2026-05-12 09:45:58.246 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.247 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.1 D=+1.9 out=+13.0 L=638.8 R=612.7rpm Vred=10.9rpm
+2026-05-12 09:45:58.298 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.298 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+0.3 D=+3.2 out=+12.3 L=637.9 R=613.4rpm Vred=11.0rpm
+2026-05-12 09:45:58.349 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.350 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=+0.5 D=+3.8 out=+10.9 L=636.5 R=614.7rpm Vred=11.0rpm
+2026-05-12 09:45:58.401 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.401 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=+0.6 D=+4.1 out=+9.1 L=634.7 R=616.5rpm Vred=11.0rpm
+2026-05-12 09:45:58.453 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.453 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=+0.7 D=+4.2 out=+7.1 L=632.8 R=618.5rpm Vred=11.0rpm
+2026-05-12 09:45:58.504 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.505 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+0.7 D=+4.3 out=+5.0 L=630.7 R=620.8rpm Vred=10.9rpm
+2026-05-12 09:45:58.556 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.556 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+0.7 D=+2.2 out=+2.8 L=629.7 R=624.0rpm Vred=9.8rpm
+2026-05-12 09:45:58.607 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.608 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=+0.6 D=+3.3 out=+1.7 L=628.4 R=625.1rpm Vred=9.9rpm
+2026-05-12 09:45:58.659 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.660 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-2.0mm P=-4.4 I=+0.5 D=+3.8 out=-0.1 L=626.6 R=626.7rpm Vred=10.0rpm
+2026-05-12 09:45:58.711 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.711 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-2.0mm P=-4.4 I=+0.4 D=+1.9 out=-2.1 L=625.5 R=629.6rpm Vred=9.1rpm
+2026-05-12 09:45:58.712 [INFO    ] modes: [DIAG] cycle avg=51.8ms max=55.6ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:45:58.763 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.764 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=+0.2 D=+3.2 out=-3.2 L=624.1 R=630.5rpm Vred=9.3rpm
+2026-05-12 09:45:58.815 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.816 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-4.0mm P=-8.8 I=+0.0 D=+3.8 out=-5.0 L=622.0 R=632.1rpm Vred=9.6rpm
+2026-05-12 09:45:58.852 [INFO    ] drivers.rfid_tcp: RFID tag read: 001E (dec=30)
+2026-05-12 09:45:58.853 [DEBUG   ] rfid_processor: [RFID] Tag read: 001E
+2026-05-12 09:45:58.867 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.867 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-5.0mm P=-11.0 I=+0.0 D=+4.1 out=-6.9 L=619.8 R=633.7rpm Vred=9.9rpm
+2026-05-12 09:45:58.918 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.918 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-6.0mm P=-13.2 I=+0.0 D=+4.2 out=-9.0 L=617.5 R=635.4rpm Vred=10.2rpm
+2026-05-12 09:45:58.969 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:58.969 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-7.0mm P=-15.4 I=+0.0 D=+4.3 out=-11.1 L=615.0 R=637.2rpm Vred=10.5rpm
+2026-05-12 09:45:58.998 [INFO    ] drivers.rfid_tcp: RFID tag read: 001E (dec=30)
+2026-05-12 09:45:58.998 [DEBUG   ] rfid_processor: [RFID] Tag read: 001E
+2026-05-12 09:45:59.019 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.020 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+0.0 D=+6.6 out=-13.2 L=611.5 R=637.9rpm Vred=11.9rpm
+2026-05-12 09:45:59.071 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.071 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+0.0 D=+5.5 out=-16.5 L=607.9 R=640.9rpm Vred=12.2rpm
+2026-05-12 09:45:59.122 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.123 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+0.0 D=+4.9 out=-19.3 L=604.8 R=643.3rpm Vred=12.6rpm
+2026-05-12 09:45:59.174 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.174 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+0.0 D=+6.9 out=-21.7 L=600.9 R=644.4rpm Vred=13.9rpm
+2026-05-12 09:45:59.225 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.226 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+0.0 D=+5.6 out=-25.2 L=597.2 R=647.5rpm Vred=14.3rpm
+2026-05-12 09:45:59.277 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.277 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+0.0 D=+5.0 out=-28.0 L=594.1 R=650.0rpm Vred=14.6rpm
+2026-05-12 09:45:59.329 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.329 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+0.0 D=+0.3 out=-30.5 L=591.3 R=652.3rpm Vred=14.8rpm
+2026-05-12 09:45:59.381 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.381 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+0.0 D=+0.2 out=-30.6 L=591.9 R=653.2rpm Vred=14.0rpm
+2026-05-12 09:45:59.432 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.433 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+0.0 D=+0.1 out=-30.7 L=592.6 R=654.0rpm Vred=13.3rpm
+2026-05-12 09:45:59.484 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.485 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+0.0 D=+0.0 out=-30.8 L=593.2 R=654.7rpm Vred=12.7rpm
+2026-05-12 09:45:59.536 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.536 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+0.0 D=-2.2 out=-30.8 L=592.8 R=654.3rpm Vred=13.1rpm
+2026-05-12 09:45:59.588 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.588 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+0.0 D=-1.1 out=-29.7 L=594.5 R=653.9rpm Vred=12.4rpm
+2026-05-12 09:45:59.640 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.640 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+0.0 D=+1.7 out=-29.1 L=594.6 R=652.9rpm Vred=12.9rpm
+2026-05-12 09:45:59.693 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.694 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+0.0 D=+0.8 out=-30.0 L=594.4 R=654.3rpm Vred=12.3rpm
+2026-05-12 09:45:59.745 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.746 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+0.0 D=+0.4 out=-30.4 L=594.5 R=655.2rpm Vred=11.8rpm
+2026-05-12 09:45:59.746 [INFO    ] modes: [DIAG] cycle avg=51.7ms max=53.4ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:45:59.797 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.798 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+0.0 D=+2.4 out=-30.6 L=593.7 R=654.9rpm Vred=12.3rpm
+2026-05-12 09:45:59.849 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.849 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+0.0 D=+1.2 out=-31.8 L=593.0 R=656.6rpm Vred=11.9rpm
+2026-05-12 09:45:59.900 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.901 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+0.0 D=+0.6 out=-32.4 L=592.8 R=657.6rpm Vred=11.4rpm
+2026-05-12 09:45:59.952 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:45:59.953 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+0.0 D=+0.3 out=-32.7 L=592.9 R=658.3rpm Vred=11.0rpm
+2026-05-12 09:46:00.005 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.005 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+2.4 out=-32.8 L=592.0 R=657.7rpm Vred=11.7rpm
+2026-05-12 09:46:00.056 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.057 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+1.2 out=-34.0 L=591.2 R=659.3rpm Vred=11.4rpm
+2026-05-12 09:46:00.108 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.108 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.6 out=-34.6 L=591.0 R=660.2rpm Vred=11.0rpm
+2026-05-12 09:46:00.159 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.160 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.3 out=-34.9 L=591.0 R=660.8rpm Vred=10.7rpm
+2026-05-12 09:46:00.210 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.211 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.1 out=-35.1 L=591.1 R=661.2rpm Vred=10.4rpm
+2026-05-12 09:46:00.262 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.263 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.1 out=-35.1 L=591.3 R=661.5rpm Vred=10.2rpm
+2026-05-12 09:46:00.314 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.314 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=591.5 R=661.8rpm Vred=10.0rpm
+2026-05-12 09:46:00.366 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.366 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=591.7 R=662.0rpm Vred=9.8rpm
+2026-05-12 09:46:00.417 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.418 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=591.8 R=662.2rpm Vred=9.6rpm
+2026-05-12 09:46:00.469 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.469 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=592.0 R=662.4rpm Vred=9.4rpm
+2026-05-12 09:46:00.520 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.521 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=592.1 R=662.5rpm Vred=9.3rpm
+2026-05-12 09:46:00.572 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.573 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=592.3 R=662.7rpm Vred=9.2rpm
+2026-05-12 09:46:00.623 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.624 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=592.4 R=662.8rpm Vred=9.1rpm
+2026-05-12 09:46:00.675 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.676 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=592.5 R=662.9rpm Vred=8.9rpm
+2026-05-12 09:46:00.727 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.727 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=592.6 R=663.0rpm Vred=8.9rpm
+2026-05-12 09:46:00.778 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.779 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=592.7 R=663.1rpm Vred=8.8rpm
+2026-05-12 09:46:00.779 [INFO    ] modes: [DIAG] cycle avg=51.6ms max=52.2ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:00.830 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.831 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=592.7 R=663.1rpm Vred=8.7rpm
+2026-05-12 09:46:00.882 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.882 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=592.8 R=663.2rpm Vred=8.6rpm
+2026-05-12 09:46:00.934 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.934 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=592.9 R=663.3rpm Vred=8.6rpm
+2026-05-12 09:46:00.986 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:00.986 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=592.9 R=663.3rpm Vred=8.5rpm
+2026-05-12 09:46:01.038 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.038 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=593.0 R=663.4rpm Vred=8.5rpm
+2026-05-12 09:46:01.090 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.091 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=593.0 R=663.4rpm Vred=8.4rpm
+2026-05-12 09:46:01.142 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.142 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=593.1 R=663.5rpm Vred=8.4rpm
+2026-05-12 09:46:01.194 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.194 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=593.1 R=663.5rpm Vred=8.3rpm
+2026-05-12 09:46:01.246 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.247 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=593.1 R=663.5rpm Vred=8.3rpm
+2026-05-12 09:46:01.298 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.299 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.0 D=+0.0 out=-35.2 L=593.2 R=663.6rpm Vred=8.3rpm
+2026-05-12 09:46:01.350 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.350 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+0.0 D=-2.2 out=-35.2 L=592.2 R=662.6rpm Vred=9.2rpm
+2026-05-12 09:46:01.402 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.403 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+0.0 D=-1.1 out=-34.1 L=593.5 R=661.7rpm Vred=9.0rpm
+2026-05-12 09:46:01.454 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.454 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+0.0 D=-2.7 out=-33.5 L=593.3 R=660.4rpm Vred=9.8rpm
+2026-05-12 09:46:01.506 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.507 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+0.0 D=-1.4 out=-32.2 L=594.9 R=659.3rpm Vred=9.5rpm
+2026-05-12 09:46:01.558 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.558 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+0.0 D=-0.7 out=-31.5 L=595.8 R=658.8rpm Vred=9.3rpm
+2026-05-12 09:46:01.609 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.610 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+0.0 D=-2.5 out=-31.1 L=595.5 R=657.8rpm Vred=10.0rpm
+2026-05-12 09:46:01.661 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.662 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+0.0 D=-1.3 out=-29.9 L=597.1 R=656.8rpm Vred=9.7rpm
+2026-05-12 09:46:01.712 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.713 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+0.0 D=-0.6 out=-29.2 L=598.0 R=656.5rpm Vred=9.3rpm
+2026-05-12 09:46:01.764 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.765 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=+0.0 D=-2.5 out=-28.9 L=597.7 R=655.5rpm Vred=10.0rpm
+2026-05-12 09:46:01.816 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.816 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+0.0 D=-3.5 out=-27.7 L=598.4 R=653.7rpm Vred=10.6rpm
+2026-05-12 09:46:01.816 [INFO    ] modes: [DIAG] cycle avg=51.9ms max=52.5ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:01.867 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.867 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+0.0 D=-1.7 out=-25.9 L=600.6 R=652.5rpm Vred=10.0rpm
+2026-05-12 09:46:01.917 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.918 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+0.0 D=-0.9 out=-25.1 L=602.0 R=652.1rpm Vred=9.6rpm
+2026-05-12 09:46:01.969 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:01.970 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+0.0 D=-2.6 out=-24.6 L=601.9 R=651.1rpm Vred=10.1rpm
+2026-05-12 09:46:02.022 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.023 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+0.0 D=-1.3 out=-23.3 L=603.7 R=650.3rpm Vred=9.6rpm
+2026-05-12 09:46:02.074 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.075 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+0.0 D=-2.9 out=-22.7 L=603.9 R=649.2rpm Vred=10.1rpm
+2026-05-12 09:46:02.127 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.127 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+0.0 D=-1.4 out=-21.2 L=605.8 R=648.3rpm Vred=9.5rpm
+2026-05-12 09:46:02.178 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.179 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=+0.0 D=-2.9 out=-20.5 L=606.1 R=647.1rpm Vred=10.0rpm
+2026-05-12 09:46:02.230 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.230 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-7.0mm P=-15.4 I=+0.0 D=-3.7 out=-19.1 L=607.2 R=645.3rpm Vred=10.3rpm
+2026-05-12 09:46:02.281 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.282 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-6.0mm P=-13.2 I=+0.0 D=-4.0 out=-17.2 L=608.8 R=643.2rpm Vred=10.6rpm
+2026-05-12 09:46:02.333 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.334 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-5.0mm P=-11.0 I=+0.0 D=-4.2 out=-15.2 L=610.6 R=641.0rpm Vred=10.8rpm
+2026-05-12 09:46:02.384 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.385 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-5.0mm P=-11.0 I=+0.0 D=-2.1 out=-13.1 L=613.5 R=639.8rpm Vred=10.0rpm
+2026-05-12 09:46:02.436 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.437 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-4.0mm P=-8.8 I=-0.2 D=-3.3 out=-12.3 L=614.2 R=638.7rpm Vred=10.2rpm
+2026-05-12 09:46:02.488 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.488 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=-0.4 D=-3.8 out=-10.8 L=615.5 R=637.1rpm Vred=10.3rpm
+2026-05-12 09:46:02.540 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.540 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-2.0mm P=-4.4 I=-0.5 D=-4.1 out=-9.0 L=617.2 R=635.3rpm Vred=10.4rpm
+2026-05-12 09:46:02.592 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.592 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-2.0mm P=-4.4 I=-0.6 D=-2.1 out=-7.1 L=620.1 R=634.2rpm Vred=9.4rpm
+2026-05-12 09:46:02.643 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.644 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=-0.7 D=-3.2 out=-6.1 L=621.0 R=633.2rpm Vred=9.5rpm
+2026-05-12 09:46:02.695 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.695 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=-0.7 D=-3.8 out=-4.5 L=622.6 R=631.5rpm Vred=9.6rpm
+2026-05-12 09:46:02.746 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.747 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=-0.6 D=-4.1 out=-2.5 L=624.4 R=629.5rpm Vred=9.7rpm
+2026-05-12 09:46:02.798 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.835 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=-0.5 D=-2.1 out=-0.4 L=627.5 R=628.3rpm Vred=8.8rpm
+2026-05-12 09:46:02.886 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.887 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=-0.4 D=-3.2 out=+0.7 L=628.4 R=626.9rpm Vred=9.0rpm
+2026-05-12 09:46:02.887 [INFO    ] modes: [DIAG] cycle avg=53.6ms max=88.5ms (target=50ms) | sensor frames/cycle avg=4.5 max=7 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:02.939 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.939 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=-0.3 D=-3.8 out=+2.5 L=629.9 R=624.9rpm Vred=9.2rpm
+2026-05-12 09:46:02.990 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:02.991 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=-0.1 D=-1.9 out=+4.6 L=632.7 R=623.6rpm Vred=8.5rpm
+2026-05-12 09:46:03.042 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.043 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+0.1 D=-3.2 out=+5.8 L=633.6 R=622.0rpm Vred=8.8rpm
+2026-05-12 09:46:03.094 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.094 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.1 D=-3.8 out=+7.3 L=634.8 R=620.1rpm Vred=9.2rpm
+2026-05-12 09:46:03.146 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.146 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.1 D=-1.9 out=+9.2 L=637.3 R=618.9rpm Vred=8.5rpm
+2026-05-12 09:46:03.198 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.198 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.1 D=-3.1 out=+10.2 L=637.8 R=617.5rpm Vred=9.0rpm
+2026-05-12 09:46:03.249 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.250 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.1 D=-1.6 out=+11.7 L=640.0 R=616.5rpm Vred=8.4rpm
+2026-05-12 09:46:03.302 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.302 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+0.1 D=-3.0 out=+12.5 L=640.3 R=615.2rpm Vred=8.9rpm
+2026-05-12 09:46:03.353 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.354 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+0.1 D=-1.5 out=+14.0 L=642.3 R=614.3rpm Vred=8.3rpm
+2026-05-12 09:46:03.405 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.406 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+0.1 D=-0.7 out=+14.8 L=643.5 R=614.0rpm Vred=7.9rpm
+2026-05-12 09:46:03.457 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.457 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=-2.6 out=+15.1 L=643.3 R=613.0rpm Vred=8.5rpm
+2026-05-12 09:46:03.509 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.509 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=-1.3 out=+16.4 L=645.0 R=612.2rpm Vred=8.0rpm
+2026-05-12 09:46:03.560 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.560 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+0.1 D=-2.8 out=+17.1 L=645.0 R=610.9rpm Vred=8.7rpm
+2026-05-12 09:46:03.611 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.611 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+0.1 D=-1.4 out=+18.5 L=646.9 R=609.9rpm Vred=8.3rpm
+2026-05-12 09:46:03.662 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.663 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+0.1 D=-0.7 out=+19.2 L=647.9 R=609.5rpm Vred=7.9rpm
+2026-05-12 09:46:03.714 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.714 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+0.1 D=-2.6 out=+19.6 L=647.6 R=608.5rpm Vred=8.6rpm
+2026-05-12 09:46:03.765 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.765 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+0.1 D=-1.3 out=+20.8 L=649.2 R=607.6rpm Vred=8.2rpm
+2026-05-12 09:46:03.816 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.816 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+0.1 D=-0.6 out=+21.5 L=650.2 R=607.2rpm Vred=7.9rpm
+2026-05-12 09:46:03.868 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.868 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+0.1 D=-0.3 out=+21.8 L=650.8 R=607.2rpm Vred=7.6rpm
+2026-05-12 09:46:03.919 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.920 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+0.1 D=-0.2 out=+22.0 L=651.2 R=607.3rpm Vred=7.4rpm
+2026-05-12 09:46:03.920 [INFO    ] modes: [DIAG] cycle avg=51.6ms max=52.4ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:03.971 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:03.972 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+0.1 D=-0.1 out=+22.0 L=651.5 R=607.5rpm Vred=7.1rpm
+2026-05-12 09:46:04.023 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.024 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+0.1 D=-0.0 out=+22.1 L=651.8 R=607.6rpm Vred=6.9rpm
+2026-05-12 09:46:04.075 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.076 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+0.1 D=-0.0 out=+22.1 L=652.0 R=607.8rpm Vred=6.7rpm
+2026-05-12 09:46:04.126 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.127 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+0.1 D=+2.2 out=+22.1 L=651.2 R=607.0rpm Vred=7.5rpm
+2026-05-12 09:46:04.178 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.178 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+0.1 D=+1.1 out=+21.0 L=650.4 R=608.4rpm Vred=7.2rpm
+2026-05-12 09:46:04.229 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.230 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+0.1 D=+0.5 out=+20.5 L=650.2 R=609.2rpm Vred=6.9rpm
+2026-05-12 09:46:04.281 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.281 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+0.1 D=+0.3 out=+20.2 L=650.1 R=609.8rpm Vred=6.7rpm
+2026-05-12 09:46:04.332 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.333 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+0.1 D=+0.1 out=+20.0 L=650.2 R=610.1rpm Vred=6.5rpm
+2026-05-12 09:46:04.384 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.385 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+0.1 D=+0.1 out=+20.0 L=650.3 R=610.4rpm Vred=6.3rpm
+2026-05-12 09:46:04.435 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.436 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+0.1 D=+0.0 out=+19.9 L=650.5 R=610.6rpm Vred=6.1rpm
+2026-05-12 09:46:04.487 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.488 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+0.1 D=+0.0 out=+19.9 L=650.6 R=610.8rpm Vred=5.9rpm
+2026-05-12 09:46:04.540 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.540 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=+2.2 out=+19.9 L=649.8 R=610.0rpm Vred=6.7rpm
+2026-05-12 09:46:04.591 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.591 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=+1.1 out=+18.8 L=649.0 R=611.3rpm Vred=6.5rpm
+2026-05-12 09:46:04.642 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.643 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=+0.6 out=+18.3 L=648.7 R=612.1rpm Vred=6.2rpm
+2026-05-12 09:46:04.694 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.694 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=+0.3 out=+18.0 L=648.6 R=612.6rpm Vred=6.0rpm
+2026-05-12 09:46:04.745 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.746 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=+0.1 out=+17.8 L=648.7 R=613.0rpm Vred=5.8rpm
+2026-05-12 09:46:04.796 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.797 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=+0.1 out=+17.8 L=648.8 R=613.2rpm Vred=5.6rpm
+2026-05-12 09:46:04.847 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.848 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=+0.0 out=+17.7 L=648.9 R=613.4rpm Vred=5.5rpm
+2026-05-12 09:46:04.900 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.900 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=+0.0 out=+17.7 L=649.0 R=613.6rpm Vred=5.3rpm
+2026-05-12 09:46:04.951 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:04.952 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=+0.0 out=+17.7 L=649.2 R=613.7rpm Vred=5.2rpm
+2026-05-12 09:46:04.952 [INFO    ] modes: [DIAG] cycle avg=51.6ms max=52.4ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:05.003 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.003 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=+0.0 out=+17.7 L=649.3 R=613.8rpm Vred=5.1rpm
+2026-05-12 09:46:05.055 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.056 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=+0.0 out=+17.7 L=649.4 R=614.0rpm Vred=5.0rpm
+2026-05-12 09:46:05.107 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.108 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=+0.0 out=+17.7 L=649.5 R=614.0rpm Vred=4.9rpm
+2026-05-12 09:46:05.158 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.158 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+0.1 D=+0.0 out=+17.7 L=649.6 R=614.1rpm Vred=4.8rpm
+2026-05-12 09:46:05.209 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.209 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+0.1 D=+2.2 out=+17.7 L=648.7 R=613.3rpm Vred=5.6rpm
+2026-05-12 09:46:05.260 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.260 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+0.1 D=+1.1 out=+16.6 L=647.8 R=614.6rpm Vred=5.4rpm
+2026-05-12 09:46:05.311 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.311 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+0.1 D=+0.6 out=+16.1 L=647.4 R=615.3rpm Vred=5.2rpm
+2026-05-12 09:46:05.363 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.363 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+0.1 D=+0.3 out=+15.8 L=647.3 R=615.8rpm Vred=5.1rpm
+2026-05-12 09:46:05.414 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.415 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+0.1 D=+0.1 out=+15.6 L=647.4 R=616.1rpm Vred=4.9rpm
+2026-05-12 09:46:05.466 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.467 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.1 D=+2.3 out=+15.6 L=646.5 R=615.3rpm Vred=5.7rpm
+2026-05-12 09:46:05.517 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.518 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.1 D=+1.1 out=+14.4 L=645.6 R=616.7rpm Vred=5.4rpm
+2026-05-12 09:46:05.568 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.569 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.1 D=+2.8 out=+13.9 L=644.3 R=616.6rpm Vred=6.2rpm
+2026-05-12 09:46:05.621 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.621 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+0.3 D=+3.6 out=+12.7 L=642.6 R=617.2rpm Vred=6.7rpm
+2026-05-12 09:46:05.673 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.673 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+0.6 D=+1.8 out=+11.1 L=641.5 R=619.2rpm Vred=6.3rpm
+2026-05-12 09:46:05.724 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.725 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=+0.7 D=+3.1 out=+10.4 L=640.2 R=619.4rpm Vred=6.8rpm
+2026-05-12 09:46:05.776 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.776 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=+0.9 D=+1.5 out=+9.0 L=639.4 R=621.3rpm Vred=6.3rpm
+2026-05-12 09:46:05.828 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.828 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=+1.0 D=+3.0 out=+8.4 L=638.3 R=621.5rpm Vred=6.7rpm
+2026-05-12 09:46:05.879 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.880 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=+1.0 D=+3.7 out=+6.9 L=636.4 R=622.6rpm Vred=7.1rpm
+2026-05-12 09:46:05.931 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.931 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=+1.1 D=+1.8 out=+5.1 L=635.3 R=625.0rpm Vred=6.4rpm
+2026-05-12 09:46:05.982 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:05.982 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+1.1 D=+3.1 out=+4.2 L=634.0 R=625.6rpm Vred=6.8rpm
+2026-05-12 09:46:05.983 [INFO    ] modes: [DIAG] cycle avg=51.5ms max=52.9ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:06.035 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.036 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+1.1 D=+1.6 out=+2.7 L=633.2 R=627.8rpm Vred=6.1rpm
+2026-05-12 09:46:06.087 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.087 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=+1.0 D=+3.0 out=+1.8 L=631.9 R=628.2rpm Vred=6.6rpm
+2026-05-12 09:46:06.138 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.139 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=+1.0 D=+1.5 out=+0.3 L=630.9 R=630.4rpm Vred=6.0rpm
+2026-05-12 09:46:06.190 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.191 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-2.0mm P=-4.4 I=+0.9 D=+2.9 out=-0.6 L=629.6 R=630.7rpm Vred=6.5rpm
+2026-05-12 09:46:06.242 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.242 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=+0.7 D=+3.7 out=-2.2 L=627.4 R=631.9rpm Vred=7.0rpm
+2026-05-12 09:46:06.294 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.294 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=+0.6 D=+1.8 out=-4.2 L=626.0 R=634.4rpm Vred=6.4rpm
+2026-05-12 09:46:06.345 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.345 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-4.0mm P=-8.8 I=+0.3 D=+3.1 out=-5.4 L=624.3 R=635.0rpm Vred=7.0rpm
+2026-05-12 09:46:06.396 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.397 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-5.0mm P=-11.0 I=+0.3 D=+3.8 out=-6.9 L=622.2 R=636.0rpm Vred=7.5rpm
+2026-05-12 09:46:06.448 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.448 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-6.0mm P=-13.2 I=+0.3 D=+4.1 out=-8.8 L=619.8 R=637.3rpm Vred=8.1rpm
+2026-05-12 09:46:06.500 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.500 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-7.0mm P=-15.4 I=+0.3 D=+4.2 out=-10.8 L=617.2 R=638.8rpm Vred=8.6rpm
+2026-05-12 09:46:06.552 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.552 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=+0.3 D=+4.3 out=-13.0 L=614.5 R=640.4rpm Vred=9.2rpm
+2026-05-12 09:46:06.604 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.605 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=+0.3 D=+2.2 out=-15.1 L=612.9 R=643.1rpm Vred=8.6rpm
+2026-05-12 09:46:06.656 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.657 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+0.3 D=+3.3 out=-16.2 L=611.2 R=643.6rpm Vred=9.2rpm
+2026-05-12 09:46:06.708 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.709 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+0.3 D=+3.8 out=-17.8 L=609.0 R=644.6rpm Vred=9.8rpm
+2026-05-12 09:46:06.760 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.760 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+0.3 D=+4.1 out=-19.8 L=606.5 R=646.0rpm Vred=10.4rpm
+2026-05-12 09:46:06.811 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.812 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+0.3 D=+2.1 out=-21.8 L=604.9 R=648.5rpm Vred=9.9rpm
+2026-05-12 09:46:06.863 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.863 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=+0.3 D=+3.2 out=-22.8 L=603.3 R=649.0rpm Vred=10.5rpm
+2026-05-12 09:46:06.914 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.914 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=+0.3 D=+1.6 out=-24.5 L=602.1 R=651.0rpm Vred=10.0rpm
+2026-05-12 09:46:06.965 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:06.965 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+0.3 D=+3.0 out=-25.3 L=600.7 R=651.2rpm Vred=10.7rpm
+2026-05-12 09:46:07.016 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.017 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+0.3 D=+1.5 out=-26.8 L=599.6 R=653.1rpm Vred=10.3rpm
+2026-05-12 09:46:07.017 [INFO    ] modes: [DIAG] cycle avg=51.7ms max=53.3ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:07.069 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.070 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+0.3 D=+0.8 out=-27.5 L=599.2 R=654.2rpm Vred=9.9rpm
+2026-05-12 09:46:07.121 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.121 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+0.3 D=+2.6 out=-27.9 L=598.1 R=653.9rpm Vred=10.6rpm
+2026-05-12 09:46:07.172 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.172 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+0.3 D=+1.3 out=-29.2 L=597.2 R=655.6rpm Vred=10.2rpm
+2026-05-12 09:46:07.224 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.224 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+0.3 D=+0.6 out=-29.8 L=596.9 R=656.5rpm Vred=9.9rpm
+2026-05-12 09:46:07.275 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.276 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+0.3 D=+2.5 out=-30.1 L=595.8 R=656.1rpm Vred=10.7rpm
+2026-05-12 09:46:07.327 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.327 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+0.3 D=+1.3 out=-31.4 L=594.9 R=657.7rpm Vred=10.4rpm
+2026-05-12 09:46:07.378 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.379 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+0.3 D=+0.6 out=-32.0 L=594.5 R=658.6rpm Vred=10.1rpm
+2026-05-12 09:46:07.431 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.431 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+0.3 D=+0.3 out=-32.4 L=594.4 R=659.2rpm Vred=9.8rpm
+2026-05-12 09:46:07.483 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.484 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+0.3 D=+0.2 out=-32.5 L=594.5 R=659.5rpm Vred=9.6rpm
+2026-05-12 09:46:07.535 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.536 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.3 D=+2.3 out=-32.6 L=593.6 R=658.8rpm Vred=10.4rpm
+2026-05-12 09:46:07.587 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.588 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.3 D=+1.1 out=-33.7 L=592.7 R=660.2rpm Vred=10.2rpm
+2026-05-12 09:46:07.639 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.639 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+0.3 D=+0.6 out=-34.3 L=592.4 R=661.0rpm Vred=10.0rpm
+2026-05-12 09:46:07.690 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.690 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+0.3 D=-1.9 out=-34.6 L=591.3 R=660.5rpm Vred=10.7rpm
+2026-05-12 09:46:07.742 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.742 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+0.3 D=-1.0 out=-33.6 L=592.6 R=659.9rpm Vred=10.4rpm
+2026-05-12 09:46:07.794 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.794 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+0.3 D=-0.5 out=-33.1 L=593.4 R=659.7rpm Vred=10.1rpm
+2026-05-12 09:46:07.845 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.845 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+0.3 D=-2.4 out=-32.9 L=592.9 R=658.7rpm Vred=10.8rpm
+2026-05-12 09:46:07.896 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.896 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+0.3 D=-1.2 out=-31.7 L=594.5 R=657.9rpm Vred=10.4rpm
+2026-05-12 09:46:07.947 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.948 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+0.3 D=-2.8 out=-31.1 L=594.5 R=656.7rpm Vred=11.0rpm
+2026-05-12 09:46:07.999 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:07.999 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+0.3 D=-1.4 out=-29.7 L=596.4 R=655.7rpm Vred=10.6rpm
+2026-05-12 09:46:08.051 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.051 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+0.3 D=-0.7 out=-29.0 L=597.5 R=655.4rpm Vred=10.2rpm
+2026-05-12 09:46:08.051 [INFO    ] modes: [DIAG] cycle avg=51.7ms max=52.8ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:08.102 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.103 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=+0.3 D=-2.6 out=-28.6 L=597.2 R=654.5rpm Vred=10.7rpm
+2026-05-12 09:46:08.117 [INFO    ] drivers.rfid_tcp: RFID tag read: 0028 (dec=40)
+2026-05-12 09:46:08.117 [DEBUG   ] rfid_processor: [RFID] Tag read: 0028
+2026-05-12 09:46:08.154 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.154 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=+0.3 D=-1.3 out=-27.3 L=599.0 R=653.7rpm Vred=10.3rpm
+2026-05-12 09:46:08.207 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.207 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=+0.3 D=-0.6 out=-26.7 L=600.1 R=653.5rpm Vred=9.8rpm
+2026-05-12 09:46:08.259 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.259 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+0.3 D=-2.5 out=-26.4 L=599.8 R=652.6rpm Vred=10.4rpm
+2026-05-12 09:46:08.311 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.311 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+0.3 D=-1.3 out=-25.1 L=601.6 R=651.8rpm Vred=9.9rpm
+2026-05-12 09:46:08.343 [INFO    ] drivers.rfid_tcp: RFID tag read: 0028 (dec=40)
+2026-05-12 09:46:08.343 [DEBUG   ] rfid_processor: [RFID] Tag read: 0028
+2026-05-12 09:46:08.362 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.363 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+0.3 D=-0.6 out=-24.5 L=602.6 R=651.6rpm Vred=9.5rpm
+2026-05-12 09:46:08.414 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.414 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+0.3 D=-2.5 out=-24.2 L=602.4 R=650.8rpm Vred=10.0rpm
+2026-05-12 09:46:08.465 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.466 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+0.3 D=-1.3 out=-22.9 L=604.2 R=650.0rpm Vred=9.5rpm
+2026-05-12 09:46:08.513 [INFO    ] drivers.rfid_tcp: RFID tag read: 0028 (dec=40)
+2026-05-12 09:46:08.514 [DEBUG   ] rfid_processor: [RFID] Tag read: 0028
+2026-05-12 09:46:08.516 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.516 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+0.3 D=-0.6 out=-22.3 L=605.2 R=649.8rpm Vred=9.1rpm
+2026-05-12 09:46:08.568 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.569 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+0.3 D=-0.3 out=-22.0 L=606.0 R=649.9rpm Vred=8.7rpm
+2026-05-12 09:46:08.620 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.620 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+0.3 D=-0.2 out=-21.8 L=606.5 R=650.1rpm Vred=8.3rpm
+2026-05-12 09:46:08.673 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.674 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+0.3 D=-0.1 out=-21.7 L=606.9 R=650.4rpm Vred=8.0rpm
+2026-05-12 09:46:08.724 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.725 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+0.3 D=-0.0 out=-21.7 L=607.2 R=650.7rpm Vred=7.7rpm
+2026-05-12 09:46:08.776 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.776 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+0.3 D=-0.0 out=-21.7 L=607.5 R=650.9rpm Vred=7.4rpm
+2026-05-12 09:46:08.828 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.828 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+0.3 D=-2.2 out=-21.7 L=606.8 R=650.2rpm Vred=8.1rpm
+2026-05-12 09:46:08.879 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.880 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+0.3 D=-1.1 out=-20.6 L=608.3 R=649.4rpm Vred=7.8rpm
+2026-05-12 09:46:08.931 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.931 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+0.3 D=-0.6 out=-20.0 L=609.2 R=649.2rpm Vred=7.4rpm
+2026-05-12 09:46:08.983 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:08.983 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=+0.3 D=-2.5 out=-19.7 L=608.8 R=648.3rpm Vred=8.1rpm
+2026-05-12 09:46:09.034 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.034 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=+0.3 D=-1.2 out=-18.5 L=610.4 R=647.5rpm Vred=7.7rpm
+2026-05-12 09:46:09.085 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.085 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=+0.3 D=-0.6 out=-17.9 L=611.4 R=647.2rpm Vred=7.3rpm
+2026-05-12 09:46:09.085 [INFO    ] modes: [DIAG] cycle avg=51.7ms max=53.4ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:09.137 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.137 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-7.0mm P=-15.4 I=+0.3 D=-2.5 out=-17.6 L=611.1 R=646.3rpm Vred=7.9rpm
+2026-05-12 09:46:09.190 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.190 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-6.0mm P=-13.2 I=+0.3 D=-3.5 out=-16.3 L=611.9 R=644.5rpm Vred=8.4rpm
+2026-05-12 09:46:09.241 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.241 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-6.0mm P=-13.2 I=+0.3 D=-1.7 out=-14.6 L=614.1 R=643.3rpm Vred=7.9rpm
+2026-05-12 09:46:09.293 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.293 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-6.0mm P=-13.2 I=+0.3 D=-0.9 out=-13.7 L=615.5 R=643.0rpm Vred=7.4rpm
+2026-05-12 09:46:09.344 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.345 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-5.0mm P=-11.0 I=+0.3 D=-2.6 out=-13.3 L=615.4 R=642.0rpm Vred=7.9rpm
+2026-05-12 09:46:09.396 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.396 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-4.0mm P=-8.8 I=+0.1 D=-3.5 out=-12.2 L=616.1 R=640.5rpm Vred=8.3rpm
+2026-05-12 09:46:09.447 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.448 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-4.0mm P=-8.8 I=-0.1 D=-1.8 out=-10.7 L=618.3 R=639.6rpm Vred=7.7rpm
+2026-05-12 09:46:09.499 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.500 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=-0.3 D=-3.1 out=-10.0 L=618.6 R=638.5rpm Vred=8.1rpm
+2026-05-12 09:46:09.551 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.551 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=-0.4 D=-1.5 out=-8.6 L=620.6 R=637.8rpm Vred=7.4rpm
+2026-05-12 09:46:09.602 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.602 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-2.0mm P=-4.4 I=-0.6 D=-3.0 out=-7.9 L=620.9 R=636.8rpm Vred=7.8rpm
+2026-05-12 09:46:09.654 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.655 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-2.0mm P=-4.4 I=-0.7 D=-1.5 out=-6.5 L=623.0 R=636.1rpm Vred=7.1rpm
+2026-05-12 09:46:09.706 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.706 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=-0.7 D=-2.9 out=-5.9 L=623.3 R=635.0rpm Vred=7.4rpm
+2026-05-12 09:46:09.757 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.758 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=-0.7 D=-3.7 out=-4.4 L=624.5 R=633.3rpm Vred=7.7rpm
+2026-05-12 09:46:09.810 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.811 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=-0.7 D=-4.0 out=-2.5 L=626.2 R=631.1rpm Vred=8.0rpm
+2026-05-12 09:46:09.862 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.862 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=-0.6 D=-2.0 out=-0.4 L=629.0 R=629.8rpm Vred=7.2rpm
+2026-05-12 09:46:09.914 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.914 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=-0.5 D=-3.2 out=+0.7 L=629.7 R=628.3rpm Vred=7.6rpm
+2026-05-12 09:46:09.965 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:09.966 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=-0.4 D=-1.6 out=+2.4 L=632.1 R=627.3rpm Vred=6.9rpm
+2026-05-12 09:46:10.017 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.017 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=-0.2 D=-3.0 out=+3.4 L=632.6 R=625.8rpm Vred=7.4rpm
+2026-05-12 09:46:10.068 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.068 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+0.0 D=-3.7 out=+5.1 L=633.9 R=623.7rpm Vred=7.9rpm
+2026-05-12 09:46:10.121 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.121 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+0.2 D=-1.9 out=+7.2 L=636.5 R=622.2rpm Vred=7.3rpm
+2026-05-12 09:46:10.122 [INFO    ] modes: [DIAG] cycle avg=51.8ms max=53.3ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:10.173 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.174 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=-3.1 out=+8.1 L=636.9 R=620.7rpm Vred=7.8rpm
+2026-05-12 09:46:10.225 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.225 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=-1.6 out=+9.7 L=639.0 R=619.7rpm Vred=7.3rpm
+2026-05-12 09:46:10.276 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.277 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=-0.8 out=+10.4 L=640.3 R=619.4rpm Vred=6.8rpm
+2026-05-12 09:46:10.328 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.328 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-2.6 out=+10.8 L=640.0 R=618.4rpm Vred=7.4rpm
+2026-05-12 09:46:10.379 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.379 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-1.3 out=+12.1 L=641.8 R=617.5rpm Vred=7.0rpm
+2026-05-12 09:46:10.431 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.432 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-0.6 out=+12.8 L=642.8 R=617.3rpm Vred=6.6rpm
+2026-05-12 09:46:10.482 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.483 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-0.3 out=+13.1 L=643.5 R=617.3rpm Vred=6.2rpm
+2026-05-12 09:46:10.534 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.535 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-0.2 out=+13.3 L=644.0 R=617.5rpm Vred=5.9rpm
+2026-05-12 09:46:10.585 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.585 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-0.1 out=+13.3 L=644.4 R=617.7rpm Vred=5.6rpm
+2026-05-12 09:46:10.637 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.638 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-0.0 out=+13.4 L=644.7 R=617.9rpm Vred=5.3rpm
+2026-05-12 09:46:10.689 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.689 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-0.0 out=+13.4 L=644.9 R=618.1rpm Vred=5.1rpm
+2026-05-12 09:46:10.740 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.740 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-0.0 out=+13.4 L=645.1 R=618.3rpm Vred=4.9rpm
+2026-05-12 09:46:10.792 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.792 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-0.0 out=+13.4 L=645.3 R=618.5rpm Vred=4.7rpm
+2026-05-12 09:46:10.842 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.843 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-0.0 out=+13.4 L=645.5 R=618.7rpm Vred=4.5rpm
+2026-05-12 09:46:10.894 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.895 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-0.0 out=+13.4 L=645.7 R=618.8rpm Vred=4.4rpm
+2026-05-12 09:46:10.946 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.947 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-0.0 out=+13.4 L=645.8 R=619.0rpm Vred=4.2rpm
+2026-05-12 09:46:10.998 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:10.999 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-0.0 out=+13.4 L=645.9 R=619.1rpm Vred=4.1rpm
+2026-05-12 09:46:11.050 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.051 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-0.0 out=+13.4 L=646.0 R=619.2rpm Vred=4.0rpm
+2026-05-12 09:46:11.102 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.103 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-0.0 out=+13.4 L=646.1 R=619.3rpm Vred=3.9rpm
+2026-05-12 09:46:11.154 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.154 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+2.2 out=+13.4 L=645.3 R=618.4rpm Vred=4.8rpm
+2026-05-12 09:46:11.154 [INFO    ] modes: [DIAG] cycle avg=51.6ms max=52.7ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:11.205 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.206 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+1.1 out=+12.3 L=644.4 R=619.8rpm Vred=4.5rpm
+2026-05-12 09:46:11.257 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.257 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+0.5 out=+11.8 L=644.1 R=620.5rpm Vred=4.3rpm
+2026-05-12 09:46:11.308 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.308 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+0.3 out=+11.5 L=644.0 R=621.0rpm Vred=4.2rpm
+2026-05-12 09:46:11.359 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.359 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+0.1 out=+11.4 L=644.0 R=621.3rpm Vred=4.0rpm
+2026-05-12 09:46:11.410 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.410 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+0.1 out=+11.3 L=644.1 R=621.5rpm Vred=3.8rpm
+2026-05-12 09:46:11.461 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.461 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+0.0 out=+11.3 L=644.2 R=621.7rpm Vred=3.7rpm
+2026-05-12 09:46:11.512 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.513 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+0.0 out=+11.2 L=644.3 R=621.8rpm Vred=3.6rpm
+2026-05-12 09:46:11.563 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.564 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+0.0 out=+11.2 L=644.4 R=621.9rpm Vred=3.5rpm
+2026-05-12 09:46:11.615 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.615 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+0.0 out=+11.2 L=644.5 R=622.0rpm Vred=3.4rpm
+2026-05-12 09:46:11.666 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.666 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-2.2 out=+11.2 L=643.5 R=621.1rpm Vred=4.3rpm
+2026-05-12 09:46:11.718 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.719 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+0.2 D=-1.1 out=+12.3 L=644.7 R=620.1rpm Vred=4.2rpm
+2026-05-12 09:46:11.770 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.770 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+1.7 out=+12.9 L=644.5 R=618.7rpm Vred=5.0rpm
+2026-05-12 09:46:11.821 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.822 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+0.8 out=+12.0 L=643.9 R=619.8rpm Vred=4.8rpm
+2026-05-12 09:46:11.873 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.873 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+0.4 out=+11.6 L=643.7 R=620.4rpm Vred=4.6rpm
+2026-05-12 09:46:11.925 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.926 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+0.2 out=+11.4 L=643.7 R=620.8rpm Vred=4.3rpm
+2026-05-12 09:46:11.978 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:11.978 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+0.1 out=+11.3 L=643.8 R=621.1rpm Vred=4.2rpm
+2026-05-12 09:46:12.030 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.031 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+0.1 out=+11.3 L=643.9 R=621.4rpm Vred=4.0rpm
+2026-05-12 09:46:12.083 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.083 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+0.0 out=+11.2 L=644.0 R=621.5rpm Vred=3.8rpm
+2026-05-12 09:46:12.135 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.136 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+0.0 out=+11.2 L=644.1 R=621.7rpm Vred=3.7rpm
+2026-05-12 09:46:12.188 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.189 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+0.2 D=+0.0 out=+11.2 L=644.3 R=621.8rpm Vred=3.6rpm
+2026-05-12 09:46:12.189 [INFO    ] modes: [DIAG] cycle avg=51.7ms max=52.7ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:12.241 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.242 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+0.4 D=+2.2 out=+11.4 L=643.6 R=620.7rpm Vred=4.4rpm
+2026-05-12 09:46:12.293 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.293 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+0.7 D=+1.1 out=+10.6 L=643.0 R=621.9rpm Vred=4.2rpm
+2026-05-12 09:46:12.344 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.344 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+0.9 D=+0.6 out=+10.2 L=642.9 R=622.4rpm Vred=4.0rpm
+2026-05-12 09:46:12.396 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.396 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+1.1 D=+0.3 out=+10.2 L=643.0 R=622.7rpm Vred=3.8rpm
+2026-05-12 09:46:12.447 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.448 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=+1.3 D=+2.3 out=+10.2 L=642.3 R=621.9rpm Vred=4.5rpm
+2026-05-12 09:46:12.499 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.499 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=+1.4 D=+1.2 out=+9.2 L=641.6 R=623.2rpm Vred=4.2rpm
+2026-05-12 09:46:12.550 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.550 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=+1.5 D=+2.8 out=+8.7 L=640.4 R=623.0rpm Vred=4.9rpm
+2026-05-12 09:46:12.602 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.603 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=+1.7 D=+1.4 out=+7.4 L=639.5 R=624.7rpm Vred=4.5rpm
+2026-05-12 09:46:12.654 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.654 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=+1.7 D=+2.9 out=+6.8 L=638.3 R=624.7rpm Vred=5.1rpm
+2026-05-12 09:46:12.706 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.706 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=+1.8 D=+1.4 out=+5.4 L=637.4 R=626.6rpm Vred=4.7rpm
+2026-05-12 09:46:12.758 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.759 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+1.8 D=+2.9 out=+4.7 L=636.1 R=626.7rpm Vred=5.2rpm
+2026-05-12 09:46:12.810 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.842 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+1.8 D=+1.5 out=+3.2 L=635.2 R=628.7rpm Vred=4.7rpm
+2026-05-12 09:46:12.894 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.895 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=+1.7 D=+2.9 out=+2.4 L=633.8 R=628.9rpm Vred=5.3rpm
+2026-05-12 09:46:12.947 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.948 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=+1.7 D=+1.5 out=+0.9 L=632.8 R=630.9rpm Vred=4.8rpm
+2026-05-12 09:46:12.999 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:12.999 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-2.0mm P=-4.4 I=+1.5 D=+2.9 out=+0.1 L=631.3 R=631.1rpm Vred=5.4rpm
+2026-05-12 09:46:13.050 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.051 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=+1.4 D=+3.7 out=-1.6 L=629.0 R=632.2rpm Vred=6.0rpm
+2026-05-12 09:46:13.102 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.103 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-4.0mm P=-8.8 I=+1.2 D=+4.0 out=-3.6 L=626.4 R=633.6rpm Vred=6.6rpm
+2026-05-12 09:46:13.155 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.155 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-5.0mm P=-11.0 I=+1.2 D=+4.2 out=-5.6 L=623.8 R=635.0rpm Vred=7.2rpm
+2026-05-12 09:46:13.207 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.207 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-6.0mm P=-13.2 I=+1.2 D=+4.3 out=-7.7 L=621.1 R=636.6rpm Vred=7.8rpm
+2026-05-12 09:46:13.258 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.259 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-7.0mm P=-15.4 I=+1.2 D=+4.4 out=-9.9 L=618.4 R=638.2rpm Vred=8.4rpm
+2026-05-12 09:46:13.259 [INFO    ] modes: [DIAG] cycle avg=53.5ms max=83.1ms (target=50ms) | sensor frames/cycle avg=4.5 max=7 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:13.310 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.311 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=+1.2 D=+4.4 out=-12.1 L=615.6 R=639.8rpm Vred=8.9rpm
+2026-05-12 09:46:13.361 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.362 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+1.2 D=+4.4 out=-14.3 L=612.9 R=641.4rpm Vred=9.5rpm
+2026-05-12 09:46:13.416 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.416 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.2 D=+6.6 out=-16.5 L=609.1 R=642.0rpm Vred=11.1rpm
+2026-05-12 09:46:13.467 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.468 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+1.2 D=+7.7 out=-19.7 L=604.3 R=643.7rpm Vred=12.6rpm
+2026-05-12 09:46:13.519 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.519 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+1.2 D=+6.0 out=-23.6 L=600.0 R=647.2rpm Vred=13.1rpm
+2026-05-12 09:46:13.571 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.571 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+1.2 D=+5.2 out=-26.6 L=596.5 R=649.7rpm Vred=13.5rpm
+2026-05-12 09:46:13.622 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.623 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+1.2 D=+4.8 out=-29.2 L=593.4 R=651.9rpm Vred=14.0rpm
+2026-05-12 09:46:13.674 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.675 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+1.2 D=+2.4 out=-31.6 L=591.6 R=654.9rpm Vred=13.4rpm
+2026-05-12 09:46:13.726 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.727 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+1.2 D=-1.0 out=-32.8 L=590.0 R=655.7rpm Vred=13.8rpm
+2026-05-12 09:46:13.777 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.778 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+1.2 D=-2.7 out=-32.3 L=590.2 R=654.9rpm Vred=14.1rpm
+2026-05-12 09:46:13.829 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.829 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+1.2 D=-3.5 out=-31.0 L=591.3 R=653.3rpm Vred=14.3rpm
+2026-05-12 09:46:13.881 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.881 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+1.2 D=-1.8 out=-29.2 L=593.8 R=652.3rpm Vred=13.6rpm
+2026-05-12 09:46:13.932 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.933 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=+1.2 D=-3.1 out=-28.3 L=594.5 R=651.2rpm Vred=13.8rpm
+2026-05-12 09:46:13.984 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:13.985 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=+1.2 D=-1.5 out=-26.8 L=596.8 R=650.4rpm Vred=13.0rpm
+2026-05-12 09:46:14.037 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.037 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=+1.2 D=-0.8 out=-26.0 L=598.3 R=650.3rpm Vred=12.3rpm
+2026-05-12 09:46:14.088 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.089 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.2 D=-2.6 out=-25.6 L=598.4 R=649.6rpm Vred=12.6rpm
+2026-05-12 09:46:14.139 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.140 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.2 D=-1.3 out=-24.3 L=600.4 R=649.0rpm Vred=11.9rpm
+2026-05-12 09:46:14.191 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.191 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.2 D=-0.6 out=-23.7 L=601.7 R=649.0rpm Vred=11.3rpm
+2026-05-12 09:46:14.243 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.244 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.2 D=-0.3 out=-23.4 L=602.6 R=649.3rpm Vred=10.7rpm
+2026-05-12 09:46:14.295 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.296 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.2 D=-0.2 out=-23.2 L=603.2 R=649.6rpm Vred=10.2rpm
+2026-05-12 09:46:14.296 [INFO    ] modes: [DIAG] cycle avg=51.9ms max=54.3ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:14.347 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.348 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.2 D=-0.1 out=-23.1 L=603.8 R=650.0rpm Vred=9.7rpm
+2026-05-12 09:46:14.398 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.399 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.2 D=-0.0 out=-23.1 L=604.2 R=650.4rpm Vred=9.3rpm
+2026-05-12 09:46:14.450 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.450 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.2 D=-0.0 out=-23.1 L=604.6 R=650.8rpm Vred=8.9rpm
+2026-05-12 09:46:14.501 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.501 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.2 D=-0.0 out=-23.1 L=605.0 R=651.1rpm Vred=8.6rpm
+2026-05-12 09:46:14.551 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.552 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.2 D=-0.0 out=-23.1 L=605.3 R=651.4rpm Vred=8.3rpm
+2026-05-12 09:46:14.603 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.603 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=+1.2 D=+2.2 out=-23.0 L=604.5 R=650.6rpm Vred=9.0rpm
+2026-05-12 09:46:14.655 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.656 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=+1.2 D=+1.1 out=-24.1 L=603.7 R=652.0rpm Vred=8.7rpm
+2026-05-12 09:46:14.707 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.708 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=+1.2 D=+0.5 out=-24.7 L=603.5 R=652.9rpm Vred=8.5rpm
+2026-05-12 09:46:14.759 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.759 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.2 D=-1.9 out=-25.0 L=602.5 R=652.4rpm Vred=9.2rpm
+2026-05-12 09:46:14.811 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.812 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.2 D=-1.0 out=-24.0 L=603.8 R=651.8rpm Vred=8.8rpm
+2026-05-12 09:46:14.863 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.864 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.2 D=-0.5 out=-23.5 L=604.6 R=651.7rpm Vred=8.5rpm
+2026-05-12 09:46:14.915 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.915 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.2 D=-0.2 out=-23.3 L=605.2 R=651.7rpm Vred=8.2rpm
+2026-05-12 09:46:14.966 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:14.966 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.2 D=-0.1 out=-23.2 L=605.6 R=651.9rpm Vred=7.9rpm
+2026-05-12 09:46:15.018 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.018 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.2 D=-0.1 out=-23.1 L=605.9 R=652.1rpm Vred=7.7rpm
+2026-05-12 09:46:15.070 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.070 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+1.2 D=-2.2 out=-23.1 L=605.1 R=651.3rpm Vred=8.4rpm
+2026-05-12 09:46:15.122 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.123 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+1.2 D=-1.1 out=-22.0 L=606.6 R=650.5rpm Vred=8.1rpm
+2026-05-12 09:46:15.174 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.174 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+1.2 D=-0.6 out=-21.4 L=607.5 R=650.3rpm Vred=7.8rpm
+2026-05-12 09:46:15.226 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.226 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+1.2 D=-0.3 out=-21.1 L=608.0 R=650.3rpm Vred=7.5rpm
+2026-05-12 09:46:15.277 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.277 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+1.2 D=-2.3 out=-21.0 L=607.5 R=649.4rpm Vred=8.2rpm
+2026-05-12 09:46:15.329 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.329 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+1.2 D=-1.2 out=-19.8 L=609.0 R=648.6rpm Vred=7.8rpm
+2026-05-12 09:46:15.329 [INFO    ] modes: [DIAG] cycle avg=51.7ms max=53.1ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:15.380 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.381 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+1.2 D=-0.6 out=-19.2 L=609.9 R=648.4rpm Vred=7.5rpm
+2026-05-12 09:46:15.432 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.433 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+1.2 D=-0.3 out=-18.9 L=610.5 R=648.4rpm Vred=7.2rpm
+2026-05-12 09:46:15.484 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.484 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+1.2 D=-0.1 out=-18.8 L=610.9 R=648.5rpm Vred=6.9rpm
+2026-05-12 09:46:15.535 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.536 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+1.2 D=-0.1 out=-18.7 L=611.2 R=648.7rpm Vred=6.7rpm
+2026-05-12 09:46:15.587 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.588 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=+1.2 D=-2.2 out=-18.7 L=610.5 R=647.9rpm Vred=7.4rpm
+2026-05-12 09:46:15.640 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.640 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=+1.2 D=-1.1 out=-17.6 L=612.0 R=647.1rpm Vred=7.1rpm
+2026-05-12 09:46:15.692 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.692 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=+1.2 D=-0.6 out=-17.0 L=612.9 R=646.9rpm Vred=6.8rpm
+2026-05-12 09:46:15.743 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.744 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-7.0mm P=-15.4 I=+1.2 D=-2.5 out=-16.7 L=612.5 R=645.9rpm Vred=7.4rpm
+2026-05-12 09:46:15.794 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.794 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-7.0mm P=-15.4 I=+1.2 D=-1.2 out=-15.5 L=614.1 R=645.1rpm Vred=7.0rpm
+2026-05-12 09:46:15.846 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.846 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=+1.2 D=+1.6 out=-14.9 L=614.0 R=643.7rpm Vred=7.7rpm
+2026-05-12 09:46:15.897 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.898 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-7.0mm P=-15.4 I=+1.2 D=-1.4 out=-15.7 L=612.7 R=644.0rpm Vred=8.3rpm
+2026-05-12 09:46:15.902 [INFO    ] drivers.rfid_tcp: RFID tag read: 0014 (dec=20)
+2026-05-12 09:46:15.903 [DEBUG   ] rfid_processor: [RFID] Tag read: 0014
+2026-05-12 09:46:15.949 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:15.949 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-7.0mm P=-15.4 I=+1.2 D=-0.7 out=-14.9 L=613.8 R=643.7rpm Vred=7.8rpm
+2026-05-12 09:46:15.969 [INFO    ] drivers.rfid_tcp: RFID tag read: 0014 (dec=20)
+2026-05-12 09:46:15.969 [DEBUG   ] rfid_processor: [RFID] Tag read: 0014
+2026-05-12 09:46:16.001 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.001 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-7.0mm P=-15.4 I=+1.2 D=-0.4 out=-14.6 L=614.6 R=643.8rpm Vred=7.4rpm
+2026-05-12 09:46:16.052 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.053 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-7.0mm P=-15.4 I=+1.2 D=-0.2 out=-14.4 L=615.2 R=644.0rpm Vred=7.0rpm
+2026-05-12 09:46:16.105 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.106 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-6.0mm P=-13.2 I=+1.2 D=-2.3 out=-14.3 L=614.7 R=643.3rpm Vred=7.6rpm
+2026-05-12 09:46:16.156 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.157 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-6.0mm P=-13.2 I=+1.2 D=-1.1 out=-13.2 L=616.3 R=642.7rpm Vred=7.1rpm
+2026-05-12 09:46:16.207 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.208 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-6.0mm P=-13.2 I=+1.2 D=-0.6 out=-12.6 L=617.3 R=642.5rpm Vred=6.7rpm
+2026-05-12 09:46:16.259 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.259 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-5.0mm P=-11.0 I=+1.2 D=-2.5 out=-12.3 L=617.0 R=641.6rpm Vred=7.3rpm
+2026-05-12 09:46:16.310 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.311 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-5.0mm P=-11.0 I=+1.2 D=-1.2 out=-11.1 L=618.7 R=640.9rpm Vred=6.8rpm
+2026-05-12 09:46:16.363 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.364 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-5.0mm P=-11.0 I=+1.2 D=-0.6 out=-10.5 L=619.8 R=640.7rpm Vred=6.4rpm
+2026-05-12 09:46:16.364 [INFO    ] modes: [DIAG] cycle avg=51.7ms max=52.7ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:16.416 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.416 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-4.0mm P=-8.8 I=+0.9 D=-2.5 out=-10.4 L=619.3 R=640.0rpm Vred=7.0rpm
+2026-05-12 09:46:16.468 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.468 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-4.0mm P=-8.8 I=+0.7 D=-1.3 out=-9.3 L=620.8 R=639.5rpm Vred=6.5rpm
+2026-05-12 09:46:16.519 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.520 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-4.0mm P=-8.8 I=+0.5 D=-0.6 out=-8.9 L=621.7 R=639.5rpm Vred=6.0rpm
+2026-05-12 09:46:16.572 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.572 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=+0.3 D=-2.5 out=-8.8 L=621.3 R=638.8rpm Vred=6.6rpm
+2026-05-12 09:46:16.623 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.624 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=+0.2 D=-1.3 out=-7.7 L=622.9 R=638.3rpm Vred=6.1rpm
+2026-05-12 09:46:16.675 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.676 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=+0.0 D=-0.6 out=-7.2 L=623.8 R=638.2rpm Vred=5.6rpm
+2026-05-12 09:46:16.727 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.727 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-2.0mm P=-4.4 I=-0.1 D=-2.5 out=-7.0 L=623.5 R=637.5rpm Vred=6.1rpm
+2026-05-12 09:46:16.777 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.778 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=-0.2 D=-3.5 out=-5.8 L=624.2 R=635.9rpm Vred=6.6rpm
+2026-05-12 09:46:16.830 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.830 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=-0.2 D=-1.7 out=-4.1 L=626.5 R=634.8rpm Vred=6.0rpm
+2026-05-12 09:46:16.881 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.882 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=-0.3 D=-0.9 out=-3.3 L=627.9 R=634.5rpm Vred=5.4rpm
+2026-05-12 09:46:16.933 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.934 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=-0.3 D=-2.6 out=-2.9 L=627.8 R=633.6rpm Vred=5.9rpm
+2026-05-12 09:46:16.985 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:16.985 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=-0.2 D=-3.5 out=-1.5 L=628.7 R=631.8rpm Vred=6.3rpm
+2026-05-12 09:46:17.036 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.036 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=-0.2 D=-1.8 out=+0.3 L=631.1 R=630.6rpm Vred=5.8rpm
+2026-05-12 09:46:17.088 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.088 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=-0.1 D=-0.9 out=+1.2 L=632.6 R=630.2rpm Vred=5.2rpm
+2026-05-12 09:46:17.140 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.140 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=-0.1 D=-0.4 out=+1.7 L=633.6 R=630.2rpm Vred=4.8rpm
+2026-05-12 09:46:17.191 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.192 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=+0.1 D=-2.4 out=+2.0 L=633.3 R=629.2rpm Vred=5.4rpm
+2026-05-12 09:46:17.244 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.245 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=+0.2 D=-1.2 out=+3.4 L=635.0 R=628.3rpm Vred=4.9rpm
+2026-05-12 09:46:17.296 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.297 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=+0.3 D=-2.8 out=+4.1 L=635.1 R=626.9rpm Vred=5.6rpm
+2026-05-12 09:46:17.347 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.348 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=+0.5 D=-1.4 out=+5.7 L=637.1 R=625.7rpm Vred=5.2rpm
+2026-05-12 09:46:17.399 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.399 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=+0.7 D=-0.7 out=+6.6 L=638.4 R=625.2rpm Vred=4.8rpm
+2026-05-12 09:46:17.399 [INFO    ] modes: [DIAG] cycle avg=51.8ms max=52.3ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:17.450 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.451 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+0.9 D=-2.6 out=+7.1 L=638.2 R=624.0rpm Vred=5.5rpm
+2026-05-12 09:46:17.501 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.502 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+1.1 D=-1.3 out=+8.6 L=640.1 R=622.8rpm Vred=5.2rpm
+2026-05-12 09:46:17.553 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.553 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+1.3 D=-0.6 out=+9.5 L=641.2 R=622.3rpm Vred=4.9rpm
+2026-05-12 09:46:17.604 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.605 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+1.3 D=-2.5 out=+9.8 L=640.8 R=621.2rpm Vred=5.6rpm
+2026-05-12 09:46:17.655 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.656 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+1.3 D=-1.3 out=+11.1 L=642.4 R=620.2rpm Vred=5.3rpm
+2026-05-12 09:46:17.707 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.708 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+1.3 D=-0.6 out=+11.7 L=643.3 R=619.9rpm Vred=5.0rpm
+2026-05-12 09:46:17.759 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.759 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+1.3 D=-0.3 out=+12.0 L=643.8 R=619.8rpm Vred=4.8rpm
+2026-05-12 09:46:17.810 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.811 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+1.3 D=-2.4 out=+12.2 L=643.2 R=618.9rpm Vred=5.6rpm
+2026-05-12 09:46:17.862 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.863 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+1.3 D=-1.2 out=+13.3 L=644.6 R=617.9rpm Vred=5.3rpm
+2026-05-12 09:46:17.914 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.915 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+1.3 D=-0.6 out=+13.9 L=645.4 R=617.6rpm Vred=5.1rpm
+2026-05-12 09:46:17.966 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:17.967 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+1.3 D=-0.3 out=+14.2 L=645.9 R=617.5rpm Vred=4.9rpm
+2026-05-12 09:46:18.019 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.020 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+1.3 D=-0.1 out=+14.4 L=646.3 R=617.5rpm Vred=4.7rpm
+2026-05-12 09:46:18.071 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.072 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+1.3 D=-0.1 out=+14.4 L=646.5 R=617.6rpm Vred=4.5rpm
+2026-05-12 09:46:18.123 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.124 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+1.3 D=-0.0 out=+14.5 L=646.7 R=617.8rpm Vred=4.4rpm
+2026-05-12 09:46:18.175 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.175 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+1.3 D=-0.0 out=+14.5 L=646.9 R=617.9rpm Vred=4.2rpm
+2026-05-12 09:46:18.226 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.226 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+1.3 D=-0.0 out=+14.5 L=647.0 R=618.0rpm Vred=4.1rpm
+2026-05-12 09:46:18.277 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.277 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+1.3 D=-0.0 out=+14.5 L=647.1 R=618.1rpm Vred=4.0rpm
+2026-05-12 09:46:18.328 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.329 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+1.3 D=-2.2 out=+14.5 L=646.2 R=617.1rpm Vred=5.0rpm
+2026-05-12 09:46:18.380 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.380 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+1.3 D=+1.1 out=+15.6 L=646.5 R=615.2rpm Vred=5.8rpm
+2026-05-12 09:46:18.432 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.432 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+1.3 D=+0.5 out=+15.1 L=646.2 R=616.1rpm Vred=5.5rpm
+2026-05-12 09:46:18.432 [INFO    ] modes: [DIAG] cycle avg=51.6ms max=53.2ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:18.484 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.484 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+1.3 D=+0.3 out=+14.8 L=646.2 R=616.6rpm Vred=5.2rpm
+2026-05-12 09:46:18.535 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.535 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+1.3 D=+0.1 out=+14.7 L=646.3 R=616.9rpm Vred=5.0rpm
+2026-05-12 09:46:18.586 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.587 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+1.3 D=+2.3 out=+14.6 L=645.4 R=616.3rpm Vred=5.8rpm
+2026-05-12 09:46:18.638 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.638 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+1.3 D=+1.1 out=+13.5 L=644.6 R=617.7rpm Vred=5.4rpm
+2026-05-12 09:46:18.689 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.690 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+1.3 D=+0.6 out=+12.9 L=644.4 R=618.6rpm Vred=5.1rpm
+2026-05-12 09:46:18.741 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.742 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+1.3 D=+0.3 out=+12.6 L=644.3 R=619.1rpm Vred=4.9rpm
+2026-05-12 09:46:18.793 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.794 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+1.5 D=+2.3 out=+12.7 L=643.7 R=618.3rpm Vred=5.6rpm
+2026-05-12 09:46:18.845 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.846 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+1.8 D=+1.2 out=+11.7 L=643.1 R=619.7rpm Vred=5.2rpm
+2026-05-12 09:46:18.896 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.897 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=+1.9 D=+2.8 out=+11.3 L=642.1 R=619.5rpm Vred=5.9rpm
+2026-05-12 09:46:18.949 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:18.950 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=+2.1 D=+1.4 out=+10.1 L=641.3 R=621.1rpm Vred=5.4rpm
+2026-05-12 09:46:19.001 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.002 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=+2.3 D=+0.7 out=+9.6 L=641.1 R=622.0rpm Vred=5.0rpm
+2026-05-12 09:46:19.053 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.054 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=+2.4 D=+2.5 out=+9.3 L=640.3 R=621.7rpm Vred=5.6rpm
+2026-05-12 09:46:19.105 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.106 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=+2.5 D=+1.3 out=+8.1 L=639.6 R=623.3rpm Vred=5.2rpm
+2026-05-12 09:46:19.157 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.158 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=+2.6 D=+0.6 out=+7.6 L=639.5 R=624.3rpm Vred=4.7rpm
+2026-05-12 09:46:19.208 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.209 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=+2.6 D=+2.5 out=+7.4 L=638.7 R=623.9rpm Vred=5.3rpm
+2026-05-12 09:46:19.260 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.260 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=+2.7 D=+1.3 out=+6.2 L=637.9 R=625.6rpm Vred=4.8rpm
+2026-05-12 09:46:19.311 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.312 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=+2.7 D=+0.6 out=+5.6 L=637.8 R=626.6rpm Vred=4.4rpm
+2026-05-12 09:46:19.363 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.363 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+2.7 D=+2.5 out=+5.3 L=636.9 R=626.4rpm Vred=5.0rpm
+2026-05-12 09:46:19.415 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.415 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+2.7 D=+1.3 out=+4.0 L=636.2 R=628.1rpm Vred=4.5rpm
+2026-05-12 09:46:19.466 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.467 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+2.7 D=+0.6 out=+3.4 L=636.0 R=629.2rpm Vred=4.0rpm
+2026-05-12 09:46:19.468 [INFO    ] modes: [DIAG] cycle avg=51.8ms max=53.1ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:19.519 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.520 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+2.7 D=+0.3 out=+3.1 L=636.1 R=629.9rpm Vred=3.6rpm
+2026-05-12 09:46:19.571 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.571 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+2.7 D=+0.2 out=+2.9 L=636.3 R=630.5rpm Vred=3.3rpm
+2026-05-12 09:46:19.622 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.623 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+2.7 D=+0.1 out=+2.8 L=636.5 R=630.9rpm Vred=2.9rpm
+2026-05-12 09:46:19.674 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.674 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=+2.7 D=+2.2 out=+2.7 L=635.7 R=630.2rpm Vred=3.7rpm
+2026-05-12 09:46:19.725 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.725 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+2.7 D=-1.1 out=+1.6 L=633.9 R=630.7rpm Vred=4.3rpm
+2026-05-12 09:46:19.775 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.776 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+2.7 D=-0.5 out=+2.2 L=634.9 R=630.6rpm Vred=3.9rpm
+2026-05-12 09:46:19.827 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.827 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+2.7 D=-0.3 out=+2.4 L=635.5 R=630.7rpm Vred=3.5rpm
+2026-05-12 09:46:19.880 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.880 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+2.7 D=-0.1 out=+2.6 L=636.0 R=630.9rpm Vred=3.1rpm
+2026-05-12 09:46:19.931 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.932 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+2.7 D=-0.1 out=+2.6 L=636.4 R=631.2rpm Vred=2.8rpm
+2026-05-12 09:46:19.983 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:19.983 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=+2.6 D=+2.2 out=+2.6 L=635.6 R=630.4rpm Vred=3.6rpm
+2026-05-12 09:46:20.034 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.034 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=+2.6 D=+1.1 out=+1.5 L=634.8 R=631.9rpm Vred=3.3rpm
+2026-05-12 09:46:20.085 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.086 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-2.0mm P=-4.4 I=+2.5 D=+2.7 out=+0.8 L=633.4 R=631.7rpm Vred=4.1rpm
+2026-05-12 09:46:20.136 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.137 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=+2.3 D=+3.6 out=-0.7 L=631.1 R=632.5rpm Vred=4.8rpm
+2026-05-12 09:46:20.188 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.189 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=+2.1 D=+1.8 out=-2.7 L=629.5 R=634.8rpm Vred=4.5rpm
+2026-05-12 09:46:20.239 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.240 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-4.0mm P=-8.8 I=+1.9 D=+3.1 out=-3.8 L=627.6 R=635.2rpm Vred=5.2rpm
+2026-05-12 09:46:20.292 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.292 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-4.0mm P=-8.8 I=+1.7 D=+1.5 out=-5.5 L=626.2 R=637.3rpm Vred=4.9rpm
+2026-05-12 09:46:20.343 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.344 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-5.0mm P=-11.0 I=+1.7 D=+3.0 out=-6.3 L=624.6 R=637.3rpm Vred=5.7rpm
+2026-05-12 09:46:20.394 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.395 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-6.0mm P=-13.2 I=+1.7 D=+3.7 out=-7.8 L=622.4 R=638.0rpm Vred=6.4rpm
+2026-05-12 09:46:20.445 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.446 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=+1.7 D=+6.2 out=-9.7 L=618.8 R=638.1rpm Vred=8.2rpm
+2026-05-12 09:46:20.497 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.497 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.7 D=+9.7 out=-12.8 L=613.0 R=638.5rpm Vred=10.9rpm
+2026-05-12 09:46:20.497 [INFO    ] modes: [DIAG] cycle avg=51.5ms max=52.9ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:20.548 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.549 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+1.7 D=+11.5 out=-17.6 L=605.5 R=640.8rpm Vred=13.5rpm
+2026-05-12 09:46:20.600 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.600 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+1.7 D=+10.1 out=-23.4 L=598.3 R=645.0rpm Vred=15.0rpm
+2026-05-12 09:46:20.651 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.651 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-18.0mm P=-39.6 I=+1.7 D=+9.5 out=-28.4 L=591.8 R=648.7rpm Vred=16.4rpm
+2026-05-12 09:46:20.701 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.702 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+1.7 D=+6.9 out=-33.2 L=586.8 R=653.1rpm Vred=16.7rpm
+2026-05-12 09:46:20.753 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.753 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+1.7 D=+3.5 out=-36.6 L=584.0 R=657.3rpm Vred=16.0rpm
+2026-05-12 09:46:20.805 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.805 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-20.0mm P=-44.0 I=+1.7 D=+3.9 out=-38.4 L=581.9 R=658.6rpm Vred=16.4rpm
+2026-05-12 09:46:20.856 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.857 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-20.0mm P=-44.0 I=+1.7 D=+2.0 out=-40.3 L=580.6 R=661.2rpm Vred=15.7rpm
+2026-05-12 09:46:20.908 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.908 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-20.0mm P=-44.0 I=+1.7 D=+1.0 out=-41.3 L=580.2 R=662.8rpm Vred=15.2rpm
+2026-05-12 09:46:20.959 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:20.959 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-20.0mm P=-44.0 I=+1.7 D=+0.5 out=-41.8 L=580.2 R=663.8rpm Vred=14.6rpm
+2026-05-12 09:46:21.011 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.011 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-20.0mm P=-44.0 I=+1.7 D=+0.2 out=-42.0 L=580.4 R=664.5rpm Vred=14.2rpm
+2026-05-12 09:46:21.062 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.062 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-20.0mm P=-44.0 I=+1.7 D=+0.1 out=-42.2 L=580.7 R=665.0rpm Vred=13.8rpm
+2026-05-12 09:46:21.115 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.115 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+1.7 D=-2.1 out=-42.2 L=580.1 R=664.5rpm Vred=14.3rpm
+2026-05-12 09:46:21.166 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.167 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-20.0mm P=-44.0 I=+1.7 D=+1.1 out=-41.2 L=580.6 R=662.9rpm Vred=14.9rpm
+2026-05-12 09:46:21.218 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.219 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-20.0mm P=-44.0 I=+1.7 D=+0.6 out=-41.7 L=580.5 R=663.9rpm Vred=14.4rpm
+2026-05-12 09:46:21.270 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.270 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+1.7 D=-1.9 out=-42.0 L=579.7 R=663.7rpm Vred=14.9rpm
+2026-05-12 09:46:21.321 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.322 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+1.7 D=-1.0 out=-41.1 L=581.2 R=663.3rpm Vred=14.4rpm
+2026-05-12 09:46:21.373 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.373 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+1.7 D=-0.5 out=-40.6 L=582.2 R=663.3rpm Vred=13.9rpm
+2026-05-12 09:46:21.424 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.425 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+1.7 D=-0.2 out=-40.3 L=582.8 R=663.5rpm Vred=13.4rpm
+2026-05-12 09:46:21.476 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.477 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+1.7 D=-0.1 out=-40.2 L=583.4 R=663.8rpm Vred=13.1rpm
+2026-05-12 09:46:21.528 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.529 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+1.7 D=-0.1 out=-40.2 L=583.8 R=664.1rpm Vred=12.7rpm
+2026-05-12 09:46:21.529 [INFO    ] modes: [DIAG] cycle avg=51.6ms max=53.3ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:21.579 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.580 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-18.0mm P=-39.6 I=+1.7 D=-2.2 out=-40.1 L=583.2 R=663.4rpm Vred=13.3rpm
+2026-05-12 09:46:21.631 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.631 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-18.0mm P=-39.6 I=+1.7 D=-1.1 out=-39.0 L=584.7 R=662.7rpm Vred=12.9rpm
+2026-05-12 09:46:21.682 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.683 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-17.0mm P=-37.4 I=+1.7 D=-2.8 out=-38.5 L=584.7 R=661.6rpm Vred=13.5rpm
+2026-05-12 09:46:21.733 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.734 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-17.0mm P=-37.4 I=+1.7 D=-1.4 out=-37.1 L=586.6 R=660.7rpm Vred=13.0rpm
+2026-05-12 09:46:21.785 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.785 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+1.7 D=-2.9 out=-36.4 L=586.8 R=659.5rpm Vred=13.5rpm
+2026-05-12 09:46:21.837 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.837 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+1.7 D=-3.6 out=-34.9 L=587.8 R=657.7rpm Vred=13.9rpm
+2026-05-12 09:46:21.890 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.891 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+1.7 D=-6.2 out=-33.1 L=588.4 R=654.6rpm Vred=15.1rpm
+2026-05-12 09:46:21.942 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.942 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+1.7 D=-7.5 out=-30.0 L=590.4 R=650.5rpm Vred=16.2rpm
+2026-05-12 09:46:21.993 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:21.994 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+1.7 D=-8.2 out=-26.3 L=593.4 R=645.9rpm Vred=17.0rpm
+2026-05-12 09:46:22.045 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.046 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=+1.7 D=-6.3 out=-22.2 L=597.7 R=642.1rpm Vred=16.7rpm
+2026-05-12 09:46:22.097 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.097 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-7.0mm P=-15.4 I=+1.7 D=-5.3 out=-19.0 L=601.2 R=639.3rpm Vred=16.4rpm
+2026-05-12 09:46:22.149 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.150 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-6.0mm P=-13.2 I=+1.7 D=-4.9 out=-16.4 L=604.2 R=636.9rpm Vred=16.0rpm
+2026-05-12 09:46:22.201 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.201 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-6.0mm P=-13.2 I=+1.7 D=-2.4 out=-13.9 L=608.0 R=635.8rpm Vred=14.7rpm
+2026-05-12 09:46:22.252 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.252 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-5.0mm P=-11.0 I=+1.7 D=-3.4 out=-12.7 L=609.4 R=634.8rpm Vred=14.5rpm
+2026-05-12 09:46:22.303 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.304 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-4.0mm P=-8.8 I=+1.5 D=-3.9 out=-11.2 L=611.1 R=633.6rpm Vred=14.3rpm
+2026-05-12 09:46:22.355 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.355 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-4.0mm P=-8.8 I=+1.3 D=-2.0 out=-9.5 L=614.1 R=633.1rpm Vred=13.0rpm
+2026-05-12 09:46:22.406 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.407 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=+1.1 D=-3.2 out=-8.7 L=615.1 R=632.4rpm Vred=12.9rpm
+2026-05-12 09:46:22.458 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.459 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-2.0mm P=-4.4 I=+1.0 D=-3.8 out=-7.2 L=616.7 R=631.1rpm Vred=12.7rpm
+2026-05-12 09:46:22.510 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.511 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=+0.9 D=-4.1 out=-5.4 L=618.8 R=629.5rpm Vred=12.5rpm
+2026-05-12 09:46:22.561 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.562 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=+0.9 D=-2.0 out=-3.4 L=622.0 R=628.7rpm Vred=11.3rpm
+2026-05-12 09:46:22.562 [INFO    ] modes: [DIAG] cycle avg=51.7ms max=53.1ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:22.613 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.614 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+0.9 D=-3.2 out=-2.3 L=623.1 R=627.8rpm Vred=11.2rpm
+2026-05-12 09:46:22.665 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.666 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=+0.9 D=-3.8 out=-0.7 L=624.9 R=626.2rpm Vred=11.1rpm
+2026-05-12 09:46:22.716 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.717 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=+1.0 D=-1.9 out=+1.3 L=627.9 R=625.3rpm Vred=10.0rpm
+2026-05-12 09:46:22.767 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.768 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=+1.0 D=-1.0 out=+2.3 L=629.8 R=625.3rpm Vred=9.1rpm
+2026-05-12 09:46:22.820 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.820 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=+1.2 D=-2.7 out=+2.9 L=630.2 R=624.5rpm Vred=9.3rpm
+2026-05-12 09:46:22.872 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.872 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=+1.3 D=-1.3 out=+4.3 L=632.5 R=623.9rpm Vred=8.4rpm
+2026-05-12 09:46:22.924 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.924 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=+1.4 D=-0.7 out=+5.1 L=634.0 R=623.8rpm Vred=7.7rpm
+2026-05-12 09:46:22.975 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:22.976 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=+1.5 D=-2.5 out=+5.6 L=634.1 R=622.9rpm Vred=8.1rpm
+2026-05-12 09:46:23.026 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.027 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=+1.7 D=-1.3 out=+7.0 L=636.2 R=622.2rpm Vred=7.4rpm
+2026-05-12 09:46:23.078 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.079 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=+1.9 D=-0.6 out=+7.8 L=637.6 R=622.0rpm Vred=6.8rpm
+2026-05-12 09:46:23.130 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.131 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+2.1 D=-2.5 out=+8.4 L=637.6 R=620.9rpm Vred=7.3rpm
+2026-05-12 09:46:23.182 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.182 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+2.3 D=-1.3 out=+9.9 L=639.7 R=620.0rpm Vred=6.8rpm
+2026-05-12 09:46:23.233 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.234 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+2.5 D=-0.6 out=+10.7 L=641.0 R=619.6rpm Vred=6.3rpm
+2026-05-12 09:46:23.285 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.285 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+2.5 D=-2.5 out=+11.0 L=640.7 R=618.7rpm Vred=6.9rpm
+2026-05-12 09:46:23.337 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.337 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+2.5 D=-1.3 out=+12.3 L=642.4 R=617.8rpm Vred=6.5rpm
+2026-05-12 09:46:23.389 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.389 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+2.5 D=-2.8 out=+12.9 L=642.4 R=616.6rpm Vred=7.2rpm
+2026-05-12 09:46:23.440 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.441 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+2.5 D=-1.4 out=+14.3 L=644.2 R=615.6rpm Vred=6.7rpm
+2026-05-12 09:46:23.492 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.493 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+2.5 D=-2.9 out=+15.0 L=644.2 R=614.2rpm Vred=7.4rpm
+2026-05-12 09:46:23.544 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.545 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+2.5 D=-1.5 out=+16.5 L=646.1 R=613.1rpm Vred=7.0rpm
+2026-05-12 09:46:23.596 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.596 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+2.5 D=-0.7 out=+17.2 L=647.2 R=612.7rpm Vred=6.7rpm
+2026-05-12 09:46:23.597 [INFO    ] modes: [DIAG] cycle avg=51.7ms max=52.5ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:23.647 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.648 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+2.5 D=-2.6 out=+17.6 L=646.8 R=611.7rpm Vred=7.4rpm
+2026-05-12 09:46:23.699 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.700 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+2.5 D=-1.3 out=+18.8 L=648.4 R=610.7rpm Vred=7.1rpm
+2026-05-12 09:46:23.751 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.751 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+2.5 D=-0.6 out=+19.5 L=649.4 R=610.4rpm Vred=6.8rpm
+2026-05-12 09:46:23.802 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.802 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+2.5 D=-0.3 out=+19.8 L=649.9 R=610.3rpm Vred=6.5rpm
+2026-05-12 09:46:23.853 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.853 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+2.5 D=-2.4 out=+20.0 L=649.3 R=609.4rpm Vred=7.3rpm
+2026-05-12 09:46:23.904 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.904 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+2.5 D=-1.2 out=+21.1 L=650.8 R=608.5rpm Vred=7.0rpm
+2026-05-12 09:46:23.956 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:23.956 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+2.5 D=-0.6 out=+21.7 L=651.6 R=608.1rpm Vred=6.8rpm
+2026-05-12 09:46:24.007 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.008 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+2.5 D=-0.3 out=+22.0 L=652.1 R=608.1rpm Vred=6.5rpm
+2026-05-12 09:46:24.059 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.059 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+2.5 D=-2.3 out=+22.2 L=651.4 R=607.1rpm Vred=7.4rpm
+2026-05-12 09:46:24.110 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.110 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+2.5 D=-1.2 out=+23.4 L=652.8 R=606.1rpm Vred=7.1rpm
+2026-05-12 09:46:24.161 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.162 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+2.5 D=-0.6 out=+23.9 L=653.6 R=605.8rpm Vred=6.9rpm
+2026-05-12 09:46:24.214 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.214 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+11.0mm P=+24.2 I=+2.5 D=-2.5 out=+24.2 L=653.1 R=604.6rpm Vred=7.8rpm
+2026-05-12 09:46:24.266 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.266 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+11.0mm P=+24.2 I=+2.5 D=-1.2 out=+25.5 L=654.6 R=603.6rpm Vred=7.6rpm
+2026-05-12 09:46:24.318 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.318 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+11.0mm P=+24.2 I=+2.5 D=-0.6 out=+26.1 L=655.4 R=603.2rpm Vred=7.3rpm
+2026-05-12 09:46:24.369 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.370 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+11.0mm P=+24.2 I=+2.5 D=-0.3 out=+26.4 L=655.9 R=603.0rpm Vred=7.2rpm
+2026-05-12 09:46:24.421 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.421 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+11.0mm P=+24.2 I=+2.5 D=-0.2 out=+26.6 L=656.2 R=603.0rpm Vred=7.0rpm
+2026-05-12 09:46:24.473 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.473 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+12.0mm P=+26.4 I=+2.5 D=-2.3 out=+26.7 L=655.4 R=602.1rpm Vred=7.9rpm
+2026-05-12 09:46:24.524 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.525 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+13.0mm P=+28.6 I=+2.5 D=-3.3 out=+27.8 L=655.7 R=600.1rpm Vred=8.8rpm
+2026-05-12 09:46:24.576 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.577 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+2.5 D=-3.9 out=+29.5 L=656.5 R=597.6rpm Vred=9.6rpm
+2026-05-12 09:46:24.628 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.629 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+2.5 D=-1.9 out=+31.4 L=658.7 R=595.9rpm Vred=9.3rpm
+2026-05-12 09:46:24.629 [INFO    ] modes: [DIAG] cycle avg=51.6ms max=53.1ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:24.680 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.681 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+2.5 D=-1.0 out=+32.4 L=659.9 R=595.2rpm Vred=9.1rpm
+2026-05-12 09:46:24.732 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.733 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+13.0mm P=+28.6 I=+2.5 D=+1.7 out=+32.8 L=659.6 R=593.9rpm Vred=9.8rpm
+2026-05-12 09:46:24.783 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.784 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+2.5 D=+7.5 out=+32.0 L=656.3 R=592.3rpm Vred=12.3rpm
+2026-05-12 09:46:24.835 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.835 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+2.5 D=+3.7 out=+28.3 L=653.3 R=596.7rpm Vred=11.6rpm
+2026-05-12 09:46:24.886 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.887 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+2.5 D=+6.3 out=+26.4 L=650.2 R=597.4rpm Vred=12.9rpm
+2026-05-12 09:46:24.938 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.938 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+2.5 D=+3.1 out=+23.3 L=647.9 R=601.4rpm Vred=12.0rpm
+2026-05-12 09:46:24.990 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:24.990 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+2.5 D=+6.0 out=+21.7 L=645.2 R=601.9rpm Vred=13.1rpm
+2026-05-12 09:46:25.042 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.042 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+2.5 D=+3.0 out=+18.7 L=643.3 R=605.8rpm Vred=12.1rpm
+2026-05-12 09:46:25.093 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.093 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+2.5 D=+3.7 out=+17.2 L=641.7 R=607.3rpm Vred=12.1rpm
+2026-05-12 09:46:25.145 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.146 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+2.5 D=+1.8 out=+15.4 L=640.8 R=610.1rpm Vred=11.1rpm
+2026-05-12 09:46:25.197 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.197 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+2.8 D=+3.1 out=+14.7 L=640.1 R=610.7rpm Vred=11.2rpm
+2026-05-12 09:46:25.248 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.249 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=+2.9 D=+3.8 out=+13.3 L=638.6 R=612.1rpm Vred=11.3rpm
+2026-05-12 09:46:25.300 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.301 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=+3.0 D=+4.1 out=+11.5 L=636.9 R=613.9rpm Vred=11.2rpm
+2026-05-12 09:46:25.352 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.353 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=+3.1 D=+2.0 out=+9.6 L=636.0 R=616.8rpm Vred=10.2rpm
+2026-05-12 09:46:25.403 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.404 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=+3.2 D=+3.2 out=+8.6 L=635.0 R=617.8rpm Vred=10.2rpm
+2026-05-12 09:46:25.456 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.457 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+3.2 D=+3.8 out=+7.0 L=633.4 R=619.4rpm Vred=10.2rpm
+2026-05-12 09:46:25.508 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.509 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=+3.1 D=+4.1 out=+5.0 L=631.4 R=621.3rpm Vred=10.2rpm
+2026-05-12 09:46:25.560 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.561 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=+3.1 D=+2.1 out=+2.9 L=630.3 R=624.4rpm Vred=9.3rpm
+2026-05-12 09:46:25.612 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.612 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-2.0mm P=-4.4 I=+3.0 D=+3.2 out=+1.8 L=629.0 R=625.4rpm Vred=9.4rpm
+2026-05-12 09:46:25.664 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.664 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=+2.8 D=+3.8 out=+0.0 L=627.0 R=627.0rpm Vred=9.6rpm
+2026-05-12 09:46:25.664 [INFO    ] modes: [DIAG] cycle avg=51.8ms max=52.7ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:25.715 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.715 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-4.0mm P=-8.8 I=+2.6 D=+4.1 out=-2.1 L=624.6 R=628.8rpm Vred=9.9rpm
+2026-05-12 09:46:25.766 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.767 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-5.0mm P=-11.0 I=+2.6 D=+4.3 out=-4.2 L=622.3 R=630.6rpm Vred=10.1rpm
+2026-05-12 09:46:25.817 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.818 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-5.0mm P=-11.0 I=+2.6 D=+2.1 out=-6.3 L=621.0 R=633.5rpm Vred=9.4rpm
+2026-05-12 09:46:25.868 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.869 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-6.0mm P=-13.2 I=+2.6 D=+3.3 out=-7.4 L=619.5 R=634.2rpm Vred=9.7rpm
+2026-05-12 09:46:25.920 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.921 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-7.0mm P=-15.4 I=+2.6 D=+3.8 out=-9.0 L=617.5 R=635.5rpm Vred=10.1rpm
+2026-05-12 09:46:25.971 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:25.972 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=+2.6 D=+4.1 out=-10.9 L=615.2 R=637.0rpm Vred=10.5rpm
+2026-05-12 09:46:26.022 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.023 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+2.6 D=+4.3 out=-13.0 L=612.8 R=638.7rpm Vred=10.9rpm
+2026-05-12 09:46:26.073 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.074 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+2.6 D=+2.1 out=-15.1 L=611.3 R=641.4rpm Vred=10.3rpm
+2026-05-12 09:46:26.125 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.125 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+2.6 D=+3.3 out=-16.2 L=609.7 R=642.0rpm Vred=10.7rpm
+2026-05-12 09:46:26.176 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.176 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+2.6 D=+1.6 out=-17.8 L=608.7 R=644.2rpm Vred=10.2rpm
+2026-05-12 09:46:26.227 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.227 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+2.6 D=+3.0 out=-18.6 L=607.3 R=644.5rpm Vred=10.7rpm
+2026-05-12 09:46:26.278 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.279 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=+2.6 D=+3.7 out=-20.1 L=605.3 R=645.5rpm Vred=11.2rpm
+2026-05-12 09:46:26.330 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.330 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=+2.6 D=+1.9 out=-22.0 L=604.0 R=647.9rpm Vred=10.7rpm
+2026-05-12 09:46:26.381 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.381 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=+2.6 D=+0.9 out=-22.9 L=603.5 R=649.3rpm Vred=10.2rpm
+2026-05-12 09:46:26.432 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.433 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+2.6 D=+2.7 out=-23.4 L=602.4 R=649.1rpm Vred=10.9rpm
+2026-05-12 09:46:26.485 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.485 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+2.6 D=+3.5 out=-24.7 L=600.5 R=649.8rpm Vred=11.5rpm
+2026-05-12 09:46:26.537 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.537 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+2.6 D=+1.8 out=-26.4 L=599.1 R=652.0rpm Vred=11.0rpm
+2026-05-12 09:46:26.589 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.589 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+2.6 D=+3.1 out=-27.3 L=597.6 R=652.3rpm Vred=11.7rpm
+2026-05-12 09:46:26.640 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.641 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+2.6 D=+1.5 out=-28.9 L=596.5 R=654.2rpm Vred=11.3rpm
+2026-05-12 09:46:26.692 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.693 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-15.0mm P=-33.0 I=+2.6 D=+0.8 out=-29.6 L=596.1 R=655.4rpm Vred=10.9rpm
+2026-05-12 09:46:26.693 [INFO    ] modes: [DIAG] cycle avg=51.5ms max=52.3ms (target=50ms) | sensor frames/cycle avg=4.2 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:26.744 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.744 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+2.6 D=+2.6 out=-30.0 L=595.0 R=655.1rpm Vred=11.6rpm
+2026-05-12 09:46:26.795 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.795 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+2.6 D=+1.3 out=-31.3 L=594.1 R=656.7rpm Vred=11.2rpm
+2026-05-12 09:46:26.846 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.846 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+2.6 D=+0.6 out=-32.0 L=593.7 R=657.7rpm Vred=10.9rpm
+2026-05-12 09:46:26.897 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.897 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-17.0mm P=-37.4 I=+2.6 D=+2.5 out=-32.3 L=592.7 R=657.2rpm Vred=11.7rpm
+2026-05-12 09:46:26.947 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:26.948 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-17.0mm P=-37.4 I=+2.6 D=+1.3 out=-33.6 L=591.7 R=658.8rpm Vred=11.4rpm
+2026-05-12 09:46:27.000 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.000 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-17.0mm P=-37.4 I=+2.6 D=+0.6 out=-34.2 L=591.4 R=659.7rpm Vred=11.1rpm
+2026-05-12 09:46:27.052 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.053 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-18.0mm P=-39.6 I=+2.6 D=+2.5 out=-34.5 L=590.3 R=659.3rpm Vred=11.9rpm
+2026-05-12 09:46:27.104 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.105 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-18.0mm P=-39.6 I=+2.6 D=+1.3 out=-35.8 L=589.3 R=660.8rpm Vred=11.6rpm
+2026-05-12 09:46:27.156 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.157 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-18.0mm P=-39.6 I=+2.6 D=+0.6 out=-36.4 L=588.9 R=661.7rpm Vred=11.3rpm
+2026-05-12 09:46:27.208 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.209 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-18.0mm P=-39.6 I=+2.6 D=+0.3 out=-36.7 L=588.8 R=662.2rpm Vred=11.1rpm
+2026-05-12 09:46:27.260 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.261 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+2.6 D=+2.4 out=-36.9 L=587.8 R=661.6rpm Vred=11.9rpm
+2026-05-12 09:46:27.312 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.313 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+2.6 D=+1.2 out=-38.0 L=586.9 R=663.0rpm Vred=11.7rpm
+2026-05-12 09:46:27.363 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.364 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+2.6 D=+0.6 out=-38.6 L=586.5 R=663.8rpm Vred=11.5rpm
+2026-05-12 09:46:27.415 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.416 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+2.6 D=+0.3 out=-38.9 L=586.4 R=664.3rpm Vred=11.3rpm
+2026-05-12 09:46:27.451 [INFO    ] drivers.rfid_tcp: RFID tag read: 001E (dec=30)
+2026-05-12 09:46:27.452 [DEBUG   ] rfid_processor: [RFID] Tag read: 001E
+2026-05-12 09:46:27.467 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.467 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+2.6 D=+0.1 out=-39.1 L=586.5 R=664.6rpm Vred=11.1rpm
+2026-05-12 09:46:27.518 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.519 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+2.6 D=+0.1 out=-39.1 L=586.5 R=664.8rpm Vred=10.9rpm
+2026-05-12 09:46:27.570 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.570 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-18.0mm P=-39.6 I=+2.6 D=-2.2 out=-39.2 L=585.7 R=664.1rpm Vred=11.7rpm
+2026-05-12 09:46:27.571 [INFO    ] drivers.rfid_tcp: RFID tag read: 001E (dec=30)
+2026-05-12 09:46:27.571 [DEBUG   ] rfid_processor: [RFID] Tag read: 001E
+2026-05-12 09:46:27.621 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.621 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+2.6 D=+1.1 out=-38.1 L=586.0 R=662.2rpm Vred=12.5rpm
+2026-05-12 09:46:27.672 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.673 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-18.0mm P=-39.6 I=+2.6 D=-1.6 out=-38.7 L=584.8 R=662.1rpm Vred=13.2rpm
+2026-05-12 09:46:27.724 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.724 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+2.6 D=+1.4 out=-37.8 L=585.0 R=660.7rpm Vred=13.8rpm
+2026-05-12 09:46:27.724 [INFO    ] modes: [DIAG] cycle avg=51.5ms max=52.6ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:27.775 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.775 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-18.0mm P=-39.6 I=+2.6 D=-1.5 out=-38.5 L=583.8 R=660.8rpm Vred=14.3rpm
+2026-05-12 09:46:27.826 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.827 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+2.6 D=+1.4 out=-37.8 L=584.0 R=659.6rpm Vred=14.8rpm
+2026-05-12 09:46:27.878 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.879 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+2.6 D=+0.7 out=-38.5 L=583.8 R=660.8rpm Vred=14.3rpm
+2026-05-12 09:46:27.930 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.930 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-20.0mm P=-44.0 I=+2.6 D=+2.6 out=-38.9 L=582.9 R=660.6rpm Vred=14.9rpm
+2026-05-12 09:46:27.982 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:27.982 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-20.0mm P=-44.0 I=+2.6 D=+1.3 out=-40.1 L=582.1 R=662.4rpm Vred=14.4rpm
+2026-05-12 09:46:28.034 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.035 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-22.0mm P=-48.4 I=+2.6 D=+5.0 out=-40.8 L=579.8 R=661.3rpm Vred=16.0rpm
+2026-05-12 09:46:28.086 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.086 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-23.0mm P=-50.6 I=+2.6 D=+4.7 out=-43.3 L=576.7 R=663.3rpm Vred=16.6rpm
+2026-05-12 09:46:28.137 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.138 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-24.0mm P=-52.8 I=+2.6 D=+4.6 out=-45.7 L=573.8 R=665.1rpm Vred=17.1rpm
+2026-05-12 09:46:28.189 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.190 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-24.0mm P=-52.8 I=+2.6 D=+2.3 out=-47.9 L=572.1 R=667.9rpm Vred=16.6rpm
+2026-05-12 09:46:28.241 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.242 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-24.0mm P=-52.8 I=+2.6 D=+1.1 out=-49.1 L=571.4 R=669.5rpm Vred=16.2rpm
+2026-05-12 09:46:28.293 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.294 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-23.0mm P=-50.6 I=+2.6 D=-1.6 out=-49.6 L=570.3 R=669.6rpm Vred=16.7rpm
+2026-05-12 09:46:28.298 [INFO    ] drivers.rfid_tcp: RFID tag read: 001E (dec=30)
+2026-05-12 09:46:28.299 [DEBUG   ] rfid_processor: [RFID] Tag read: 001E
+2026-05-12 09:46:28.345 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.346 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-21.0mm P=-46.2 I=+2.6 D=-5.2 out=-48.8 L=569.7 R=667.4rpm Vred=18.1rpm
+2026-05-12 09:46:28.397 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.397 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-20.0mm P=-44.0 I=+2.6 D=-4.8 out=-46.2 L=572.1 R=664.6rpm Vred=18.3rpm
+2026-05-12 09:46:28.435 [INFO    ] drivers.rfid_tcp: RFID tag read: 001E (dec=30)
+2026-05-12 09:46:28.436 [DEBUG   ] rfid_processor: [RFID] Tag read: 001E
+2026-05-12 09:46:28.448 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.449 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-19.0mm P=-41.8 I=+2.6 D=-4.6 out=-43.8 L=574.4 R=662.1rpm Vred=18.4rpm
+2026-05-12 09:46:28.500 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.500 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-18.0mm P=-39.6 I=+2.6 D=-4.5 out=-41.5 L=576.7 R=659.7rpm Vred=18.4rpm
+2026-05-12 09:46:28.551 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.551 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+2.6 D=-6.7 out=-39.3 L=577.9 R=656.5rpm Vred=19.4rpm
+2026-05-12 09:46:28.603 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.603 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-16.0mm P=-35.2 I=+2.6 D=-3.3 out=-35.9 L=582.4 R=654.3rpm Vred=18.3rpm
+2026-05-12 09:46:28.654 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.654 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+2.6 D=-6.1 out=-34.3 L=583.2 R=651.8rpm Vred=19.1rpm
+2026-05-12 09:46:28.705 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.705 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-14.0mm P=-30.8 I=+2.6 D=-3.0 out=-31.2 L=587.4 R=649.9rpm Vred=17.9rpm
+2026-05-12 09:46:28.757 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.757 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-13.0mm P=-28.6 I=+2.6 D=-3.7 out=-29.7 L=589.1 R=648.6rpm Vred=17.8rpm
+2026-05-12 09:46:28.757 [INFO    ] modes: [DIAG] cycle avg=51.7ms max=52.7ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:28.809 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.809 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-12.0mm P=-26.4 I=+2.6 D=-4.1 out=-27.9 L=591.1 R=646.9rpm Vred=17.6rpm
+2026-05-12 09:46:28.860 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.861 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-11.0mm P=-24.2 I=+2.6 D=-4.2 out=-25.8 L=593.4 R=645.1rpm Vred=17.4rpm
+2026-05-12 09:46:28.912 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.912 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-10.0mm P=-22.0 I=+2.6 D=-4.3 out=-23.7 L=595.7 R=643.2rpm Vred=17.2rpm
+2026-05-12 09:46:28.964 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:28.964 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-9.0mm P=-19.8 I=+2.6 D=-4.4 out=-21.6 L=598.2 R=641.3rpm Vred=16.9rpm
+2026-05-12 09:46:29.016 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.016 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-8.0mm P=-17.6 I=+2.6 D=-4.4 out=-19.4 L=600.6 R=639.4rpm Vred=16.6rpm
+2026-05-12 09:46:29.067 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.068 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-7.0mm P=-15.4 I=+2.6 D=-4.4 out=-17.2 L=603.1 R=637.5rpm Vred=16.3rpm
+2026-05-12 09:46:29.119 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.119 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-6.0mm P=-13.2 I=+2.6 D=-4.4 out=-15.0 L=605.6 R=635.7rpm Vred=16.0rpm
+2026-05-12 09:46:29.170 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.171 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-6.0mm P=-13.2 I=+2.6 D=-2.2 out=-12.8 L=609.1 R=634.8rpm Vred=14.7rpm
+2026-05-12 09:46:29.222 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.222 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-5.0mm P=-11.0 I=+2.6 D=-3.3 out=-11.7 L=610.5 R=633.9rpm Vred=14.4rpm
+2026-05-12 09:46:29.273 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.273 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-5.0mm P=-11.0 I=+2.6 D=-1.6 out=-10.1 L=613.3 R=633.4rpm Vred=13.3rpm
+2026-05-12 09:46:29.324 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.324 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=+2.4 D=-5.2 out=-9.4 L=613.1 R=631.9rpm Vred=14.1rpm
+2026-05-12 09:46:29.376 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.376 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-3.0mm P=-6.6 I=+2.3 D=-2.6 out=-7.0 L=616.8 R=630.8rpm Vred=12.8rpm
+2026-05-12 09:46:29.428 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.429 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-2.0mm P=-4.4 I=+2.1 D=-3.5 out=-5.8 L=618.2 R=629.7rpm Vred=12.6rpm
+2026-05-12 09:46:29.480 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.481 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=+2.1 D=-4.0 out=-4.1 L=620.1 R=628.3rpm Vred=12.4rpm
+2026-05-12 09:46:29.532 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.533 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=-1.0mm P=-2.2 I=+2.0 D=-2.0 out=-2.1 L=623.2 R=627.5rpm Vred=11.2rpm
+2026-05-12 09:46:29.584 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.584 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+0.0mm P=+0.0 I=+2.0 D=-3.2 out=-1.2 L=624.4 R=626.7rpm Vred=11.1rpm
+2026-05-12 09:46:29.635 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.636 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+1.0mm P=+2.2 I=+2.1 D=-3.8 out=+0.5 L=626.1 R=625.1rpm Vred=11.0rpm
+2026-05-12 09:46:29.687 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.687 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+2.0mm P=+4.4 I=+2.2 D=-4.1 out=+2.5 L=628.1 R=623.1rpm Vred=11.0rpm
+2026-05-12 09:46:29.738 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.738 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=+2.4 D=-4.2 out=+4.7 L=630.2 R=620.8rpm Vred=11.1rpm
+2026-05-12 09:46:29.789 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.790 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+3.0mm P=+6.6 I=+2.5 D=-2.1 out=+7.0 L=633.5 R=619.5rpm Vred=10.1rpm
+2026-05-12 09:46:29.790 [INFO    ] modes: [DIAG] cycle avg=51.6ms max=52.7ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:29.842 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.843 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+2.8 D=-3.3 out=+8.3 L=634.6 R=618.0rpm Vred=10.3rpm
+2026-05-12 09:46:29.894 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.895 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+4.0mm P=+8.8 I=+3.0 D=-1.6 out=+10.1 L=637.3 R=617.0rpm Vred=9.5rpm
+2026-05-12 09:46:29.946 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.946 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+5.0mm P=+11.0 I=+3.0 D=-3.0 out=+11.0 L=637.8 R=615.9rpm Vred=9.8rpm
+2026-05-12 09:46:29.997 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:29.997 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+3.0 D=-3.7 out=+12.5 L=639.0 R=614.1rpm Vred=10.1rpm
+2026-05-12 09:46:30.047 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.048 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+6.0mm P=+13.2 I=+3.0 D=-1.9 out=+14.3 L=641.5 R=612.9rpm Vred=9.4rpm
+2026-05-12 09:46:30.099 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.100 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+7.0mm P=+15.4 I=+3.0 D=-3.1 out=+15.2 L=642.1 R=611.6rpm Vred=9.8rpm
+2026-05-12 09:46:30.151 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.152 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+3.0 D=-3.8 out=+16.8 L=643.2 R=609.6rpm Vred=10.2rpm
+2026-05-12 09:46:30.204 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.204 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+8.0mm P=+17.6 I=+3.0 D=-1.9 out=+18.7 L=645.7 R=608.3rpm Vred=9.6rpm
+2026-05-12 09:46:30.255 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.256 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+3.0 D=-3.1 out=+19.6 L=646.2 R=606.9rpm Vred=10.1rpm
+2026-05-12 09:46:30.307 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.307 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+9.0mm P=+19.8 I=+3.0 D=-1.6 out=+21.2 L=648.3 R=605.9rpm Vred=9.5rpm
+2026-05-12 09:46:30.359 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.359 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+3.0 D=-3.0 out=+22.0 L=648.5 R=604.6rpm Vred=10.1rpm
+2026-05-12 09:46:30.410 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.411 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+10.0mm P=+22.0 I=+3.0 D=-1.5 out=+23.5 L=650.5 R=603.6rpm Vred=9.6rpm
+2026-05-12 09:46:30.462 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.462 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+11.0mm P=+24.2 I=+3.0 D=-2.9 out=+24.2 L=650.7 R=602.2rpm Vred=10.2rpm
+2026-05-12 09:46:30.514 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.514 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+12.0mm P=+26.4 I=+3.0 D=-3.7 out=+25.7 L=651.6 R=600.2rpm Vred=10.7rpm
+2026-05-12 09:46:30.565 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.566 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+12.0mm P=+26.4 I=+3.0 D=-1.8 out=+27.5 L=653.9 R=598.8rpm Vred=10.3rpm
+2026-05-12 09:46:30.617 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.617 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+12.0mm P=+26.4 I=+3.0 D=-0.9 out=+28.5 L=655.2 R=598.3rpm Vred=9.8rpm
+2026-05-12 09:46:30.669 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.669 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+13.0mm P=+28.6 I=+3.0 D=-2.7 out=+28.9 L=655.0 R=597.2rpm Vred=10.5rpm
+2026-05-12 09:46:30.721 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.721 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+13.0mm P=+28.6 I=+3.0 D=-1.3 out=+30.2 L=656.7 R=596.3rpm Vred=10.1rpm
+2026-05-12 09:46:30.772 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.775 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+3.0 D=-2.9 out=+30.9 L=656.7 R=594.9rpm Vred=10.8rpm
+2026-05-12 09:46:30.827 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.827 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+3.0 D=-1.4 out=+32.3 L=658.5 R=593.9rpm Vred=10.4rpm
+2026-05-12 09:46:30.828 [INFO    ] modes: [DIAG] cycle avg=51.9ms max=54.6ms (target=50ms) | sensor frames/cycle avg=4.3 max=5 zero=0/20 | qmax ao=2 do=0
+2026-05-12 09:46:30.879 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.879 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+14.0mm P=+30.8 I=+3.0 D=-0.7 out=+33.1 L=659.6 R=593.5rpm Vred=10.1rpm
+2026-05-12 09:46:30.930 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.930 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+15.0mm P=+33.0 I=+3.0 D=-2.6 out=+33.4 L=659.2 R=592.4rpm Vred=10.8rpm
+2026-05-12 09:46:30.982 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:30.982 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+15.0mm P=+33.0 I=+3.0 D=-1.3 out=+34.7 L=660.8 R=591.4rpm Vred=10.5rpm
+2026-05-12 09:46:31.033 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:31.033 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+15.0mm P=+33.0 I=+3.0 D=-0.6 out=+35.3 L=661.8 R=591.1rpm Vred=10.2rpm
+2026-05-12 09:46:31.084 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:31.085 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+15.0mm P=+33.0 I=+3.0 D=-0.3 out=+35.7 L=662.4 R=591.0rpm Vred=9.9rpm
+2026-05-12 09:46:31.135 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:31.136 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+15.0mm P=+33.0 I=+3.0 D=-0.2 out=+35.8 L=662.8 R=591.1rpm Vred=9.7rpm
+2026-05-12 09:46:31.188 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:31.188 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+15.0mm P=+33.0 I=+3.0 D=-0.1 out=+35.9 L=663.0 R=591.3rpm Vred=9.5rpm
+2026-05-12 09:46:31.241 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:31.241 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+15.0mm P=+33.0 I=+3.0 D=-0.0 out=+35.9 L=663.3 R=591.4rpm Vred=9.3rpm
+2026-05-12 09:46:31.292 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:31.293 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+15.0mm P=+33.0 I=+3.0 D=-0.0 out=+36.0 L=663.5 R=591.6rpm Vred=9.1rpm
+2026-05-12 09:46:31.344 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:31.345 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+15.0mm P=+33.0 I=+3.0 D=-0.0 out=+36.0 L=663.7 R=591.7rpm Vred=8.9rpm
+2026-05-12 09:46:31.395 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:31.395 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+15.0mm P=+33.0 I=+3.0 D=-0.0 out=+36.0 L=663.8 R=591.9rpm Vred=8.8rpm
+2026-05-12 09:46:31.448 [DEBUG   ] modes: [AUTO] left_marker=False
+2026-05-12 09:46:31.448 [DEBUG   ] modes: [SLOW] Target=0.20m/s e=+15.0mm P=+33.0 I=+3.0 D=-0.0 out=+36.0 L=663.9 R=592.0rpm Vred=8.7rpm
+2026-05-12 09:46:31.492 [INFO    ] modes: RESET — stopping AUTO, returning to ARMED.

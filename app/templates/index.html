@@ -4,13 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AGV Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     background: #d4d0c8;
     color: #000;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'Inter', system-ui, sans-serif;
     font-size: 20px;
     padding: 12px 12px 84px 12px; /* bottom pad for fixed nav */
   }
@@ -199,6 +202,19 @@
   }
   .seq-status-value.none { color: #a0a0a0; }
 
+  /* ── Speed mode badge (in motion panel) ── */
+  #speed-mode-badge {
+    font-size: 22px; font-weight: bold; letter-spacing: 2px;
+    padding: 6px 20px;
+    border-top:    3px solid #808080;
+    border-left:   3px solid #808080;
+    border-right:  3px solid #fff;
+    border-bottom: 3px solid #fff;
+    background: #c0c0c0; color: #404040;
+  }
+  #speed-mode-badge.high { background: #006000; color: #fff; }
+  #speed-mode-badge.slow { background: #c07000; color: #fff; }
+
   /* ── Motion telemetry panel ── */
   #motion-panel { background: #c0c0c0; padding: 0; margin-top: 12px; }
   #motion-body {
@@ -245,10 +261,12 @@
     width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
     background: #606060; border: 3px solid #404040;
   }
+  .safety-lamp.outer  { background: radial-gradient(circle at 35% 35%, #80c0ff, #0060c0); border-color: #003080; box-shadow: 0 0 7px 2px #0080ff66; }
   .safety-lamp.slow   { background: radial-gradient(circle at 35% 35%, #ffe080, #d08000); border-color: #804000; box-shadow: 0 0 7px 2px #ffa00066; }
   .safety-lamp.stop   { background: radial-gradient(circle at 35% 35%, #ff8080, #cc0000); border-color: #800000; box-shadow: 0 0 7px 2px #cc000066; }
   .safety-lamp.bumper { background: radial-gradient(circle at 35% 35%, #ff8080, #cc0000); border-color: #800000; box-shadow: 0 0 10px 4px #ff000099; }
   .safety-label       { color: #404040; }
+  .safety-label.active-outer  { color: #0060c0; }
   .safety-label.active-slow   { color: #d08000; }
   .safety-label.active-stop   { color: #cc0000; }
   .safety-label.active-bumper { color: #cc0000; }
@@ -267,7 +285,7 @@
   .nav-btn {
     flex: 1;
     padding: 8px 0;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'Inter', system-ui, sans-serif;
     font-size: 16px;
     font-weight: bold;
     letter-spacing: 1px;
@@ -297,7 +315,7 @@
 
   button {
     padding: 6px 28px;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'Inter', system-ui, sans-serif;
     font-size: 18px;
     font-weight: bold;
     letter-spacing: 1px;
@@ -361,12 +379,16 @@
   <div class="panel-title">SAFETY STATUS</div>
   <div id="safety-body">
     <div class="safety-item">
+      <span class="safety-lamp" id="sl-outer"></span>
+      <span class="safety-label" id="sl-outer-label">LIDAR OUTER DETECT</span>
+    </div>
+    <div class="safety-item">
       <span class="safety-lamp" id="sl-slow"></span>
-      <span class="safety-label" id="sl-slow-label">AGV SLOWING DOWN</span>
+      <span class="safety-label" id="sl-slow-label">LIDAR MIDDLE DETECT</span>
     </div>
     <div class="safety-item">
       <span class="safety-lamp" id="sl-stop"></span>
-      <span class="safety-label" id="sl-stop-label">AGV LIDAR STOP</span>
+      <span class="safety-label" id="sl-stop-label">LIDAR INNER DETECT</span>
     </div>
     <div class="safety-item">
       <span class="safety-lamp" id="sl-bumper"></span>
@@ -418,6 +440,11 @@
       <span class="seq-status-label">Cooldowns:</span>
       <span id="seq-cooldowns" class="seq-status-value none">—</span>
     </div>
+    <div style="width:3px;height:42px;background:#a0a0a0;"></div>
+    <div class="seq-status-field">
+      <span class="seq-status-label">RFID Tag:</span>
+      <span id="seq-rfid" class="seq-status-value none">—</span>
+    </div>
   </div>
 </div>
 
@@ -450,6 +477,13 @@
         <span class="motion-label">Out:</span>
         <span class="motion-value" id="mt-out">—</span>
         <span class="motion-unit">rpm</span>
+      </div>
+    </div>
+    <div style="width:3px;height:78px;background:#a0a0a0;align-self:center;"></div>
+    <div class="motion-group">
+      <div class="motion-group-title">Speed Mode</div>
+      <div class="motion-row">
+        <span id="speed-mode-badge">—</span>
       </div>
     </div>
     <div style="width:3px;height:78px;background:#a0a0a0;align-self:center;"></div>
@@ -557,6 +591,17 @@ function fetchState() {
         cdEl.className = 'seq-status-value';
       }
 
+      const rfidTag = seqs.last_rfid || null;
+      const rfidEl  = document.getElementById('seq-rfid');
+      rfidEl.textContent = rfidTag ? rfidTag + ' (' + parseInt(rfidTag, 16) + ')' : '—';
+      rfidEl.className   = 'seq-status-value' + (rfidTag ? '' : ' none');
+
+      // Speed mode badge
+      const sm  = agv.speed_mode || null;
+      const smEl = document.getElementById('speed-mode-badge');
+      smEl.textContent = sm || '—';
+      smEl.className   = sm === 'HIGH' ? 'high' : sm === 'SLOW' ? 'slow' : '';
+
       // Motion telemetry
       const mt = d.motion || {};
       function fmtRpm(v) { return v !== null && v !== undefined ? v.toFixed(1) : '—'; }
@@ -577,9 +622,10 @@ function fetchState() {
         if (lamp)  lamp.className  = 'safety-lamp' + (active ? (' ' + lampCls) : '');
         if (label) label.className = 'safety-label' + (active ? (' ' + labelCls) : '');
       }
-      setSafety('sl-slow',   'sl-slow-label',   sf.lidar_slow, 'slow',   'active-slow');
-      setSafety('sl-stop',   'sl-stop-label',   sf.lidar_stop, 'stop',   'active-stop');
-      setSafety('sl-bumper', 'sl-bumper-label', sf.bumper,     'bumper', 'active-bumper');
+      setSafety('sl-outer',  'sl-outer-label',  sf.lidar_outer, 'outer',  'active-outer');
+      setSafety('sl-slow',   'sl-slow-label',   sf.lidar_slow,  'slow',   'active-slow');
+      setSafety('sl-stop',   'sl-stop-label',   sf.lidar_stop,  'stop',   'active-stop');
+      setSafety('sl-bumper', 'sl-bumper-label', sf.bumper,      'bumper', 'active-bumper');
 
       // Reverse auto
       const revActive = agv.reverse_auto_request || agv.mode === 'reverse';

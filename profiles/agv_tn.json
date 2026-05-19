@@ -35,9 +35,10 @@
     "MODE_SWITCH_INVERT": 1,
     "DI_START":           8,
     "DI_RESET":           9,
-    "DI_BUMPER":          13,
-    "DI_LIDAR_SLOW":      14,
-    "DI_LIDAR_STOP":      15
+    "DI_LIDAR_OUTER":     3,
+    "DI_LIDAR_SLOW":      2,
+    "DI_LIDAR_STOP":      1,
+    "DI_BUMPER":          13
   },
 
   "motor_channels": {
@@ -52,6 +53,12 @@
     "retract": [9, 10]
   },
 
+  "horn_channels": {
+    "_comment": "DO channel indices for the horn (shared with pusher extend)",
+    "regular_horn": 12,
+    "alarm_horn": 13
+  },
+
   "hardware": {
     "V_RANGE": 10.0,
     "DAC_RES": 4095
@@ -63,34 +70,36 @@
   },
 
   "speeds": {
-    "MANUAL_TARGET_HIGH_SPEED":     0.4,
-    "MANUAL_TARGET_SLOW_SPEED":     0.2,
-    "AUTO_TARGET_HIGH_SPEED":       0.25,
-    "AUTO_TARGET_SLOW_SPEED":       0.12,
+    "MANUAL_TARGET_HIGH_SPEED":     0.3,
+    "MANUAL_TARGET_SLOW_SPEED":     0.1,
+    "AUTO_TARGET_HIGH_SPEED":       0.4,
+    "AUTO_TARGET_SLOW_SPEED":       0.4,
     "AUTO_TARGET_EXTRA_SLOW_SPEED": 0.10,
-    "ACCEL_RATE": 0.6
+    "ACCEL_RATE": 0.4,
+    "_comment_manual_accel": "Manual jog acceleration in m/s^2. Applies on button press only; release = instant stop (no deceleration). Set to 2x ACCEL_RATE so manual feels more responsive than auto.",
+    "MANUAL_ACCEL_RATE": 0.6
   },
 
   "pid_tuning": {
-    "_comment_high": "Starting point from AGV B legacy code — retune on hardware",
-    "KP": 3.0,
-    "TD": 0,
-    "N":  8,
-    "_comment_slow": "SLOW gains — same starting point as HIGH",
-    "KP_SLOW": 3.5,
-    "TD_SLOW": 0,
-    "N_SLOW":  8,
-    "_comment_shared": "Shared — integral and timing constants",
-    "TI": null,
-    "TI_DEADBAND": 25,
-    "TI_MAX": 500,
-    "DT": 0.01,
-    "_comment_sr": "Speed reduction coefficients",
-    "V_RED_COEF":      1.5,
-    "V_RED_COEF_SLOW": 1.0,
-    "OUTPUT_CLAMP_RPM": 22300,
+    "_comment_high": "2026-05-12: DT halved to 50ms (sensor TPDO1 now at 100Hz). KP=2.4, TD=0.13 with N=2 filter (alpha~0.43 at DT=50ms).",
+    "KP": 2.4,
+    "TD": 0.13,
+    "N":  2,
+    "_comment_slow": "SLOW: KP and TD slightly milder than HIGH; N=2 to match HIGH filter strength.",
+    "KP_SLOW": 1.5,
+    "TD_SLOW": 0.06,
+    "N_SLOW":  2,
+    "_comment_shared": "Integral ENABLED — deadband-gated (|e|<5mm) removes steady bias on straights. TI_MAX caps i_term contribution to ~66 rpm.",
+    "TI": 2.5,
+    "TI_DEADBAND": 2,
+    "TI_MAX":10,
+    "DT": 0.05,
+    "_comment_sr": "Speed reduction — deep SR_CAP (50%) and high V_RED_COEF needed because wheels are forward-only. SR_ALPHA=0.1 preserves ~0.5s time constant at DT=50ms.",
+    "V_RED_COEF":      0.5,
+    "V_RED_COEF_SLOW": 0.8,
+    "OUTPUT_CLAMP_RPM": 100,
     "SR_ALPHA": 0.08,
-    "SR_CAP":   0.3
+    "SR_CAP":   0.20
   },
 
   "can_sensor": {
@@ -110,19 +119,37 @@
 
   "sequences": [
     {
-      "_comment": "Tag 10 — stop AGV, pusher DOWN, end cycle (stays stopped until RESET)",
-      "name": "tag10_end_cycle",
+      "_comment": "Tag 10 ARRIVAL — AGV arrives at home: stop, pusher DOWN, set at_home, return to ARMED",
+      "name": "tag10",
       "trigger": { "type": "rfid", "rfid_tag": "000A" },
       "requires_mode": "running",
-      "cooldown_s": 15.0,
+      "requires_at_home": false,
+      "cooldown_s": 10.0,
       "actions": [
         { "type": "stop_agv" },
-        { "type": "pusher_retract", "duration": 2.0 }
+        { "type": "pusher_retract", "duration": 5.0 },
+        { "type": "set_at_home", "value": true },
+        { "type": "end_cycle" }
       ]
     },
     {
-      "_comment": "Tag 20 — switch to SLOW speed",
-      "name": "tag20_slow_speed",
+      "_comment": "Tag 10 DEPARTURE — AGV starts from home: stop, pusher UP (5s), clear at_home, resume HIGH",
+      "name": "tag10",
+      "trigger": { "type": "rfid", "rfid_tag": "000A" },
+      "requires_mode": "running",
+      "requires_at_home": true,
+      "cooldown_s": 10.0,
+      "actions": [
+        { "type": "stop_agv" },
+        { "type": "pusher_extend", "duration": 5.0 },
+        { "type": "set_at_home", "value": false },
+        { "type": "set_speed", "speed": "HIGH" },
+        { "type": "resume" }
+      ]
+    },
+    {
+      "_comment": "Tag 20 — slow speed for corners and sequence approaches",
+      "name": "tag20_slow",
       "trigger": { "type": "rfid", "rfid_tag": "0014" },
       "requires_mode": "running",
       "cooldown_s": 5.0,
@@ -131,8 +158,8 @@
       ]
     },
     {
-      "_comment": "Tag 30 — switch back to HIGH speed",
-      "name": "tag30_high_speed",
+      "_comment": "Tag 30 — resume HIGH speed on straights",
+      "name": "tag30_high",
       "trigger": { "type": "rfid", "rfid_tag": "001E" },
       "requires_mode": "running",
       "cooldown_s": 5.0,
@@ -141,37 +168,38 @@
       ]
     },
     {
-      "_comment": "Tag 40 — stop AGV, pusher DOWN, then resume",
-      "name": "tag40_stop_pusher_down",
+      "_comment": "Tag 40 — stop, pusher DOWN (5s), resume at current speed",
+      "name": "tag40_pusher_down",
       "trigger": { "type": "rfid", "rfid_tag": "0028" },
       "requires_mode": "running",
-      "cooldown_s": 10.0,
+      "cooldown_s": 15.0,
       "actions": [
         { "type": "stop_agv" },
-        { "type": "pusher_retract", "duration": 2.0 },
+        { "type": "pusher_retract", "duration": 5.0 },
         { "type": "resume" }
       ]
     },
     {
-      "_comment": "Tag 50 — stop AGV, pusher UP, then resume",
-      "name": "tag50_stop_pusher_up",
+      "_comment": "Tag 50 — stop, pusher UP (5s), resume at current speed",
+      "name": "tag50_pusher_up",
       "trigger": { "type": "rfid", "rfid_tag": "0032" },
       "requires_mode": "running",
-      "cooldown_s": 10.0,
+      "cooldown_s": 15.0,
       "actions": [
         { "type": "stop_agv" },
-        { "type": "pusher_extend", "duration": 2.0 },
+        { "type": "pusher_extend", "duration": 5.0 },
         { "type": "resume" }
       ]
     }
   ],
 
   "features": {
-    "_comment": "SLMP disabled — no PLC on AGV B",
-    "DIO_ENABLED":  1,
-    "CAN_ENABLED":  1,
-    "RFID_ENABLED": 1,
-    "SLMP_ENABLED": 0
+    "_comment": "SLMP disabled — no PLC on AGV B. LIDAR_STOP_ENABLED is now driven by the runtime UI toggle (defaults ON at boot regardless of this value); kept here only as a deployment hint.",
+    "DIO_ENABLED":        1,
+    "CAN_ENABLED":        1,
+    "RFID_ENABLED":       1,
+    "SLMP_ENABLED":       0,
+    "LIDAR_STOP_ENABLED": 1
   },
 
   "watchdog": {

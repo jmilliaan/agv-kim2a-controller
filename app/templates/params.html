@@ -4,13 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AGV Parameters</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     background: #d4d0c8;
     color: #000;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'Inter', system-ui, sans-serif;
     font-size: 20px;
     padding: 12px 12px 64px 12px;
   }
@@ -114,7 +117,7 @@
   .nav-btn {
     flex: 1;
     padding: 8px 0;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'Inter', system-ui, sans-serif;
     font-size: 16px;
     font-weight: bold;
     letter-spacing: 1px;
@@ -142,6 +145,133 @@
     border-bottom: 3px solid #fff;
   }
 
+  /* ── Runtime tuning panel ── */
+  .tune-row {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #a0a0a0;
+    min-height: 44px;
+    padding: 6px 12px;
+    gap: 12px;
+  }
+  .tune-row:last-child { border-bottom: none; }
+  .tune-label {
+    flex: 1;
+    font-size: 15px;
+    font-weight: bold;
+    color: #000080;
+  }
+  .tune-hint {
+    font-size: 12px;
+    font-weight: normal;
+    color: #404040;
+    margin-left: 8px;
+  }
+
+  /* Toggle switch (auto-applies on change) */
+  .tgl {
+    position: relative;
+    display: inline-block;
+    width: 64px;
+    height: 30px;
+    flex-shrink: 0;
+  }
+  .tgl input { opacity: 0; width: 0; height: 0; }
+  .tgl-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #808080;
+    border-top:    2px solid #404040;
+    border-left:   2px solid #404040;
+    border-right:  2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transition: background 0.12s;
+  }
+  .tgl-slider:before {
+    content: "";
+    position: absolute;
+    height: 22px; width: 22px;
+    left: 2px; top: 2px;
+    background: #c0c0c0;
+    border-top:    2px solid #fff;
+    border-left:   2px solid #fff;
+    border-right:  2px solid #404040;
+    border-bottom: 2px solid #404040;
+    transition: transform 0.12s;
+  }
+  .tgl input:checked + .tgl-slider { background: #006000; }
+  .tgl input:checked + .tgl-slider:before { transform: translateX(32px); }
+  .tgl input:disabled + .tgl-slider { opacity: 0.5; cursor: wait; }
+
+  /* Speed editor */
+  .speed-grid {
+    padding: 8px 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .speed-cell { display: flex; flex-direction: column; gap: 4px; }
+  .speed-cell label {
+    font-size: 13px;
+    font-weight: bold;
+    color: #000080;
+    letter-spacing: 1px;
+  }
+  .speed-cell input {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 18px;
+    padding: 6px 8px;
+    background: #fff;
+    border-top:    2px solid #404040;
+    border-left:   2px solid #404040;
+    border-right:  2px solid #fff;
+    border-bottom: 2px solid #fff;
+    width: 100%;
+  }
+  .speed-actions {
+    padding: 0 12px 10px 12px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .btn-confirm, .btn-revert {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    cursor: pointer;
+    text-transform: uppercase;
+    background: #c0c0c0;
+    color: #000;
+    border-top:    3px solid #fff;
+    border-left:   3px solid #fff;
+    border-right:  3px solid #808080;
+    border-bottom: 3px solid #808080;
+  }
+  .btn-confirm { background: #000080; color: #fff; }
+  .btn-confirm:disabled, .btn-revert:disabled {
+    opacity: 0.4; cursor: not-allowed;
+  }
+  .btn-confirm:active:not(:disabled),
+  .btn-revert:active:not(:disabled) {
+    border-top:    3px solid #808080;
+    border-left:   3px solid #808080;
+    border-right:  3px solid #fff;
+    border-bottom: 3px solid #fff;
+  }
+  #tune-status {
+    flex: 1;
+    font-size: 13px;
+    color: #404040;
+  }
+  #tune-status.ok    { color: #006000; font-weight: bold; }
+  #tune-status.err   { color: #800000; font-weight: bold; }
+  #tune-status.dirty { color: #806000; font-weight: bold; }
+
+  .section.tuning .section-title { background: #006000; }
+
   /* ── Kiosk / flip mode (?flip=1) ── */
   html.flipped {
     transform: rotate(180deg);
@@ -163,6 +293,79 @@
 <div id="header" class="raised">
   <span class="title">AGV PARAMETERS</span>
   <span class="agv-id">{{ agv_id | upper }}</span>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     RUNTIME TUNING — applied immediately, NOT persisted to profile JSON.
+     Reverts to JSON values on controller restart.
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="section tuning raised">
+  <div class="section-title">RUNTIME TUNING (LIVE)</div>
+  <div class="section-body">
+
+    <div class="tune-row">
+      <span class="tune-label">
+        LIDAR STOP (inner zone)
+        <span class="tune-hint">protective stop on innermost lidar zone</span>
+      </span>
+      <label class="tgl">
+        <input type="checkbox" id="tgl-lidar-stop"
+               onchange="toggleFeature('lidar_stop_enabled', this)">
+        <span class="tgl-slider"></span>
+      </label>
+    </div>
+
+    <div class="tune-row">
+      <span class="tune-label">
+        LIDAR SLOW (middle zone)
+        <span class="tune-hint">switches auto to SLOW when middle zone hit</span>
+      </span>
+      <label class="tgl">
+        <input type="checkbox" id="tgl-lidar-slow"
+               onchange="toggleFeature('lidar_slow_enabled', this)">
+        <span class="tgl-slider"></span>
+      </label>
+    </div>
+
+    <div class="tune-row">
+      <span class="tune-label">
+        RFID SEQUENCES
+        <span class="tune-hint">if OFF, tags are read but ignored — AGV just follows tape</span>
+      </span>
+      <label class="tgl">
+        <input type="checkbox" id="tgl-rfid"
+               onchange="toggleFeature('rfid_enabled', this)">
+        <span class="tgl-slider"></span>
+      </label>
+    </div>
+
+    <div class="speed-grid">
+      <div class="speed-cell">
+        <label>AUTO HIGH (m/s)</label>
+        <input type="number" id="spd-high" step="0.01" min="0.05" max="1.5"
+               oninput="markDirty()">
+      </div>
+      <div class="speed-cell">
+        <label>AUTO SLOW (m/s)</label>
+        <input type="number" id="spd-slow" step="0.01" min="0.05" max="1.5"
+               oninput="markDirty()">
+      </div>
+      <div class="speed-cell">
+        <label>EXTRA SLOW (m/s)</label>
+        <input type="number" id="spd-xslow" step="0.01" min="0.05" max="1.5"
+               oninput="markDirty()">
+      </div>
+    </div>
+
+    <div class="speed-actions">
+      <button class="btn-confirm" id="btn-confirm-speeds"
+              onclick="confirmSpeeds()" disabled>CONFIRM SPEEDS</button>
+      <button class="btn-revert" id="btn-revert-speeds"
+              onclick="loadTuning()" disabled>REVERT</button>
+      <span id="tune-status">loading…</span>
+    </div>
+
+  </div>
 </div>
 
 {% set skip_keys = ['_comment', '_comment_high', '_comment_slow', '_comment_shared', '_comment_sr', '_agv_id', '_description'] %}
@@ -210,6 +413,118 @@
   </div>
   {% endif %}
 {% endfor %}
+
+<script>
+(function() {
+  const $ = id => document.getElementById(id);
+  const status = $('tune-status');
+  let serverSpeeds = { high: null, slow: null, xslow: null };
+
+  function setStatus(msg, cls) {
+    status.textContent = msg;
+    status.className = cls || '';
+  }
+
+  function fmt(v) { return (Math.round(v * 100) / 100).toFixed(2); }
+
+  window.loadTuning = async function() {
+    try {
+      const r = await fetch('/api/tuning');
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      $('tgl-lidar-stop').checked = d.lidar_stop_enabled;
+      $('tgl-lidar-slow').checked = d.lidar_slow_enabled;
+      $('tgl-rfid').checked       = d.rfid_enabled;
+      $('spd-high').value  = fmt(d.auto_high_speed);
+      $('spd-slow').value  = fmt(d.auto_slow_speed);
+      $('spd-xslow').value = fmt(d.auto_extra_slow_speed);
+      serverSpeeds = {
+        high:  d.auto_high_speed,
+        slow:  d.auto_slow_speed,
+        xslow: d.auto_extra_slow_speed
+      };
+      $('btn-confirm-speeds').disabled = true;
+      $('btn-revert-speeds').disabled  = true;
+      setStatus('loaded — limits ' + fmt(d.speed_min) + '–' + fmt(d.speed_max) + ' m/s', 'ok');
+    } catch (e) {
+      setStatus('failed to load: ' + e.message, 'err');
+    }
+  };
+
+  window.toggleFeature = async function(feature, checkbox) {
+    checkbox.disabled = true;
+    const enabled = checkbox.checked;
+    try {
+      const r = await fetch('/api/tuning/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feature: feature, enabled: enabled })
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'HTTP ' + r.status);
+      setStatus(feature + ' → ' + (enabled ? 'ENABLED' : 'DISABLED'), 'ok');
+    } catch (e) {
+      checkbox.checked = !enabled;   // revert visual state
+      setStatus(feature + ' failed: ' + e.message, 'err');
+    } finally {
+      checkbox.disabled = false;
+    }
+  };
+
+  window.markDirty = function() {
+    const cur = {
+      high:  parseFloat($('spd-high').value),
+      slow:  parseFloat($('spd-slow').value),
+      xslow: parseFloat($('spd-xslow').value)
+    };
+    const dirty =
+      cur.high  !== serverSpeeds.high  ||
+      cur.slow  !== serverSpeeds.slow  ||
+      cur.xslow !== serverSpeeds.xslow;
+    $('btn-confirm-speeds').disabled = !dirty;
+    $('btn-revert-speeds').disabled  = !dirty;
+    if (dirty) setStatus('unsaved speed changes — press CONFIRM', 'dirty');
+  };
+
+  window.confirmSpeeds = async function() {
+    const high  = parseFloat($('spd-high').value);
+    const slow  = parseFloat($('spd-slow').value);
+    const xslow = parseFloat($('spd-xslow').value);
+    if (![high, slow, xslow].every(Number.isFinite)) {
+      setStatus('all three speeds must be numbers', 'err');
+      return;
+    }
+    if (!(high >= slow && slow >= xslow)) {
+      setStatus('must satisfy HIGH ≥ SLOW ≥ EXTRA_SLOW', 'err');
+      return;
+    }
+    $('btn-confirm-speeds').disabled = true;
+    try {
+      const r = await fetch('/api/tuning/speeds', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          auto_high_speed: high,
+          auto_slow_speed: slow,
+          auto_extra_slow_speed: xslow
+        })
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'HTTP ' + r.status);
+      serverSpeeds = { high: d.auto_high_speed, slow: d.auto_slow_speed, xslow: d.auto_extra_slow_speed };
+      $('btn-revert-speeds').disabled = true;
+      setStatus('speeds applied: H=' + fmt(d.auto_high_speed) +
+                ' S=' + fmt(d.auto_slow_speed) +
+                ' XS=' + fmt(d.auto_extra_slow_speed) + ' m/s', 'ok');
+    } catch (e) {
+      setStatus('apply failed: ' + e.message, 'err');
+      $('btn-confirm-speeds').disabled = false;
+    }
+  };
+
+  loadTuning();
+})();
+</script>
 
 <!-- Bottom nav bar -->
 <div id="nav-bar">

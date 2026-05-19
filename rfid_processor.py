@@ -12,6 +12,7 @@ core/sequence_engine.py and register it there.
 """
 
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -27,4 +28,10 @@ async def rfid_processor(state, engine):
     while True:
         tag = await state.rfid_queue.get()
         logger.debug("[RFID] Tag read: %s", tag)
+        state.last_rfid_tag    = tag       # expose to dashboard (4-char hex, e.g. "000A")
+        state.last_rfid_tag_ts = time.time()
+        if not state.rfid_enabled:
+            # Soft-disabled: keep dashboard display alive, but do not trigger
+            # any sequence. AGV continues tape-following at the active speed.
+            continue
         await engine.on_rfid_tag(tag)

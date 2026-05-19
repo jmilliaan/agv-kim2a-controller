@@ -17,6 +17,7 @@ from drivers.slmp_plc    import SLMPDriver
 from safety_watchdog import safety_watchdog
 import modes
 from rfid_processor import rfid_processor
+from horn_controller import horn_controller
 from app.app import run_server, stop_server
 
 logger = logging.getLogger(__name__)
@@ -100,6 +101,7 @@ async def run():
 
     core_tasks.append(safety_watchdog(state, watched=watched))
     core_tasks.append(rfid_processor(state, engine))
+    core_tasks.append(horn_controller(state))
     core_tasks.append(modes.mode_manager(state, engine))
 
     tasks = asyncio.gather(*core_tasks)

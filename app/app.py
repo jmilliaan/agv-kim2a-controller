@@ -84,6 +84,10 @@ def _build_state_snapshot():
     sequences = _engine.status() if _engine is not None else {
         "active": None, "armed": None, "cooldowns": {}
     }
+    # Expire the displayed tag 3 s after the last read (reader's recv timeout is 2 s,
+    # so a card that left range will naturally stop updating within that window).
+    _rfid_fresh = (time.time() - s.last_rfid_tag_ts) < 3.0
+    sequences["last_rfid"] = s.last_rfid_tag if _rfid_fresh else None
 
     # ── Motion telemetry (RPM + PID — populated during auto/reverse modes) ────
     tel = s.motion_telemetry or {}
@@ -103,9 +107,10 @@ def _build_state_snapshot():
         return bool(di[ch]) if ch is not None and len(di) > ch else False
 
     safety = {
-        "bumper":     s.bumper_active,
-        "lidar_slow": _di_flag(_config.DI_LIDAR_SLOW),
-        "lidar_stop": _di_flag(_config.DI_LIDAR_STOP),
+        "bumper":      s.bumper_active,
+        "lidar_outer": _di_flag(_config.DI_LIDAR_OUTER),
+        "lidar_slow":  _di_flag(_config.DI_LIDAR_SLOW),
+        "lidar_stop":  _di_flag(_config.DI_LIDAR_STOP),
     }
 
     return {
@@ -130,9 +135,66 @@ def index():
 def manual():
     return render_template("manual.html")
 
+def _build_io_names():
+    """Derive DI / DO channel labels from the active profile.
+
+    Single source of truth: profile JSON. If a channel isn't referenced by any
+    profile field, it's labelled [SPARE].
+    """
+    cfg = _config
+
+    # ── DI labels ────────────────────────────────────────────────────────────
+    di_map = {
+        cfg.DI_EMERGENCY:   "EPB EMERGENCY",
+        cfg.DI_FWD:         "PB FORWARD",
+        cfg.DI_REV:         "PB REVERSE",
+        cfg.DI_LEFT:        "PB LEFT",
+        cfg.DI_RIGHT:       "PB RIGHT",
+        cfg.DI_START:       "PB START AUTO",
+        cfg.DI_RESET:       "PB RESET / STOP",
+        cfg.DI_MODE_SWITCH: "SS MAN / AUTO",
+    }
+    if cfg.DI_LIDAR_OUTER is not None:
+        di_map[cfg.DI_LIDAR_OUTER] = "LIDAR OUTER"
+    if cfg.DI_LIDAR_SLOW  is not None:
+        di_map[cfg.DI_LIDAR_SLOW]  = "LIDAR MIDDLE"
+    if cfg.DI_LIDAR_STOP  is not None:
+        di_map[cfg.DI_LIDAR_STOP]  = "LIDAR INNER"
+    if cfg.DI_BUMPER      is not None:
+        di_map[cfg.DI_BUMPER]      = "IMPACT BUMPER"
+
+    di_names = [di_map.get(i, "[SPARE]") for i in range(cfg.NUM_DI)]
+
+    # ── DO labels ────────────────────────────────────────────────────────────
+    do_map = {}
+    for side, ch in cfg.MOTOR_CHANNELS.items():
+        side_u = side.upper()
+        if "do_fwd"   in ch: do_map[ch["do_fwd"]]   = f"{side_u} FWD"
+        if "do_rev"   in ch: do_map[ch["do_rev"]]   = f"{side_u} REV"
+        if "do_brake" in ch: do_map[ch["do_brake"]] = f"{side_u} BRAKE"
+
+    if cfg.PUSHER_CHANNELS:
+        for i, ch in enumerate(cfg.PUSHER_CHANNELS.get("extend",  []) or []):
+            do_map[ch] = "PUSHER EXTEND"  + (f" {i+1}" if i else "")
+        for i, ch in enumerate(cfg.PUSHER_CHANNELS.get("retract", []) or []):
+            do_map[ch] = "PUSHER RETRACT" + (f" {i+1}" if i else "")
+
+    if cfg.HORN_CHANNELS:
+        if cfg.HORN_CHANNELS.get("regular_horn") is not None:
+            do_map[cfg.HORN_CHANNELS["regular_horn"]] = "REGULAR HORN"
+        if cfg.HORN_CHANNELS.get("alarm_horn") is not None:
+            do_map[cfg.HORN_CHANNELS["alarm_horn"]]   = "ALARM HORN"
+
+    do_names = [do_map.get(i, "[SPARE]") for i in range(cfg.NUM_DO)]
+    return di_names, do_names
+
+
 @app.route("/io")
 def io_monitor():
-    return render_template("io_monitor.html")
+    di_names, do_names = _build_io_names()
+    return render_template("io_monitor.html",
+                           di_names=di_names,
+                           do_names=do_names)
 
 @app.route("/params")
 def params_page():
@@ -173,6 +235,24 @@ def api_manual_command():
     _state.web_manual_command    = cmd
     _state.web_manual_command_ts = time.time()
     return jsonify({"ok": True, "command": cmd})
+
+
+@app.route("/api/manual/pusher", methods=["POST"])
+def api_manual_pusher():
+    if _state is None:
+        return jsonify({"error": "state not initialised"}), 503
+    if _state.current_mode != "manual":
+        return jsonify({"error": f"AGV not in manual mode (current: {_state.current_mode})"}), 403
+    if _config.PUSHER_CHANNELS is None:
+        return jsonify({"error": "no pusher configured in profile"}), 400
+
+    data   = request.get_json(silent=True) or {}
+    action = data.get("action")
+    if action not in ("up", "down", "clear"):
+        return jsonify({"error": "action must be 'up', 'down', or 'clear'"}), 400
+
+    _state.web_pusher_request = action
+    return jsonify({"ok": True, "action": action})
 
 
 @app.route("/api/state")
@@ -247,6 +327,82 @@ def api_io():
         "do":     [bool(b) for b in do] if do is not None else [False] * _config.NUM_DO,
         "num_di": _config.NUM_DI,
         "num_do": _config.NUM_DO,
+    })
+
+
+@app.route("/api/tuning", methods=["GET"])
+def api_tuning_get():
+    if _state is None:
+        return jsonify({"error": "state not initialised"}), 503
+    import state as _state_mod
+    return jsonify({
+        "lidar_stop_enabled":   _state.lidar_stop_enabled,
+        "lidar_slow_enabled":   _state.lidar_slow_enabled,
+        "rfid_enabled":         _state.rfid_enabled,
+        "auto_high_speed":      _state.auto_high_speed,
+        "auto_slow_speed":      _state.auto_slow_speed,
+        "auto_extra_slow_speed":_state.auto_extra_slow_speed,
+        "speed_min":            _state_mod.AUTO_SPEED_MIN,
+        "speed_max":            _state_mod.AUTO_SPEED_MAX,
+    })
+
+
+_TOGGLE_FIELDS = {"lidar_stop_enabled", "lidar_slow_enabled", "rfid_enabled"}
+
+@app.route("/api/tuning/toggle", methods=["POST"])
+def api_tuning_toggle():
+    if _state is None:
+        return jsonify({"error": "state not initialised"}), 503
+    data    = request.get_json(silent=True) or {}
+    feature = data.get("feature")
+    enabled = data.get("enabled")
+    if feature not in _TOGGLE_FIELDS:
+        return jsonify({"error": f"unknown feature: {feature}"}), 400
+    if not isinstance(enabled, bool):
+        return jsonify({"error": "enabled must be true or false"}), 400
+    setattr(_state, feature, enabled)
+    _state.log_event("INFO", f"TUNING: {feature} -> {'ENABLED' if enabled else 'DISABLED'}")
+    logger.info("[TUNING] %s = %s", feature, enabled)
+    return jsonify({"ok": True, "feature": feature, "enabled": enabled})
+
+
+@app.route("/api/tuning/speeds", methods=["POST"])
+def api_tuning_speeds():
+    if _state is None:
+        return jsonify({"error": "state not initialised"}), 503
+    import state as _state_mod
+    data = request.get_json(silent=True) or {}
+
+    # Accept partial updates; missing keys keep current value.
+    try:
+        new_high  = float(data.get("auto_high_speed",       _state.auto_high_speed))
+        new_slow  = float(data.get("auto_slow_speed",       _state.auto_slow_speed))
+        new_xslow = float(data.get("auto_extra_slow_speed", _state.auto_extra_slow_speed))
+    except (TypeError, ValueError):
+        return jsonify({"error": "speeds must be numeric (m/s)"}), 400
+
+    lo, hi = _state_mod.AUTO_SPEED_MIN, _state_mod.AUTO_SPEED_MAX
+    for name, v in (("auto_high_speed", new_high),
+                    ("auto_slow_speed", new_slow),
+                    ("auto_extra_slow_speed", new_xslow)):
+        if not (lo <= v <= hi):
+            return jsonify({"error": f"{name}={v} out of bounds [{lo}, {hi}]"}), 400
+
+    if not (new_high >= new_slow >= new_xslow):
+        return jsonify({"error": "must satisfy HIGH >= SLOW >= EXTRA_SLOW"}), 400
+
+    _state.auto_high_speed       = new_high
+    _state.auto_slow_speed       = new_slow
+    _state.auto_extra_slow_speed = new_xslow
+    _state.log_event("INFO",
+        f"TUNING: auto speeds -> HIGH={new_high:.2f} SLOW={new_slow:.2f} XSLOW={new_xslow:.2f} m/s")
+    logger.info("[TUNING] auto speeds updated: H=%.2f S=%.2f XS=%.2f",
+                new_high, new_slow, new_xslow)
+    return jsonify({
+        "ok": True,
+        "auto_high_speed":       new_high,
+        "auto_slow_speed":       new_slow,
+        "auto_extra_slow_speed": new_xslow,
     })
 
 

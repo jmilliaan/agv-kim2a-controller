@@ -1,0 +1,209 @@
+{
+  "title": "DT 100ms → 50ms upgrade (with sensor 10Hz → 100Hz)",
+  "date": "2026-05-12",
+  "status": "completed",
+  "agv_profile": "agv_tn",
+
+  "system_context": {
+    "platform": "Differential-drive AGV following magnetic tape, asyncio Python controller on Ubuntu.",
+    "sensor": "Roboteq MGS1600 magnetic guide sensor over CANopen (Node ID 6, TPDO1 on COB-ID 0x186).",
+    "sensor_geometry": {
+      "type": "Forward-mounted lookahead sensor",
+      "lookahead_mm": 100,
+      "implication": "Sensor measures lateral_offset + lookahead*sin(heading_error). Single sensor cannot disambiguate lateral position from heading angle. Driving sensor reading to zero produces a manifold of equilibria, which manifests as a slow lateral weave (~6 s period at 0.2 m/s)."
+    },
+    "actuators": {
+      "ao_writer_rate_limit": "Modbus TCP, ~500 writes/sec capacity",
+      "wheels": "Forward-only via DO direction relays + AO speed; cannot command reverse on a single wheel for tighter turns. Tightest turn radius is set by OUTPUT_CLAMP_RPM relative to base_rpm."
+    },
+    "controller_loop": "Single asyncio task `auto_mode` in `modes.py`. PID computed in `core/pid.py`. Sleeps `config.DT` between cycles."
+  },
+
+  "motivation": {
+    "symptom_observed": "Slow lateral weave on straights (~6 s period, ~13 mm std), corner-exit transient slow to settle.",
+    "ceiling_diagnosed": "PID tuning could reduce amplitude but not eliminate the weave because: (a) 100mm lookahead provides little phase lead at low frequencies, (b) PID at 100ms cycle time leaves significant phase lag in the feedback loop.",
+    "hypothesis": "Halving DT from 100ms to 50ms would double closed-loop bandwidth and reduce phase lag, partially compensating for the short lookahead. But this requires sensor data fresher than 100ms — i.e., sensor publish rate > 20 Hz."
+  },
+
+  "discovery_sequence": [
+    {
+      "step": 1,
+      "title": "Audit DT usage across codebase",
+      "finding": "DT only governs the PID auto loop (`modes.py auto_mode`) and the acceleration ramp. All other periodic tasks (DI reader 50ms, safety_watchdog 50ms, mode_manager 10ms, AO/DO writers queue-driven) are independent. Codebase is well-factored on this front — DT change is safely isolated to the controller loop."
+    },
+    {
+      "step": 2,
+      "title": "Add per-cycle diagnostic to auto_mode",
+      "what_was_added": "Throttled INFO log every 20 PID cycles (~2 s) reporting actual cycle time, max cycle time, sensor frames drained per cycle, and AO/DO queue peak depth.",
+      "first_implementation_bug": "Initial version sampled `sensor_queue.qsize()` AFTER the drain-to-latest loop, so it always read 0. Fixed by counting frames drained per cycle inside the drain loop instead.",
+      "diagnostic_format": "[DIAG] cycle avg=Xms max=Yms (target=Zms) | sensor frames/cycle avg=A max=B zero=C/N | qmax ao=D do=E"
+    },
+    {
+      "step": 3,
+      "title": "Measure actual sensor rate at runtime",
+      "result": "sensor frames/cycle avg = 1.0, max = 1, zero = 0/20. This is the signature of a 10Hz sensor feeding a 10Hz consumer — perfectly matched, but at 1/10 of the spec rate.",
+      "interpretation": "If the sensor were truly publishing at 100Hz, drained frames per 100ms cycle would be ~10. Seeing exactly 1 confirmed the sensor was at 10Hz."
+    },
+    {
+      "step": 4,
+      "title": "Locate sensor cadence config",
+      "tool": "Roboteq MGS1600 vendor configuration utility",
+      "config_object_responsible": "CANopen TPDO1 Send Rate (event timer, object dictionary entry 0x1800:05)",
+      "value_before": "100 ms (10 Hz)",
+      "value_after": "10 ms (100 Hz)",
+      "what_NOT_to_change": [
+        "Bit Rate: 500 kbps is sufficient (proposed config uses ~16% bus load with full TPDO mesh; 500 kbps allows up to ~30% comfortably). 1 Mbps offers no benefit and reduces cable-length budget.",
+        "TPDO 2/3/4 send rates: only TPDO1 carries the lateral data the controller consumes. Speeding up unused TPDOs adds bus traffic for no gain.",
+        "Heartbeat: stays at 100ms. Heartbeat is for liveness, not data — controller uses last-TPDO1-rx timestamp for staleness detection anyway.",
+        "MiniCAN Send Rate: irrelevant in CANopen mode."
+      ],
+      "tpdo1_data_layout_verified_against_manual": {
+        "header": "0x180 + NodeID = 0x186 for NodeID 6",
+        "byte_1_2": "Left Track (signed int16, little-endian)",
+        "byte_3_4": "Right Track (signed int16, little-endian)",
+        "byte_5_flags_canopen_mode": {
+          "bit_1": "Tape Cross (not currently consumed)",
+          "bit_2": "Tape Detect (FLAG_TAPE_DETECT = 2)",
+          "bit_3": "Left Marker (FLAG_LEFT_MARKER = 4)",
+          "bit_4": "Right Marker (FLAG_RIGHT_MARKER = 8)",
+          "bit_8": "Sensor Failure (FLAG_SENSOR_FAIL = 128)"
+        }
+      }
+    },
+    {
+      "step": 5,
+      "title": "Verify sensor change",
+      "expected_metric": "sensor frames/cycle avg ≈ 10 at DT=100ms",
+      "measured_metric": "avg = 8.5, max = 9-10",
+      "interpretation": "8.5 instead of exactly 10 is normal: CAN bus arbitration jitter and sensor firmware tolerance prevent perfect 10ms intervals. No frames lost (zero=0). Phase lag in the feedback loop dropped from ~50ms (averaged-over-100ms data) to ~12ms (current snapshot)."
+    },
+    {
+      "step": 6,
+      "title": "Apply DT change",
+      "json_changes": [
+        { "key": "DT", "before": 0.1, "after": 0.05, "reason": "Double the controller bandwidth to take advantage of fresh sensor data." },
+        { "key": "SR_ALPHA", "before": 0.20, "after": 0.10, "reason": "SR_ALPHA is a per-cycle smoothing coefficient, not a time constant. The effective time constant is `dt * (1 - alpha) / alpha`. Halving DT requires halving SR_ALPHA to preserve the 0.5 s SR response time. NOT halving it would make speed reduction twice as aggressive — a hidden behavioral regression." }
+      ],
+      "json_changes_NOT_needed": [
+        { "key": "KP, KP_SLOW", "reason": "Proportional gain has no time dependence." },
+        { "key": "TI, TI_DEADBAND, TI_MAX", "reason": "TI is a true time constant; integration step is correctly scaled by DT inside `core/pid.py`." },
+        { "key": "TD, TD_SLOW, N, N_SLOW", "reason": "TD is a true time constant. The filter coefficient `alpha = dt / (td/N + dt)` is recomputed in PID.__init__ and update_gains; at DT=0.05, alpha becomes ~0.43-0.50 instead of 0.71-0.87 — i.e., heavier filtering, which is desirable since per-sample sensor noise has more weight at smaller dt." },
+        { "key": "ACCEL_RATE", "reason": "Net acceleration is unchanged; ramp updates 2× more often with 2× smaller steps per update." },
+        { "key": "OUTPUT_CLAMP_RPM, V_RED_COEF, SR_CAP", "reason": "Per-cycle constants with no time dependence." }
+      ]
+    },
+    {
+      "step": 7,
+      "title": "Verify post-change diagnostic",
+      "measured": {
+        "cycle_avg_ms": 51.6,
+        "cycle_max_ms": 53,
+        "cycle_max_outlier_ms": 88,
+        "sensor_frames_per_cycle_avg": 4.3,
+        "sensor_frames_per_cycle_max": 5,
+        "zero_frame_cycles": "0 / 20",
+        "qmax_ao": 2,
+        "qmax_do": 0
+      },
+      "interpretation": [
+        "cycle avg 51.6 vs target 50: 3% drift, well within tolerance.",
+        "cycle max 88 ms outlier observed ~once per 11 s — likely Python GC or OS scheduling. Not problematic at this scale; would investigate if it became regular.",
+        "sensor frames/cycle exactly halved from 8.5 to 4.3, as expected when PID rate doubles and sensor rate is unchanged.",
+        "zero=0 confirms sensor never starves the controller.",
+        "qmax ao=2 confirms AO writer keeps up at the doubled write rate (40 writes/sec). Headroom remains for further DT reduction if ever needed."
+      ]
+    },
+    {
+      "step": 8,
+      "title": "Verify control performance via motion analysis",
+      "test_conditions": "Constant 0.2 m/s tape-following on a straight section, RFID disabled (no sequence interference). Speed-reduction temporarily reduced (V_RED_COEF: 1.5 → 0.5) to remove a confounding nonlinearity.",
+      "metrics": {
+        "error_std_mm": { "before": 13.4, "after": 10.86, "delta_pct": -19 },
+        "error_max_mm": { "before": 39, "after": 24, "delta_pct": -38 },
+        "error_mean_mm": { "before": -1.6, "after": -3.45, "comment": "Within deadband; integral handles it." },
+        "d_term_std": { "before": 5.0, "after": 2.66, "delta_pct": -47 },
+        "d_term_max": { "before": 109, "after": 11.5, "delta_pct": -89, "comment": "Largest single improvement. Heavier filter alpha at smaller DT plus smoother sensor signal eliminated noise spikes; D-term now provides actual predictive damping instead of injecting noise." }
+      },
+      "fundamental_limit_unchanged": {
+        "metric": "Dominant error oscillation period",
+        "before_hz_period_s": 5.9,
+        "after_hz_period_s": 6.7,
+        "interpretation": "The lookahead-induced manifold weave is geometry-bound. Halving DT reduces amplitude but does not change the natural period. To eliminate this requires either: (a) longer mechanical lookahead (move sensor forward), (b) heading-rate sensing (gyro/IMU + Stanley/Pure Pursuit controller), or (c) accepting current performance."
+      }
+    }
+  ],
+
+  "files_modified": {
+    "profiles/agv_tn.json": [
+      "DT: 0.1 → 0.05",
+      "SR_ALPHA: 0.20 → 0.10",
+      "Comment text updated to reflect current values (was stale, referenced 2026-05-05 changes)."
+    ],
+    "modes.py": [
+      "Added per-cycle diagnostic block in auto_mode loop reporting cycle time, sensor drain rate, AO/DO queue depths every 20 cycles. Diagnostic overhead ~3µs/cycle."
+    ],
+    "external_hardware_config": {
+      "device": "Roboteq MGS1600 (via vendor utility)",
+      "change": "TPDO 1 Send Rate: 100 ms → 10 ms",
+      "save_to_eeprom": true,
+      "other_tpdo_rates_unchanged": "TPDO 2/3/4 left at 100 ms (not consumed)"
+    }
+  },
+
+  "what_did_NOT_change": {
+    "controller_architecture": "Still single-loop PID with Δpv-based filtered derivative, deadband-gated integral, and speed reduction term. No move to Pure Pursuit, Stanley, or model-predictive control.",
+    "sensor_arrangement": "Still single forward-mounted MGS1600 at 100mm lookahead. No second sensor, no IMU/gyro integration.",
+    "loop_period_for_other_tasks": "DI reader, safety_watchdog, mode_manager, horn_controller all retain their original periods. Only the PID auto loop runs at 50ms now."
+  },
+
+  "remaining_limits_and_recommended_next_steps": {
+    "primary_constraint": {
+      "name": "Lookahead-poor sensor geometry",
+      "explanation_for_kinematics_reader": "With a single forward-mounted sensor at lookahead L, the controller can only minimize one scalar error signal. The signal sensor_reading = lateral_offset + L*sin(heading_angle) has a one-dimensional null space: any combination of lateral offset and heading angle satisfying lateral_offset = -L*sin(heading_angle) reads zero. As the bot drives forward at speed v, motion along this manifold causes lateral position to drift, which triggers controller correction that overshoots into the opposite side of the manifold. Period of this drift cycle scales as L/v adjusted by closed-loop bandwidth — empirically ~6 s at v=0.2 m/s, L=100mm with our current PID. Increasing PID bandwidth (smaller DT) reduces amplitude but cannot eliminate the period.",
+      "remediation_options": [
+        {
+          "option": "A — accept current performance",
+          "rationale": "11 mm std / 24 mm peak is acceptable for many tape-following applications. Further effort yields diminishing returns."
+        },
+        {
+          "option": "B — increase mechanical lookahead",
+          "rationale": "Stanley/Pure Pursuit literature suggests lookahead = 1–3× wheelbase. Current geometry has L ≈ 0.2× wheelbase. Doubling to 200 mm should drop error std significantly (back-of-envelope estimate: another 30–50%).",
+          "cost": "Mechanical bracket change; possibly bumper interference."
+        },
+        {
+          "option": "C — add IMU/gyro and switch to Stanley or Pure Pursuit",
+          "rationale": "Heading rate eliminates the manifold ambiguity by giving the controller a second observation independent of lateral position.",
+          "cost": "Hardware addition + significant controller rewrite."
+        }
+      ]
+    },
+    "secondary_followups": [
+      {
+        "item": "Restore V_RED_COEF / V_RED_COEF_SLOW for production cornering",
+        "current_test_values": "0.5 / 0.5 (set for clean PID isolation in straight-line test)",
+        "suggested_production_values": "1.0 / 1.2 (down from pre-test 1.5 / 1.8 — less needed now that PID corrects faster)",
+        "trigger": "After corner testing in the new DT regime."
+      },
+      {
+        "item": "Investigate periodic ~88 ms cycle-time outliers",
+        "frequency": "~once per 11 seconds",
+        "suspected_cause": "Python garbage collection or OS scheduling jitter",
+        "priority": "low — does not affect control correctness"
+      },
+      {
+        "item": "Move plotter PNG render off the event loop",
+        "issue": "RunRecorder.stop() calls matplotlib synchronously in auto_mode's `finally` block. Renders take 200–800 ms and block the asyncio loop during that window.",
+        "fix": "Wrap _save_outputs in asyncio.to_thread.",
+        "priority": "low — only matters during run end when motors are zero'd anyway"
+      }
+    ]
+  },
+
+  "key_insights_for_future_tuning_work": [
+    "Always count frames drained per cycle, not post-drain queue depth. The latter measures 'how full is the queue after I emptied it' — always near zero for a fast-draining consumer.",
+    "Sensor publish rate is the binding constraint on PID rate. Halving DT below 1.5× the sensor period produces phantom-zero derivative samples on cycles that see no new data — actively bad for D action.",
+    "When halving DT, check every controller parameter for whether it is a per-cycle coefficient (must rescale) or a true time constant (no rescale needed). SR_ALPHA was the one that bit us — easy to miss because the symptom is subtle (overly aggressive speed reduction) not catastrophic.",
+    "Bus utilization math: at 500 kbps CAN with 8-byte frames, each frame is ~260 µs on the wire. 100 Hz on TPDO1 + 10 Hz heartbeat ≈ 110 frames/sec ≈ 2.6% bus load. CAN best-practice keeps bus < 30%. No reason to bump bitrate to 1 Mbps for this traffic level.",
+    "PID tuning has hard physical ceilings. Once you've isolated 'noise on D', 'integral wind-up', and 'gain mismatches', what's left is geometry. Don't chase further tuning gains past that point — invest mechanical or sensor changes instead."
+  ]
+}

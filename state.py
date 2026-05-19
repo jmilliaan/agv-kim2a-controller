@@ -1,7 +1,14 @@
 import asyncio
 import time
 
+import config
+
 _EVENT_LOG_MAX = 200
+
+# Hard bounds for runtime-tunable auto speeds (m/s).
+# Prevents an operator from typing a runaway value into the dashboard.
+AUTO_SPEED_MIN = 0.05
+AUTO_SPEED_MAX = 1.50
 
 
 # ── Typed state domains ───────────────────────────────────────────────────────
@@ -22,13 +29,18 @@ class SystemState:
 class KinematicState:
     """Owned by sequence_engine and mode_manager."""
     def __init__(self):
-        self.speed_mode           = "HIGH"  # "HIGH" | "SLOW"
+        self.speed_mode           = "SLOW"  # "HIGH" | "SLOW" | "EXTRA_SLOW"
         self.sequence_stop        = False   # True = AGV should brake and wait
         self.pending_sequence     = None    # name of armed rfid_then_marker sequence
         self.reverse_auto_request = False   # set by Flask to start reverse tape-follow
         self.web_manual_command    = None    # set by Flask remote; "forward"|"reverse"|"left"|"right"|"fwd_left"|"fwd_right"|"rvs_left"|"rvs_right"|None
         self.web_manual_command_ts = 0.0    # epoch of last web command update
         self.motion_telemetry     = None    # dict: left_rpm, right_rpm, pid_error, pid_p/i/d, pid_output
+        self.last_rfid_tag        = None    # last 4-char hex tag string read by RFID reader
+        self.last_rfid_tag_ts     = 0.0     # epoch of last valid RFID tag received
+        self.web_pusher_request   = None    # "up" | "down" | None — set by Flask, consumed by manual_mode
+        self.at_home              = False   # False = treat next tag-10 as arrival; True = treat as departure
+        self.end_cycle_request    = False   # set by end_cycle sequence action; mode_manager transitions to ARMED
 
 
 class PerceptionState:
@@ -38,6 +50,27 @@ class PerceptionState:
         self.latest_do     = None   # latest commanded DO state  (list of bool)
         self.latest_sensor = None   # last CAN frame dict from MGS1600
         self.can_last_rx   = 0.0    # epoch of last CAN message received
+
+
+class TuningState:
+    """Runtime-tunable feature toggles and parameters.
+
+    These mirror selected fields from `config` so the operator can flip them
+    from the dashboard without restarting the controller. Defaults are taken
+    from the active profile JSON at startup.
+    """
+    def __init__(self):
+        # Feature toggles — default ENABLED at boot regardless of profile flags.
+        # The profile's LIDAR_STOP_ENABLED / RFID_ENABLED are no longer consulted
+        # for the runtime gate; they remain only as deployment-time hints.
+        self.lidar_stop_enabled = True
+        self.lidar_slow_enabled = True
+        self.rfid_enabled       = True
+
+        # Auto target speeds (m/s) — bounded by AUTO_SPEED_MIN/MAX.
+        self.auto_high_speed       = float(config.AUTO_TARGET_HIGH_SPEED)
+        self.auto_slow_speed       = float(config.AUTO_TARGET_SLOW_SPEED)
+        self.auto_extra_slow_speed = float(config.AUTO_TARGET_EXTRA_SLOW_SPEED)
 
 
 class PLCState:
@@ -73,6 +106,7 @@ class AMRState:
         self.kinematic  = KinematicState()
         self.perception = PerceptionState()
         self.plc        = PLCState()
+        self.tuning     = TuningState()
 
     # ── SystemState shims ─────────────────────────────────────────────────────
 
@@ -157,6 +191,31 @@ class AMRState:
     @motion_telemetry.setter
     def motion_telemetry(self, v): self.kinematic.motion_telemetry = v
 
+    @property
+    def last_rfid_tag(self): return self.kinematic.last_rfid_tag
+    @last_rfid_tag.setter
+    def last_rfid_tag(self, v): self.kinematic.last_rfid_tag = v
+
+    @property
+    def last_rfid_tag_ts(self): return self.kinematic.last_rfid_tag_ts
+    @last_rfid_tag_ts.setter
+    def last_rfid_tag_ts(self, v): self.kinematic.last_rfid_tag_ts = v
+
+    @property
+    def web_pusher_request(self): return self.kinematic.web_pusher_request
+    @web_pusher_request.setter
+    def web_pusher_request(self, v): self.kinematic.web_pusher_request = v
+
+    @property
+    def at_home(self): return self.kinematic.at_home
+    @at_home.setter
+    def at_home(self, v): self.kinematic.at_home = v
+
+    @property
+    def end_cycle_request(self): return self.kinematic.end_cycle_request
+    @end_cycle_request.setter
+    def end_cycle_request(self, v): self.kinematic.end_cycle_request = v
+
     # ── PerceptionState shims ─────────────────────────────────────────────────
 
     @property
@@ -200,3 +259,35 @@ class AMRState:
     def plc_sequence_complete(self): return self.plc.plc_sequence_complete
     @plc_sequence_complete.setter
     def plc_sequence_complete(self, v): self.plc.plc_sequence_complete = v
+
+    # ── TuningState shims ─────────────────────────────────────────────────────
+
+    @property
+    def lidar_stop_enabled(self): return self.tuning.lidar_stop_enabled
+    @lidar_stop_enabled.setter
+    def lidar_stop_enabled(self, v): self.tuning.lidar_stop_enabled = bool(v)
+
+    @property
+    def lidar_slow_enabled(self): return self.tuning.lidar_slow_enabled
+    @lidar_slow_enabled.setter
+    def lidar_slow_enabled(self, v): self.tuning.lidar_slow_enabled = bool(v)
+
+    @property
+    def rfid_enabled(self): return self.tuning.rfid_enabled
+    @rfid_enabled.setter
+    def rfid_enabled(self, v): self.tuning.rfid_enabled = bool(v)
+
+    @property
+    def auto_high_speed(self): return self.tuning.auto_high_speed
+    @auto_high_speed.setter
+    def auto_high_speed(self, v): self.tuning.auto_high_speed = float(v)
+
+    @property
+    def auto_slow_speed(self): return self.tuning.auto_slow_speed
+    @auto_slow_speed.setter
+    def auto_slow_speed(self, v): self.tuning.auto_slow_speed = float(v)
+
+    @property
+    def auto_extra_slow_speed(self): return self.tuning.auto_extra_slow_speed
+    @auto_extra_slow_speed.setter
+    def auto_extra_slow_speed(self, v): self.tuning.auto_extra_slow_speed = float(v)

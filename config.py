@@ -92,6 +92,7 @@ AUTO_TARGET_HIGH_SPEED       = _params["speeds"]["AUTO_TARGET_HIGH_SPEED"]
 AUTO_TARGET_SLOW_SPEED       = _params["speeds"]["AUTO_TARGET_SLOW_SPEED"]
 AUTO_TARGET_EXTRA_SLOW_SPEED = _params["speeds"]["AUTO_TARGET_EXTRA_SLOW_SPEED"]
 ACCEL_RATE                   = _params["speeds"]["ACCEL_RATE"]
+MANUAL_ACCEL_RATE            = _params["speeds"].get("MANUAL_ACCEL_RATE", 2.0 * _params["speeds"]["ACCEL_RATE"])
 
 # ── PID Tuning ────────────────────────────────────────────────────────────────
 KP = _params["pid_tuning"]["KP"]
@@ -133,10 +134,11 @@ SEQUENCES = _params.get("sequences", [])
 
 # ── Feature flags ────────────────────────────────────────────────────────────
 _feat = _params.get("features", {})
-DIO_ENABLED  = bool(_feat.get("DIO_ENABLED",  1))
-CAN_ENABLED  = bool(_feat.get("CAN_ENABLED",  1))
-RFID_ENABLED = bool(_feat.get("RFID_ENABLED", 1))
-SLMP_ENABLED = bool(_feat.get("SLMP_ENABLED", 0))
+DIO_ENABLED        = bool(_feat.get("DIO_ENABLED",        1))
+CAN_ENABLED        = bool(_feat.get("CAN_ENABLED",        1))
+RFID_ENABLED       = bool(_feat.get("RFID_ENABLED",       1))
+SLMP_ENABLED       = bool(_feat.get("SLMP_ENABLED",       0))
+LIDAR_STOP_ENABLED = bool(_feat.get("LIDAR_STOP_ENABLED", 1))  # 0 = disable inner lidar stop
 
 # ── Watchdog timeouts (Phase 4) ───────────────────────────────────────────────
 _wd = _params.get("watchdog", {})
@@ -147,7 +149,9 @@ WATCHDOG_RFID_TIMEOUT_S = _wd.get("RFID_TIMEOUT_S", 5.0)
 # ── AGV B (TN) — per-profile options (backwards-compatible defaults = AGV A values) ──
 AO_MAX_VOLTAGE     = float(_params.get("ao_max_voltage", 10.0))
 SENSOR_ORIENTATION = int(_params.get("sensor_orientation", 1))   # 1=normal, -1=flipped
-DI_LIDAR_STOP      = _params["io_mapping"].get("DI_LIDAR_STOP", None)  # None = no lidar
-DI_LIDAR_SLOW      = _params["io_mapping"].get("DI_LIDAR_SLOW", None)
+DI_LIDAR_OUTER     = _params["io_mapping"].get("DI_LIDAR_OUTER", None)  # outer zone — no speed change, dashboard only
+DI_LIDAR_SLOW      = _params["io_mapping"].get("DI_LIDAR_SLOW",  None)  # middle zone — switches to SLOW
+DI_LIDAR_STOP      = _params["io_mapping"].get("DI_LIDAR_STOP",  None)  # inner zone  — Cat 1 protective stop
 DI_BUMPER          = _params["io_mapping"].get("DI_BUMPER",     None)  # None = no bumper
 PUSHER_CHANNELS    = _params.get("pusher_channels", None)  # None = no pusher
+HORN_CHANNELS      = _params.get("horn_channels",   None)  # None = no horn

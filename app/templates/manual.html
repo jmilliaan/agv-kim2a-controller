@@ -4,13 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>AGV Manual Remote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     background: #d4d0c8;
     color: #000;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'Inter', system-ui, sans-serif;
     font-size: 20px;
     height: 100dvh;
     display: flex;
@@ -147,7 +150,7 @@
     border-right:  5px solid #404040;
     border-bottom: 5px solid #404040;
     cursor: pointer;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'Inter', system-ui, sans-serif;
     font-size: 16px;
     font-weight: bold;
     letter-spacing: 0.5px;
@@ -201,6 +204,48 @@
     height: 40px;
   }
 
+  /* ── Pusher panel ── */
+  #pusher-panel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: #c0c0c0;
+    border-top: 3px solid #808080;
+    flex-shrink: 0;
+  }
+  .pusher-btn {
+    padding: 8px 28px;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer;
+  }
+  #btn-pusher-up {
+    background: #004080; color: #fff;
+    border-top: 3px solid #0070d0; border-left: 3px solid #0070d0;
+    border-right: 3px solid #002040; border-bottom: 3px solid #002040;
+  }
+  #btn-pusher-up:active {
+    border-top: 3px solid #002040; border-left: 3px solid #002040;
+    border-right: 3px solid #0070d0; border-bottom: 3px solid #0070d0;
+  }
+  #btn-pusher-down {
+    background: #804000; color: #fff;
+    border-top: 3px solid #c06000; border-left: 3px solid #c06000;
+    border-right: 3px solid #402000; border-bottom: 3px solid #402000;
+  }
+  #btn-pusher-down:active {
+    border-top: 3px solid #402000; border-left: 3px solid #402000;
+    border-right: 3px solid #c06000; border-bottom: 3px solid #c06000;
+  }
+  #pusher-status {
+    font-size: 15px; font-weight: bold; letter-spacing: 0.5px;
+    flex: 1; text-align: right;
+  }
+  body.not-manual #pusher-panel { opacity: 0.35; pointer-events: none; }
+
   /* ── Bottom nav bar ── */
   #nav-bar {
     display: flex;
@@ -213,7 +258,7 @@
   .nav-btn {
     flex: 1;
     padding: 8px 0;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'Inter', system-ui, sans-serif;
     font-size: 16px;
     font-weight: bold;
     letter-spacing: 1px;
@@ -309,6 +354,13 @@
 </div>
 
 <div id="active-cmd"></div>
+
+<!-- Pusher panel -->
+<div id="pusher-panel">
+  <button id="btn-pusher-up"   class="pusher-btn">&#9650; PUSHER UP</button>
+  <button id="btn-pusher-down" class="pusher-btn">&#9660; PUSHER DOWN</button>
+  <span id="pusher-status"></span>
+</div>
 
 <!-- Bottom nav bar -->
 <div id="nav-bar">
@@ -474,6 +526,46 @@
 
   poll();
   setInterval(poll, 500);
+
+  // ── Pusher buttons (hold to energise, release to de-energise) ───────────
+  function pusherSend(action) {
+    fetch('/api/manual/pusher', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action }),
+      keepalive: true
+    }).catch(() => {});
+  }
+
+  function pusherPress(action) {
+    const st = document.getElementById('pusher-status');
+    st.textContent = action === 'up' ? '▲ PUSHER UP' : '▼ PUSHER DOWN';
+    st.style.color  = action === 'up' ? '#004080' : '#804000';
+    pusherSend(action);
+  }
+
+  function pusherRelease() {
+    const st = document.getElementById('pusher-status');
+    st.textContent = '';
+    pusherSend('clear');
+  }
+
+  ['btn-pusher-up', 'btn-pusher-down'].forEach(id => {
+    const btn    = document.getElementById(id);
+    const action = id === 'btn-pusher-up' ? 'up' : 'down';
+
+    btn.addEventListener('mousedown',   e => { e.preventDefault(); pusherPress(action); });
+    btn.addEventListener('mouseup',     ()  => pusherRelease());
+    btn.addEventListener('mouseleave',  ()  => pusherRelease());
+
+    btn.addEventListener('touchstart',  e => { e.preventDefault(); pusherPress(action); }, { passive: false });
+    btn.addEventListener('touchend',    e => { e.preventDefault(); pusherRelease(); },     { passive: false });
+    btn.addEventListener('touchcancel', e => { e.preventDefault(); pusherRelease(); },     { passive: false });
+  });
+
+  // Safety: lose focus or tab hidden -> release pusher
+  window.addEventListener('blur', () => pusherRelease());
+  document.addEventListener('visibilitychange', () => { if (document.hidden) pusherRelease(); });
 </script>
 </body>
 </html>
