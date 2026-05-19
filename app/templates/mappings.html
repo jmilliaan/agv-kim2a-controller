@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RFID Mappings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #d4d0c8;
+    color: #000;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 18px;
+    padding: 12px 12px 70px 12px;
+  }
+
+  .raised {
+    border-top:    3px solid #fff;
+    border-left:   3px solid #fff;
+    border-right:  3px solid #808080;
+    border-bottom: 3px solid #808080;
+  }
+  .sunken {
+    border-top:    3px solid #808080;
+    border-left:   3px solid #808080;
+    border-right:  3px solid #fff;
+    border-bottom: 3px solid #fff;
+  }
+
+  #header {
+    display: flex; align-items: center; gap: 18px;
+    background: #000080; color: #fff;
+    padding: 8px 16px; margin-bottom: 12px;
+    font-weight: bold; font-size: 20px; letter-spacing: 2px;
+  }
+  #header .title { flex: 1; }
+  #header .agv-id {
+    font-size: 16px; background: #c0c0c0; color: #000080;
+    padding: 2px 12px;
+    border-top: 3px solid #808080; border-left: 3px solid #808080;
+    border-right: 3px solid #fff; border-bottom: 3px solid #fff;
+    font-weight: bold; letter-spacing: 1px;
+  }
+
+  /* ── Tabs ─────────────────────────────────────────────────────────────── */
+  #tab-bar {
+    display: flex; gap: 4px; margin-bottom: 0;
+  }
+  .tab-btn {
+    background: #c0c0c0; border: none; cursor: pointer;
+    font-family: inherit; font-size: 16px; font-weight: bold;
+    padding: 6px 20px; letter-spacing: 1px;
+    border-top:   3px solid #fff;
+    border-left:  3px solid #fff;
+    border-right: 3px solid #808080;
+    border-bottom: 3px solid #c0c0c0;
+    color: #444;
+  }
+  .tab-btn.active {
+    background: #c0c0c0; color: #000080;
+    border-bottom: 3px solid #c0c0c0;
+    z-index: 1;
+  }
+  #tab-content {
+    background: #c0c0c0; padding: 12px;
+    border-top: 3px solid #808080; border-left: 3px solid #808080;
+    border-right: 3px solid #fff; border-bottom: 3px solid #fff;
+  }
+
+  /* ── Banners ──────────────────────────────────────────────────────────── */
+  #banner {
+    padding: 8px 14px; margin-bottom: 10px; font-weight: bold;
+    font-size: 16px; display: none;
+  }
+  #banner.ok  { background: #008000; color: #fff; }
+  #banner.err { background: #800000; color: #fff; }
+  #banner.warn { background: #c07000; color: #fff; }
+
+  #rfid-warn {
+    background: #c07000; color: #fff; padding: 6px 14px;
+    font-size: 15px; margin-bottom: 10px; display: none;
+  }
+
+  /* ── Toolbar ──────────────────────────────────────────────────────────── */
+  .toolbar {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-bottom: 12px; align-items: center;
+  }
+  .toolbar label { font-size: 15px; font-weight: bold; }
+  .btn {
+    background: #c0c0c0; border: none; cursor: pointer;
+    font-family: inherit; font-size: 15px; font-weight: bold;
+    padding: 6px 16px; letter-spacing: 1px;
+    border-top: 2px solid #fff; border-left: 2px solid #fff;
+    border-right: 2px solid #808080; border-bottom: 2px solid #808080;
+  }
+  .btn:active { border-top: 2px solid #808080; border-left: 2px solid #808080;
+                border-right: 2px solid #fff; border-bottom: 2px solid #fff; }
+  .btn:disabled { color: #808080; cursor: default; }
+  .btn-primary { background: #000080; color: #fff; }
+  .btn-primary:disabled { background: #6060a0; }
+  .btn-danger  { background: #800000; color: #fff; }
+
+  select.add-select {
+    background: #c0c0c0; font-family: inherit; font-size: 15px;
+    padding: 5px 10px;
+    border-top: 2px solid #808080; border-left: 2px solid #808080;
+    border-right: 2px solid #fff; border-bottom: 2px solid #fff;
+  }
+
+  /* ── Rules table ──────────────────────────────────────────────────────── */
+  #rules-table { width: 100%; border-collapse: collapse; }
+  #rules-table th {
+    background: #000080; color: #fff; font-size: 14px;
+    padding: 5px 8px; text-align: left; letter-spacing: 1px;
+  }
+  #rules-table td {
+    padding: 6px 8px; border-bottom: 1px solid #a0a0a0;
+    font-size: 15px; vertical-align: middle;
+  }
+  #rules-table tr:last-child td { border-bottom: none; }
+  #rules-table tr.dirty td { background: #fff8c0; }
+  #rules-table tr.disabled-row td { color: #808080; }
+
+  .rule-type-badge {
+    display: inline-block; font-size: 12px; font-weight: bold;
+    padding: 2px 8px; letter-spacing: 1px; background: #000080; color: #fff;
+  }
+  .rule-type-badge.slow_zone   { background: #007000; }
+  .rule-type-badge.timed_pause { background: #6000a0; }
+  .rule-type-badge.pulse_pusher { background: #804000; }
+  .rule-type-badge.end_cycle   { background: #800000; }
+  .rule-type-badge.start_cycle { background: #008080; }
+  .rule-type-badge.pause_until_tag { background: #404040; }
+
+  .field-err { color: #800000; font-size: 13px; display: none; }
+
+  /* ── Edit form ────────────────────────────────────────────────────────── */
+  .edit-form { background: #e8e8e0; padding: 10px; margin: 4px 0; }
+  .edit-form label { font-size: 14px; font-weight: bold; display: block; margin-top: 6px; }
+  .edit-form input[type=number], .edit-form select {
+    background: #fff; font-family: inherit; font-size: 15px;
+    padding: 3px 8px; width: 120px;
+    border-top: 2px solid #808080; border-left: 2px solid #808080;
+    border-right: 2px solid #fff; border-bottom: 2px solid #fff;
+  }
+  .edit-form .form-row { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end; }
+  .edit-form .form-hint { font-size: 13px; color: #444; margin-top: 2px; }
+
+  .toggle-wrap { display: flex; align-items: center; gap: 10px; }
+  .toggle-wrap input[type=checkbox] { width: 20px; height: 20px; cursor: pointer; }
+
+  /* ── Tag inventory table ───────────────────────────────────────────────── */
+  #inv-table { width: 100%; border-collapse: collapse; }
+  #inv-table th {
+    background: #007000; color: #fff; font-size: 14px;
+    padding: 5px 8px; text-align: left;
+  }
+  #inv-table td { padding: 6px 8px; border-bottom: 1px solid #a0a0a0; font-size: 15px; }
+
+  /* ── History table ────────────────────────────────────────────────────── */
+  #hist-table { width: 100%; border-collapse: collapse; }
+  #hist-table th {
+    background: #404040; color: #fff; font-size: 14px;
+    padding: 5px 8px; text-align: left;
+  }
+  #hist-table td { padding: 6px 8px; border-bottom: 1px solid #a0a0a0; font-size: 14px; }
+
+  /* ── Nav bar ──────────────────────────────────────────────────────────── */
+  #nav-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    display: flex;
+    background: #c0c0c0;
+    border-top: 3px solid #fff;
+    padding: 6px 12px;
+    gap: 6px;
+    z-index: 100;
+  }
+  .nav-btn {
+    flex: 1;
+    padding: 8px 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-transform: uppercase;
+    background: #c0c0c0;
+    color: #000;
+    border-top:    3px solid #fff;
+    border-left:   3px solid #fff;
+    border-right:  3px solid #808080;
+    border-bottom: 3px solid #808080;
+  }
+  .nav-btn.active {
+    background: #000080;
+    color: #fff;
+    border-top:    3px solid #404040;
+    border-left:   3px solid #404040;
+    border-right:  3px solid #c0c0c0;
+    border-bottom: 3px solid #c0c0c0;
+  }
+  .nav-btn:active:not(.active) {
+    border-top:    3px solid #808080;
+    border-left:   3px solid #808080;
+    border-right:  3px solid #fff;
+    border-bottom: 3px solid #fff;
+  }
+
+  /* ── Misc ─────────────────────────────────────────────────────────────── */
+  .raw-note { background: #c07000; color: #fff; font-size: 13px;
+              padding: 3px 8px; margin-bottom: 6px; }
+  .spacer { flex: 1; }
+  .ts-cell { font-size: 13px; color: #444; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <span class="title">RFID MAPPINGS</span>
+  <span class="agv-id">{{ agv_id }}</span>
+</div>
+
+<div id="rfid-warn">
+  ⚠ RFID is currently DISABLED — rules will not fire until re-enabled on the Tuning page.
+</div>
+
+<div id="banner"></div>
+
+<!-- ── Tab bar ──────────────────────────────────────────────────────────────── -->
+<div id="tab-bar">
+  <button class="tab-btn active" onclick="showTab('rules')">RULES</button>
+  <button class="tab-btn" onclick="showTab('inventory')">TAG INVENTORY</button>
+  <button class="tab-btn" onclick="showTab('history')">HISTORY</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!--  RULES TAB                                                                -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div id="tab-content">
+<div id="tab-rules">
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <label>ADD RULE:</label>
+    <select class="add-select" id="add-type">
+      <option value="">-- select type --</option>
+      <option value="end_cycle">End cycle (arrival)</option>
+      <option value="start_cycle">Start cycle (departure)</option>
+      <option value="slow_zone">Slow zone (paired tags)</option>
+      <option value="timed_pause">Timed pause</option>
+      <option value="pause_until_tag">Pause until tag</option>
+      <option value="pulse_pusher">Pulse pusher</option>
+    </select>
+    <button class="btn" onclick="addRule()">+ ADD</button>
+    <span class="spacer"></span>
+    <button class="btn" id="btn-export" onclick="exportRules()">EXPORT JSON</button>
+    <label class="btn" style="cursor:pointer;">
+      IMPORT JSON <input type="file" accept=".json" style="display:none" onchange="importRules(this)">
+    </label>
+  </div>
+
+  <!-- Restore backup row -->
+  <div class="toolbar" id="backup-toolbar">
+    <label>RESTORE BACKUP:</label>
+    <select class="add-select" id="backup-slot"></select>
+    <button class="btn btn-danger" onclick="restoreBackup()">RESTORE</button>
+  </div>
+
+  <!-- First-open import notice -->
+  <div id="import-notice" style="display:none; background:#005080; color:#fff; padding:10px 14px; margin-bottom:10px; font-size:15px;">
+    <b>FIRST OPEN:</b> These rules were imported from your profile. Review them and click CONFIRM to take ownership.
+    Rules marked [RAW] could not be matched to a preset — recreate them manually if needed.
+  </div>
+
+  <!-- Raw sequences notice -->
+  <div id="raw-notice" class="raw-note" style="display:none"></div>
+
+  <!-- Rules table -->
+  <table id="rules-table">
+    <thead>
+      <tr>
+        <th>ON</th>
+        <th>TYPE</th>
+        <th>TAGS / SETTINGS</th>
+        <th>COOLDOWN</th>
+        <th>ACTIONS</th>
+      </tr>
+    </thead>
+    <tbody id="rules-tbody"></tbody>
+  </table>
+
+  <!-- Confirm / Apply bar -->
+  <div class="toolbar" style="margin-top:14px;">
+    <button class="btn btn-primary" id="btn-confirm" onclick="confirmRules()" disabled>CONFIRM &amp; SAVE</button>
+    <button class="btn" id="btn-apply" onclick="applyNow()" disabled>APPLY NOW</button>
+    <span id="reload-badge" style="display:none; background:#c07000; color:#fff; font-size:14px; padding:4px 12px; font-weight:bold;">
+      RELOAD PENDING — apply on next ARMED entry
+    </span>
+  </div>
+
+</div><!-- end tab-rules -->
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!--  TAG INVENTORY TAB                                                        -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div id="tab-inventory" style="display:none">
+  <div class="toolbar">
+    <button class="btn" onclick="loadInventory()">REFRESH</button>
+  </div>
+  <table id="inv-table">
+    <thead>
+      <tr>
+        <th>TAG (DEC)</th><th>HEX</th><th>RULE TYPE</th><th>SUMMARY</th><th>ENABLED</th>
+      </tr>
+    </thead>
+    <tbody id="inv-tbody"></tbody>
+  </table>
+
+  <div style="margin-top:16px; font-weight:bold; font-size:15px; color:#600000;">
+    RECENTLY SCANNED — UNMAPPED (last 60s)
+  </div>
+  <table id="unmapped-table" style="width:100%; border-collapse:collapse; margin-top:6px;">
+    <thead>
+      <tr>
+        <th style="background:#600000; color:#fff; padding:5px 8px; text-align:left; font-size:14px;">TAG (DEC)</th>
+        <th style="background:#600000; color:#fff; padding:5px 8px; text-align:left; font-size:14px;">HEX</th>
+        <th style="background:#600000; color:#fff; padding:5px 8px; text-align:left; font-size:14px;">TIME</th>
+      </tr>
+    </thead>
+    <tbody id="unmapped-tbody"></tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!--  HISTORY TAB                                                              -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div id="tab-history" style="display:none">
+  <div class="toolbar">
+    <button class="btn" onclick="loadHistory()">REFRESH</button>
+  </div>
+  <table id="hist-table">
+    <thead>
+      <tr><th>TIME</th><th>SOURCE</th><th>RULES</th><th>SUMMARY</th></tr>
+    </thead>
+    <tbody id="hist-tbody"></tbody>
+  </table>
+</div>
+
+</div><!-- end tab-content -->
+
+<!-- ── Bottom nav bar ────────────────────────────────────────────────────── -->
+<div id="nav-bar">
+  <button class="nav-btn" onclick="location.href='/'">HOME</button>
+  <button class="nav-btn" onclick="location.href='/manual'">MANUAL</button>
+  <button class="nav-btn" onclick="location.href='/io'">IO MON</button>
+  <button class="nav-btn" onclick="location.href='/params'">PARAMS</button>
+  <button class="nav-btn active">MAPPINGS</button>
+  <button class="nav-btn" onclick="location.href='/errors'">ERRORS</button>
+</div>
+
+<script>
+'use strict';
+
+const AGV_ID = {{ agv_id | tojson }};
+
+// ── State ──────────────────────────────────────────────────────────────────
+let rules = [];       // current working copy (may be dirty)
+let savedRules = [];  // last confirmed server state
+let dirty = false;
+let expandedRow = null;   // rule id currently showing edit form
+
+// ── Tab switching ──────────────────────────────────────────────────────────
+function showTab(name) {
+  ['rules','inventory','history'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = t === name ? '' : 'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', ['rules','inventory','history'][i] === name);
+  });
+  if (name === 'inventory') loadInventory();
+  if (name === 'history')   loadHistory();
+}
+
+// ── Banner ─────────────────────────────────────────────────────────────────
+let bannerTimer = null;
+function setBanner(msg, type, persist) {
+  const el = document.getElementById('banner');
+  el.textContent = msg;
+  el.className   = type;
+  el.style.display = 'block';
+  if (bannerTimer) clearTimeout(bannerTimer);
+  if (!persist) bannerTimer = setTimeout(() => { el.style.display = 'none'; }, 6000);
+}
+
+// ── Initial load ───────────────────────────────────────────────────────────
+async function loadMappings() {
+  try {
+    const r = await fetch('/api/mappings');
+    const d = await r.json();
+
+    rules      = d.rules || [];
+    savedRules = JSON.parse(JSON.stringify(rules));
+    dirty      = false;
+
+    document.getElementById('rfid-warn').style.display =
+      d.rfid_enabled === false ? 'block' : 'none';
+
+    if (d.first_open) {
+      document.getElementById('import-notice').style.display = 'block';
+      markDirty();  // require explicit save on first open
+    }
+
+    if (d.raw_sequences && d.raw_sequences.length > 0) {
+      const n = document.getElementById('raw-notice');
+      n.textContent = d.raw_sequences.length +
+        ' sequence(s) from profile could not be converted to presets — ' +
+        'recreate them manually if needed.';
+      n.style.display = 'block';
+    }
+
+    updateReloadBadge(d.reload_pending);
+    renderRules();
+    await loadBackups();
+  } catch(e) {
+    setBanner('Load failed: ' + e.message, 'err', true);
+  }
+}
+
+// ── Dirty state ────────────────────────────────────────────────────────────
+function markDirty() {
+  dirty = true;
+  document.getElementById('btn-confirm').disabled = false;
+}
+
+function updateReloadBadge(pending) {
+  const badge  = document.getElementById('reload-badge');
+  const btnApp = document.getElementById('btn-apply');
+  badge.style.display  = pending ? 'inline-block' : 'none';
+  btnApp.disabled = !pending;
+}
+
+// ── Rule rendering ─────────────────────────────────────────────────────────
+function renderRules() {
+  const tbody = document.getElementById('rules-tbody');
+  tbody.innerHTML = '';
+  rules.forEach((r, idx) => {
+    const tr = document.createElement('tr');
+    if (!r.enabled) tr.classList.add('disabled-row');
+    tr.id = 'row-' + r.id;
+
+    tr.innerHTML = `
+      <td>
+        <input type="checkbox" ${r.enabled ? 'checked' : ''}
+               onchange="toggleEnable('${r.id}', this.checked)" style="width:20px;height:20px;">
+      </td>
+      <td><span class="rule-type-badge ${r.type}">${r.type.replace(/_/g,' ').toUpperCase()}</span></td>
+      <td id="summary-${r.id}">${ruleSummary(r)}</td>
+      <td>${r.cooldown_s != null ? r.cooldown_s + 's' : '—'}</td>
+      <td>
+        <button class="btn" onclick="toggleEdit('${r.id}')">EDIT</button>
+        <button class="btn btn-danger" onclick="deleteRule('${r.id}')">DEL</button>
+      </td>`;
+    tbody.appendChild(tr);
+
+    // Edit form row (hidden by default)
+    const editTr = document.createElement('tr');
+    editTr.id = 'edit-' + r.id;
+    editTr.style.display = 'none';
+    editTr.innerHTML = `<td colspan="5">${buildEditForm(r)}</td>`;
+    tbody.appendChild(editTr);
+  });
+
+  if (rules.length === 0) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td colspan="5" style="text-align:center;color:#808080;padding:20px;">No rules defined. Use ADD to create one.</td>';
+    tbody.appendChild(tr);
+  }
+}
+
+function ruleSummary(r) {
+  const h = n => ('000' + n.toString(16).toUpperCase()).slice(-4);
+  switch(r.type) {
+    case 'end_cycle':
+      return `Tag <b>${r.tag}</b> (0x${h(r.tag)}) — ${r.requires_at_home ? 'when at home' : 'always'}`;
+    case 'start_cycle':
+      return `Tag <b>${r.tag}</b> (0x${h(r.tag)}) — pusher up ${r.pusher_duration_s || 5}s`;
+    case 'timed_pause':
+      return `Tag <b>${r.tag}</b> (0x${h(r.tag)}) — pause ${r.duration_s}s`;
+    case 'pause_until_tag':
+      return `Stop at <b>${r.start_tag}</b>, resume at <b>${r.resume_tag}</b>`;
+    case 'pulse_pusher':
+      return `Tag <b>${r.tag}</b> (0x${h(r.tag)}) — ${r.direction} ${r.duration_s}s`;
+    case 'slow_zone':
+      return `Slow from <b>${r.start_tag}</b> → fast from <b>${r.end_tag}</b>`;
+    default:
+      return JSON.stringify(r);
+  }
+}
+
+function buildEditForm(r) {
+  const h = n => ('000' + (n||0).toString(16).toUpperCase()).slice(-4);
+  let fields = '';
+
+  if (['end_cycle','start_cycle','timed_pause','pulse_pusher'].includes(r.type)) {
+    fields += `
+      <div>
+        <label>TAG (decimal 0–999)</label>
+        <div class="form-row">
+          <div>
+            <input type="number" min="0" max="999" value="${r.tag ?? ''}"
+                   id="f-tag-${r.id}" oninput="updateField('${r.id}','tag',+this.value); updateHex('${r.id}', this.value)">
+            <span class="form-hint">Hex: <span id="f-hex-${r.id}">0x${h(r.tag ?? 0)}</span></span>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  if (r.type === 'end_cycle') {
+    fields += `
+      <div>
+        <label>REQUIRES AT HOME</label>
+        <div class="toggle-wrap">
+          <input type="checkbox" id="f-home-${r.id}" ${r.requires_at_home ? 'checked' : ''}
+                 onchange="updateField('${r.id}','requires_at_home',this.checked)">
+          <span class="form-hint">Check for arrival sequence (AGV already at home)</span>
+        </div>
+      </div>`;
+  }
+
+  if (r.type === 'start_cycle') {
+    fields += `
+      <div>
+        <label>PUSHER DURATION (s)</label>
+        <input type="number" min="1" max="60" step="0.5" value="${r.pusher_duration_s ?? 5}"
+               id="f-pdur-${r.id}" oninput="updateField('${r.id}','pusher_duration_s',+this.value)">
+      </div>`;
+  }
+
+  if (r.type === 'timed_pause') {
+    fields += `
+      <div>
+        <label>PAUSE DURATION (s)</label>
+        <input type="number" min="0.5" max="60" step="0.5" value="${r.duration_s ?? 3}"
+               id="f-dur-${r.id}" oninput="updateField('${r.id}','duration_s',+this.value)">
+      </div>`;
+  }
+
+  if (r.type === 'pulse_pusher') {
+    const dir = r.direction || 'extend';
+    fields += `
+      <div>
+        <label>DIRECTION</label>
+        <select id="f-dir-${r.id}" onchange="updateField('${r.id}','direction',this.value)">
+          <option value="extend"  ${dir==='extend'  ? 'selected':''}>EXTEND (UP)</option>
+          <option value="retract" ${dir==='retract' ? 'selected':''}>RETRACT (DOWN)</option>
+        </select>
+      </div>
+      <div>
+        <label>DURATION (s)</label>
+        <input type="number" min="0.5" max="60" step="0.5" value="${r.duration_s ?? 5}"
+               id="f-dur-${r.id}" oninput="updateField('${r.id}','duration_s',+this.value)">
+      </div>`;
+  }
+
+  if (r.type === 'slow_zone') {
+    fields += `
+      <div>
+        <label>START TAG — switch to SLOW (decimal)</label>
+        <div class="form-row">
+          <div>
+            <input type="number" min="0" max="999" value="${r.start_tag ?? ''}"
+                   id="f-stag-${r.id}" oninput="updateField('${r.id}','start_tag',+this.value); updateHex2('${r.id}','s',this.value)">
+            <span class="form-hint">Hex: <span id="f-shex-${r.id}">0x${h(r.start_tag ?? 0)}</span></span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <label>END TAG — switch back to HIGH (decimal)</label>
+        <div class="form-row">
+          <div>
+            <input type="number" min="0" max="999" value="${r.end_tag ?? ''}"
+                   id="f-etag-${r.id}" oninput="updateField('${r.id}','end_tag',+this.value); updateHex2('${r.id}','e',this.value)">
+            <span class="form-hint">Hex: <span id="f-ehex-${r.id}">0x${h(r.end_tag ?? 0)}</span></span>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  if (r.type === 'pause_until_tag') {
+    fields += `
+      <div>
+        <label>STOP TAG (decimal)</label>
+        <div class="form-row">
+          <div>
+            <input type="number" min="0" max="999" value="${r.start_tag ?? ''}"
+                   id="f-stag-${r.id}" oninput="updateField('${r.id}','start_tag',+this.value); updateHex2('${r.id}','s',this.value)">
+            <span class="form-hint">Hex: <span id="f-shex-${r.id}">0x${h(r.start_tag ?? 0)}</span></span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <label>RESUME TAG (decimal)</label>
+        <div class="form-row">
+          <div>
+            <input type="number" min="0" max="999" value="${r.resume_tag ?? ''}"
+                   id="f-etag-${r.id}" oninput="updateField('${r.id}','resume_tag',+this.value); updateHex2('${r.id}','e',this.value)">
+            <span class="form-hint">Hex: <span id="f-ehex-${r.id}">0x${h(r.resume_tag ?? 0)}</span></span>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // Cooldown (all types)
+  fields += `
+    <div>
+      <label>COOLDOWN (s, min 1)</label>
+      <input type="number" min="1" max="60" step="0.5" value="${r.cooldown_s ?? 5}"
+             oninput="updateField('${r.id}','cooldown_s',+this.value)">
+    </div>`;
+
+  return `<div class="edit-form"><div class="form-row" style="gap:30px;">${fields}</div></div>`;
+}
+
+// ── Edit helpers ───────────────────────────────────────────────────────────
+function toggleEdit(id) {
+  if (expandedRow && expandedRow !== id) {
+    document.getElementById('edit-' + expandedRow).style.display = 'none';
+  }
+  const el = document.getElementById('edit-' + id);
+  el.style.display = el.style.display === 'none' ? '' : 'none';
+  expandedRow = el.style.display !== 'none' ? id : null;
+}
+
+function updateHex(rid, val) {
+  const n = parseInt(val);
+  const el = document.getElementById('f-hex-' + rid);
+  if (el) el.textContent = isNaN(n) ? '—' : '0x' + ('000' + n.toString(16).toUpperCase()).slice(-4);
+}
+function updateHex2(rid, which, val) {
+  const n = parseInt(val);
+  const id = which === 's' ? 'f-shex-' + rid : 'f-ehex-' + rid;
+  const el = document.getElementById(id);
+  if (el) el.textContent = isNaN(n) ? '—' : '0x' + ('000' + n.toString(16).toUpperCase()).slice(-4);
+}
+
+function updateField(id, field, value) {
+  const r = rules.find(x => x.id === id);
+  if (!r) return;
+  r[field] = value;
+  document.getElementById('summary-' + id).innerHTML = ruleSummary(r);
+  markDirty();
+}
+
+function toggleEnable(id, enabled) {
+  const r = rules.find(x => x.id === id);
+  if (!r) return;
+  r.enabled = enabled;
+  const row = document.getElementById('row-' + id);
+  row.classList.toggle('disabled-row', !enabled);
+  markDirty();
+}
+
+function deleteRule(id) {
+  rules = rules.filter(r => r.id !== id);
+  renderRules();
+  markDirty();
+}
+
+// ── Add rule ───────────────────────────────────────────────────────────────
+function addRule() {
+  const type = document.getElementById('add-type').value;
+  if (!type) { setBanner('Select a rule type first', 'err'); return; }
+  const id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
+  const defaults = {
+    end_cycle:       { type, id, enabled: true, tag: null, requires_at_home: false, cooldown_s: 10 },
+    start_cycle:     { type, id, enabled: true, tag: null, pusher_duration_s: 5, cooldown_s: 10 },
+    timed_pause:     { type, id, enabled: true, tag: null, duration_s: 3, cooldown_s: 5 },
+    pause_until_tag: { type, id, enabled: true, start_tag: null, resume_tag: null, cooldown_s: 5 },
+    pulse_pusher:    { type, id, enabled: true, tag: null, direction: 'extend', duration_s: 5, cooldown_s: 10 },
+    slow_zone:       { type, id, enabled: true, start_tag: null, end_tag: null, cooldown_s: 5 },
+  };
+  rules.push(defaults[type]);
+  document.getElementById('add-type').value = '';
+  renderRules();
+  markDirty();
+  // Auto-open edit form for the new rule
+  toggleEdit(id);
+  document.getElementById('edit-' + id).scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Confirm save ───────────────────────────────────────────────────────────
+async function confirmRules() {
+  const btn = document.getElementById('btn-confirm');
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/mappings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rules }),
+    });
+    const d = await r.json();
+    if (!r.ok) {
+      const msgs = (d.errors || []).map(e =>
+        (e.rule_id ? 'Rule ' + e.rule_id.slice(0,8) + ': ' : '') +
+        (e.field ? '[' + e.field + '] ' : '') + e.message
+      ).join(' | ');
+      setBanner('Save failed: ' + (msgs || d.error), 'err', true);
+      btn.disabled = false;
+      return;
+    }
+    savedRules = JSON.parse(JSON.stringify(rules));
+    dirty = false;
+    document.getElementById('import-notice').style.display = 'none';
+    updateReloadBadge(true);
+    setBanner('Saved. Will apply on next ARMED entry — or click APPLY NOW.', 'warn', true);
+  } catch(e) {
+    setBanner('Save error: ' + e.message, 'err', true);
+    btn.disabled = false;
+  }
+}
+
+// ── Apply now ──────────────────────────────────────────────────────────────
+async function applyNow() {
+  if (!confirm('Apply now will clear all cooldowns.\nA recently-fired rule could re-fire on the next scan.\n\nContinue?'))
+    return;
+  const btn = document.getElementById('btn-apply');
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/mappings/apply_now', { method: 'POST' });
+    const d = await r.json();
+    if (!r.ok) {
+      setBanner('Apply failed: ' + (d.error || 'HTTP ' + r.status), 'err');
+      btn.disabled = false;
+      return;
+    }
+    updateReloadBadge(false);
+    setBanner('Sequences applied — ' + d.seq_count + ' sequence(s) now active.', 'ok');
+  } catch(e) {
+    setBanner('Apply error: ' + e.message, 'err');
+    btn.disabled = false;
+  }
+}
+
+// ── Export ─────────────────────────────────────────────────────────────────
+async function exportRules() {
+  const r = await fetch('/api/mappings/export');
+  const blob = await r.blob();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = AGV_ID + '_sequences.json';
+  a.click();
+}
+
+// ── Import ─────────────────────────────────────────────────────────────────
+async function importRules(input) {
+  if (!input.files[0]) return;
+  if (!confirm('Importing will replace ALL current rules.\n\nThe current rules will be backed up.\nContinue?'))
+    return;
+  const text = await input.files[0].text();
+  let data;
+  try { data = JSON.parse(text); } catch(e) {
+    setBanner('Import failed: invalid JSON — ' + e.message, 'err');
+    return;
+  }
+  const r = await fetch('/api/mappings/import', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: text,
+  });
+  const d = await r.json();
+  if (!r.ok) {
+    const msgs = (d.errors || []).map(e => e.message).join(' | ');
+    setBanner('Import failed: ' + (msgs || d.error), 'err', true);
+    return;
+  }
+  setBanner('Imported ' + d.rule_count + ' rules. Reload pending.', 'ok');
+  await loadMappings();
+}
+
+// ── Backups ────────────────────────────────────────────────────────────────
+async function loadBackups() {
+  const r = await fetch('/api/mappings/backups');
+  const d = await r.json();
+  const sel = document.getElementById('backup-slot');
+  sel.innerHTML = '';
+  if (!d.backups || d.backups.length === 0) {
+    sel.innerHTML = '<option value="">No backups</option>';
+    return;
+  }
+  d.backups.forEach(b => {
+    const dt = new Date(b.ts * 1000).toLocaleString();
+    sel.innerHTML += `<option value="${b.slot}">Slot ${b.slot} — ${b.rule_count} rules — ${dt}</option>`;
+  });
+}
+
+async function restoreBackup() {
+  const slot = parseInt(document.getElementById('backup-slot').value);
+  if (!slot) return;
+  if (!confirm('Restore backup slot ' + slot + '?\n\nCurrent rules will be backed up first.'))
+    return;
+  const r = await fetch('/api/mappings/restore', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ slot }),
+  });
+  const d = await r.json();
+  if (!r.ok) {
+    setBanner('Restore failed: ' + (d.errors || []).map(e=>e.message).join(' | '), 'err');
+    return;
+  }
+  setBanner('Restored ' + d.rule_count + ' rules from slot ' + slot + '. Reload pending.', 'ok');
+  await loadMappings();
+}
+
+// ── Tag inventory tab ──────────────────────────────────────────────────────
+async function loadInventory() {
+  // Build inventory from current rules
+  const h = n => ('000' + n.toString(16).toUpperCase()).slice(-4);
+  const tbody = document.getElementById('inv-tbody');
+  tbody.innerHTML = '';
+
+  const entries = [];
+  rules.forEach(r => {
+    const add = (tag, label) => entries.push({ tag, label, type: r.type, enabled: r.enabled });
+    switch(r.type) {
+      case 'end_cycle':
+      case 'start_cycle':
+      case 'timed_pause':
+      case 'pulse_pusher':   add(r.tag, ruleSummary(r)); break;
+      case 'slow_zone':      add(r.start_tag, 'SLOW zone start'); add(r.end_tag, 'SLOW zone end'); break;
+      case 'pause_until_tag': add(r.start_tag, 'Pause start'); add(r.resume_tag, 'Pause resume'); break;
+    }
+  });
+  entries.sort((a,b) => (a.tag ?? 9999) - (b.tag ?? 9999));
+
+  if (entries.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="padding:16px; color:#808080;">No tags mapped.</td></tr>';
+  } else {
+    entries.forEach(e => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><b>${e.tag ?? '—'}</b></td>
+        <td>${e.tag != null ? '0x' + h(e.tag) : '—'}</td>
+        <td><span class="rule-type-badge ${e.type}">${e.type.replace(/_/g,' ').toUpperCase()}</span></td>
+        <td>${e.label}</td>
+        <td>${e.enabled ? '✔' : '<span style="color:#808080">disabled</span>'}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Unmapped recent
+  const ur = await fetch('/api/mappings/unmapped');
+  const ud = await ur.json();
+  const utbody = document.getElementById('unmapped-tbody');
+  utbody.innerHTML = '';
+  const now = Date.now() / 1000;
+  const recent = (ud.entries || []).filter(e => (now - e.ts) < 60);
+  if (recent.length === 0) {
+    utbody.innerHTML = '<tr><td colspan="3" style="padding:10px; color:#808080;">None in last 60s.</td></tr>';
+  } else {
+    recent.forEach(e => {
+      const dt = new Date(e.ts * 1000).toLocaleTimeString();
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><b>${e.tag_dec}</b></td><td>${e.tag}</td><td class="ts-cell">${dt}</td>`;
+      utbody.appendChild(tr);
+    });
+  }
+}
+
+// ── History tab ────────────────────────────────────────────────────────────
+async function loadHistory() {
+  const r = await fetch('/api/mappings/history');
+  const d = await r.json();
+  const tbody = document.getElementById('hist-tbody');
+  tbody.innerHTML = '';
+  const entries = d.entries || [];
+  if (entries.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:16px; color:#808080;">No history yet.</td></tr>';
+    return;
+  }
+  entries.forEach(e => {
+    const dt = new Date(e.ts * 1000).toLocaleString();
+    const summary = (e.rules_summary || [])
+      .map(r => (r.enabled ? '' : '[off] ') + r.type + ' #' + (r.id||'?').slice(0,6))
+      .join(', ');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="ts-cell">${dt}</td>
+      <td><b>${(e.source || '').toUpperCase()}</b></td>
+      <td>${e.rule_count}</td>
+      <td style="font-size:13px; color:#444;">${summary}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+loadMappings();
+</script>
+</body>
+</html>

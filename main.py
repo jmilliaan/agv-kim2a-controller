@@ -49,11 +49,21 @@ async def run():
 
     loop = asyncio.get_running_loop()
 
-    state  = AMRState()
-    engine = SequenceEngine(state, config.SEQUENCES)
+    state      = AMRState()
+    state.loop = loop   # expose for Flask thread → call_soon_threadsafe
 
-    logger.info("Loaded profile: %s  (%d sequence(s) defined)",
-                config.AGV_ID, len(config.SEQUENCES))
+    from core.mapping_store import load_rules, compile_to_sequences
+    _override_rules = load_rules(config.AGV_ID)
+    if _override_rules is not None:
+        _initial_seqs = compile_to_sequences(_override_rules)
+        logger.info("Loaded mapping override: %s  (%d rule(s) → %d sequence(s))",
+                    config.AGV_ID, len(_override_rules), len(_initial_seqs))
+    else:
+        _initial_seqs = config.SEQUENCES
+        logger.info("No mapping override found — using profile sequences: %s  (%d sequence(s))",
+                    config.AGV_ID, len(_initial_seqs))
+
+    engine = SequenceEngine(state, _initial_seqs)
 
     # ── Instantiate drivers (feature-flag gated) ──────────────────────────────
     di_drv   = DIReader()   if config.DIO_ENABLED  else None

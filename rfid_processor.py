@@ -34,4 +34,8 @@ async def rfid_processor(state, engine):
             # Soft-disabled: keep dashboard display alive, but do not trigger
             # any sequence. AGV continues tape-following at the active speed.
             continue
-        await engine.on_rfid_tag(tag)
+        matched = await engine.on_rfid_tag(tag)
+        if not matched:
+            logger.info("[RFID] Unmapped tag: %s", tag)
+            import time as _time
+            state.unmapped_rfid_log.append((_time.time(), tag))

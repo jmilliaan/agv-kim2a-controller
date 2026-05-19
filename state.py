@@ -1,4 +1,5 @@
 import asyncio
+import collections
 import time
 
 import config
@@ -41,6 +42,7 @@ class KinematicState:
         self.web_pusher_request   = None    # "up" | "down" | None — set by Flask, consumed by manual_mode
         self.at_home              = False   # False = treat next tag-10 as arrival; True = treat as departure
         self.end_cycle_request    = False   # set by end_cycle sequence action; mode_manager transitions to ARMED
+        self.unmapped_rfid_log    = collections.deque(maxlen=50)  # (timestamp, tag_hex) for unmapped tags
 
 
 class PerceptionState:
@@ -60,6 +62,8 @@ class TuningState:
     from the active profile JSON at startup.
     """
     def __init__(self):
+        self.mapping_reload_pending = False  # set by save endpoint; cleared on ARMED reload
+
         # Feature toggles — default ENABLED at boot regardless of profile flags.
         # The profile's LIDAR_STOP_ENABLED / RFID_ENABLED are no longer consulted
         # for the runtime gate; they remain only as deployment-time hints.
@@ -107,6 +111,10 @@ class AMRState:
         self.perception = PerceptionState()
         self.plc        = PLCState()
         self.tuning     = TuningState()
+
+        # asyncio event loop reference — set by main.py after loop starts.
+        # Used by Flask thread to dispatch reload_sequences via call_soon_threadsafe.
+        self.loop = None
 
     # ── SystemState shims ─────────────────────────────────────────────────────
 
@@ -215,6 +223,16 @@ class AMRState:
     def end_cycle_request(self): return self.kinematic.end_cycle_request
     @end_cycle_request.setter
     def end_cycle_request(self, v): self.kinematic.end_cycle_request = v
+
+    @property
+    def unmapped_rfid_log(self): return self.kinematic.unmapped_rfid_log
+
+    # ── TuningState shims (mapping) ───────────────────────────────────────────
+
+    @property
+    def mapping_reload_pending(self): return self.tuning.mapping_reload_pending
+    @mapping_reload_pending.setter
+    def mapping_reload_pending(self, v): self.tuning.mapping_reload_pending = bool(v)
 
     # ── PerceptionState shims ─────────────────────────────────────────────────
 

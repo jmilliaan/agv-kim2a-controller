@@ -81,18 +81,43 @@ class SequenceEngine:
 
     # ── Public trigger interface (called by rfid_processor and auto_mode) ────
 
-    async def on_rfid_tag(self, tag_hex: str):
-        """Called by rfid_processor whenever a tag is read."""
+    def reload_sequences(self, new_defs: list) -> bool:
+        """Hot-swap the sequence list. Safe to call from the asyncio loop.
+
+        Refuses if a sequence is currently running (returns False).
+        Clears armed and cooldown state — warn the operator that a recently-fired
+        rule could re-fire immediately after reload.
+        """
+        if self._active_sequence is not None:
+            logger.warning("[SEQ] reload_sequences refused — '%s' is running",
+                           self._active_sequence)
+            return False
+        self._sequences = list(new_defs)
+        self._armed.clear()
+        self._cooldowns.clear()
+        self._state.pending_sequence = None
+        logger.info("[SEQ] Sequences reloaded — %d definition(s) active", len(self._sequences))
+        return True
+
+    async def on_rfid_tag(self, tag_hex: str) -> bool:
+        """Called by rfid_processor whenever a tag is read.
+
+        Returns True if at least one matching sequence was found (and either
+        launched or armed), False if no sequence claimed this tag.
+        """
         now = time.time()
+        matched = False
         for seq in self._sequences:
             trig = seq["trigger"]
 
             if trig["type"] == "rfid" and trig["rfid_tag"] == tag_hex:
+                matched = True
                 if not self._check_preconditions(seq, now):
                     continue
                 self._active_task = asyncio.create_task(self._run_sequence(seq))
 
             elif trig["type"] == "rfid_then_marker" and trig["rfid_tag"] == tag_hex:
+                matched = True
                 if not self._check_preconditions(seq, now):
                     continue
                 # Arm: slow down for approach, record armed state
@@ -100,6 +125,7 @@ class SequenceEngine:
                 self._state.speed_mode       = "SLOW"
                 self._state.pending_sequence = seq["name"]
                 logger.info("[SEQ] Armed '%s' — slowing for marker approach", seq["name"])
+        return matched
 
     async def on_marker(self, side: str):
         """Called by auto_mode whenever a left/right marker is detected in the
