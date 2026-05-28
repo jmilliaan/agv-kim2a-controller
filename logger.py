@@ -27,6 +27,7 @@ import logging
 import logging.handlers
 import os
 import queue
+import time
 from collections import deque
 from datetime import datetime
 
@@ -40,9 +41,12 @@ _listener = None
 class _MemoryLogHandler(logging.Handler):
     """Appends WARNING and above records to the module-level deque."""
     def emit(self, record: logging.LogRecord) -> None:
+        # formatTime lives on Formatter, not Handler — derive the timestamp
+        # directly from the record so this works standalone (and behind the
+        # QueueListener).
+        ts = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(record.created))
         _error_log.append({
-            "time":    self.formatTime(record, "%Y-%m-%d %H:%M:%S")
-                       + f".{record.msecs:03.0f}",
+            "time":    f"{ts}.{record.msecs:03.0f}",
             "level":   record.levelname,
             "logger":  record.name,
             "message": record.getMessage(),
