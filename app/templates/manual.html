@@ -11,7 +11,7 @@
     background: #d4d0c8;
     color: #000;
     font-family: Consolas, 'Courier New', Courier, monospace;
-    font-size: 25px;
+    font-size: 20px;
     height: calc(100dvh - 86px);
     display: flex;
     flex-direction: column;
@@ -37,7 +37,7 @@
     justify-content: center;
     color: #a0a0e0;
     font-family: Consolas, 'Courier New', Courier, monospace;
-    font-size: 32px;
+    font-size: 26px;
     font-weight: bold;
     letter-spacing: 2px;
     text-decoration: none;
@@ -57,21 +57,21 @@
     color: #fff;
     padding: 12px 19px;
     font-weight: bold;
-    font-size: 28px;
+    font-size: 22px;
     letter-spacing: 2px;
     flex-shrink: 0;
   }
   #header a {
     color: #adf;
     text-decoration: none;
-    font-size: 24px;
+    font-size: 19px;
     letter-spacing: 0;
   }
   #header .title { flex: 1; }
 
   .mode-badge {
     padding: 2px 24px;
-    font-size: 24px;
+    font-size: 19px;
     font-weight: bold;
     letter-spacing: 1px;
     border-top:    2px solid #808080;
@@ -91,7 +91,7 @@
     padding: 8px 19px;
     background: #c0c0c0;
     border-bottom: 2px solid #808080;
-    font-size: 24px;
+    font-size: 19px;
     flex-shrink: 0;
   }
   #status-bar.ok   { color: #006000; }
@@ -101,9 +101,12 @@
   #main {
     flex: 1;
     display: flex;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
-    padding: 31px;
+    padding: 15px;
+    gap: 12px;
+    overflow: hidden;
   }
 
   /* ── Compass grid ── */
@@ -111,9 +114,10 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
-    gap: 15px;
-    width: min(90vw, 90vh, 702px);
-    height: min(90vw, 90vh, 702px);
+    gap: 9px;
+    width: min(54vw, 54vh, 421px);
+    height: min(54vw, 54vh, 421px);
+    flex-shrink: 0;
   }
 
   .btn {
@@ -121,15 +125,15 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 5px;
     background: #c0c0c0;
-    border-top:    6px solid #fff;
-    border-left:   6px solid #fff;
-    border-right:  6px solid #404040;
-    border-bottom: 6px solid #404040;
+    border-top:    4px solid #fff;
+    border-left:   4px solid #fff;
+    border-right:  4px solid #404040;
+    border-bottom: 4px solid #404040;
     cursor: pointer;
     font-family: Consolas, 'Courier New', Courier, monospace;
-    font-size: 22px;
+    font-size: 11px;
     font-weight: bold;
     letter-spacing: 0.10px;
     text-align: center;
@@ -140,17 +144,17 @@
   }
 
   .btn .arrow {
-    font-size: 44px;
+    font-size: 21px;
     line-height: 1;
   }
 
   .btn:active,
   .btn.pressed {
     background: #a0a0a0;
-    border-top:    6px solid #404040;
-    border-left:   6px solid #404040;
-    border-right:  6px solid #fff;
-    border-bottom: 6px solid #fff;
+    border-top:    4px solid #404040;
+    border-left:   4px solid #404040;
+    border-right:  4px solid #fff;
+    border-bottom: 4px solid #fff;
   }
 
   .btn.diag { background: #b8b8b0; }
@@ -160,7 +164,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 39px;
+    font-size: 31px;
     opacity: 0.3;
   }
 
@@ -172,7 +176,7 @@
   /* ── Active command display ── */
   #active-cmd {
     text-align: center;
-    font-size: 24px;
+    font-size: 19px;
     font-weight: bold;
     letter-spacing: 1px;
     padding: 8px 19px;
@@ -184,26 +188,30 @@
 
   #sensor-bar {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     justify-content: center;
-    gap: 31px;
-    padding: 6px 19px;
+    gap: 14px;
+    padding: 12px 14px;
     background: #b8b4ac;
-    border-top: 1px solid #a0a0a0;
+    border-left: 1px solid #a0a0a0;
     flex-shrink: 0;
-    font-size: 24px;
+    width: 155px;
+    font-size: 19px;
     font-weight: bold;
     letter-spacing: 0.10px;
+    align-self: stretch;
   }
-  .sen-field { display: flex; align-items: center; gap: 12px; }
-  .sen-label { color: #606060; font-size: 19px; letter-spacing: 1px; text-transform: uppercase; }
+  .sen-field { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+  .sen-field-row { display: flex; align-items: center; gap: 8px; }
+  .sen-label { color: #606060; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
   .sen-val {
-    font-size: 28px;
+    font-size: 18px;
     font-weight: bold;
     color: #000080;
     background: #fff;
-    padding: 1px 15px;
-    min-width: 101px;
+    padding: 1px 8px;
+    min-width: 80px;
     text-align: right;
     border-top: 2px solid #808080;
     border-left: 2px solid #808080;
@@ -211,7 +219,7 @@
     border-bottom: 2px solid #fff;
   }
   .lamp-sm {
-    width: 28px; height: 28px; border-radius: 50%;
+    width: 24px; height: 24px; border-radius: 50%;
     background: #888; border: 2px solid #606060;
   }
   .lamp-sm.on { background: radial-gradient(circle at 35% 35%, #80ff80, #00a000); border-color: #005000; box-shadow: 0 0 8px 1px #00cc0066; }
@@ -261,29 +269,39 @@
       <span class="arrow">&#8600;</span>RVS-R
     </button>
   </div>
+
+  <div id="sensor-bar">
+    <div class="sen-field">
+      <span class="sen-label">Tape Pos</span>
+      <div class="sen-field-row">
+        <span class="sen-val" id="m-pos">—</span>
+        <span class="sen-label">mm</span>
+      </div>
+    </div>
+    <div class="sen-field">
+      <div class="sen-field-row">
+        <span class="lamp-sm" id="m-tape"></span><span class="sen-label">TAPE</span>
+      </div>
+    </div>
+    <div class="sen-field">
+      <div class="sen-field-row">
+        <span class="lamp-sm" id="m-lm"></span><span class="sen-label">L.MRK</span>
+      </div>
+    </div>
+    <div class="sen-field">
+      <div class="sen-field-row">
+        <span class="lamp-sm" id="m-rm"></span><span class="sen-label">R.MRK</span>
+      </div>
+    </div>
+    <div class="sen-field">
+      <div class="sen-field-row">
+        <span class="lamp-sm" id="m-fail"></span><span class="sen-label">FAIL</span>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="active-cmd"></div>
-
-<div id="sensor-bar">
-  <div class="sen-field">
-    <span class="sen-label">Tape Pos</span>
-    <span class="sen-val" id="m-pos">—</span>
-    <span class="sen-label">mm</span>
-  </div>
-  <div class="sen-field">
-    <span class="lamp-sm" id="m-tape"></span><span class="sen-label">TAPE</span>
-  </div>
-  <div class="sen-field">
-    <span class="lamp-sm" id="m-lm"></span><span class="sen-label">L.MRK</span>
-  </div>
-  <div class="sen-field">
-    <span class="lamp-sm" id="m-rm"></span><span class="sen-label">R.MRK</span>
-  </div>
-  <div class="sen-field">
-    <span class="lamp-sm" id="m-fail"></span><span class="sen-label">FAIL</span>
-  </div>
-</div>
 
 <script>
   const statusBar  = document.getElementById('status-bar');

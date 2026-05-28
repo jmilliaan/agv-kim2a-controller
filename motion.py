@@ -3,12 +3,10 @@ import config
 # ── Kinematic Math ────────────────────────────────────────────────────────────
 
 def voltage_to_rpm(voltage):
-    rpm = 646.59 * voltage - 101.2
-    return rpm
+    return config.RPM_PER_VOLT * voltage + config.RPM_VOLT_OFFSET
 
 def rpm_to_voltage(rpm):
-    voltage = (rpm + 101.2) / 646.59
-    return voltage
+    return (rpm - config.RPM_VOLT_OFFSET) / config.RPM_PER_VOLT
 
 def mps_to_rpm(v_meter_per_second):
     v_meter_per_minute = v_meter_per_second * 60
@@ -26,16 +24,16 @@ async def _drive(state, left_fwd: bool, left_v: float, right_fwd: bool, right_v:
     lch = config.MOTOR_CHANNELS["left"]
     rch = config.MOTOR_CHANNELS["right"]
 
-    await state.do_queue.put((lch["do_fwd"],   left_fwd))
-    await state.do_queue.put((lch["do_rev"],   not left_fwd))
-    await state.do_queue.put((lch["do_brake"], False))
+    state.set_do(lch["do_fwd"],   left_fwd)
+    state.set_do(lch["do_rev"],   not left_fwd)
+    state.set_do(lch["do_brake"], False)
 
-    await state.do_queue.put((rch["do_fwd"],   right_fwd))
-    await state.do_queue.put((rch["do_rev"],   not right_fwd))
-    await state.do_queue.put((rch["do_brake"], False))
+    state.set_do(rch["do_fwd"],   right_fwd)
+    state.set_do(rch["do_rev"],   not right_fwd)
+    state.set_do(rch["do_brake"], False)
 
-    await state.ao_queue.put((lch["ao_speed"], left_v))
-    await state.ao_queue.put((rch["ao_speed"], right_v))
+    state.set_ao(lch["ao_speed"], left_v)
+    state.set_ao(rch["ao_speed"], right_v)
 
 async def set_forward(state, v):
     await _drive(state, True, v, True, v)
@@ -70,23 +68,23 @@ async def set_reverse_right(state, v_fast, v_slow):
 async def set_brake(state):
     lch = config.MOTOR_CHANNELS["left"]
     rch = config.MOTOR_CHANNELS["right"]
-    await state.ao_queue.put((lch["ao_speed"], 0.0))
-    await state.ao_queue.put((rch["ao_speed"], 0.0))
-    await state.do_queue.put((lch["do_fwd"],   False))
-    await state.do_queue.put((lch["do_rev"],   False))
-    await state.do_queue.put((lch["do_brake"], True))
-    await state.do_queue.put((rch["do_fwd"],   False))
-    await state.do_queue.put((rch["do_rev"],   False))
-    await state.do_queue.put((rch["do_brake"], True))
+    state.set_ao(lch["ao_speed"], 0.0)
+    state.set_ao(rch["ao_speed"], 0.0)
+    state.set_do(lch["do_fwd"],   False)
+    state.set_do(lch["do_rev"],   False)
+    state.set_do(lch["do_brake"], True)
+    state.set_do(rch["do_fwd"],   False)
+    state.set_do(rch["do_rev"],   False)
+    state.set_do(rch["do_brake"], True)
 
 async def idle(state):
     lch = config.MOTOR_CHANNELS["left"]
     rch = config.MOTOR_CHANNELS["right"]
-    await state.ao_queue.put((lch["ao_speed"], 0.0))
-    await state.ao_queue.put((rch["ao_speed"], 0.0))
-    await state.do_queue.put((lch["do_fwd"],   False))
-    await state.do_queue.put((lch["do_rev"],   False))
-    await state.do_queue.put((lch["do_brake"], False))
-    await state.do_queue.put((rch["do_fwd"],   False))
-    await state.do_queue.put((rch["do_rev"],   False))
-    await state.do_queue.put((rch["do_brake"], False))
+    state.set_ao(lch["ao_speed"], 0.0)
+    state.set_ao(rch["ao_speed"], 0.0)
+    state.set_do(lch["do_fwd"],   False)
+    state.set_do(lch["do_rev"],   False)
+    state.set_do(lch["do_brake"], False)
+    state.set_do(rch["do_fwd"],   False)
+    state.set_do(rch["do_rev"],   False)
+    state.set_do(rch["do_brake"], False)

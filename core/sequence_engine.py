@@ -28,6 +28,13 @@ class SequenceTimeout(Exception):
     pass
 
 
+class SequencePLCFault(Exception):
+    """Raised when a PLC handshake never completes within its done_timeout.
+    Unlike SequenceTimeout, this holds the AGV stopped (fault) until the
+    operator presses RESET — it must NOT auto-resume."""
+    pass
+
+
 class SequenceEngine:
 
     def __init__(self, state, sequence_defs):
@@ -216,6 +223,13 @@ class SequenceEngine:
             self._state.sequence_stop = False
             self._state.speed_mode    = "HIGH"
 
+        except SequencePLCFault as exc:
+            # Hold the AGV stopped (fault). Do NOT clear sequence_stop — the
+            # operator must press RESET, which returns to ARMED and clears it.
+            logger.error("[SEQ] '%s' PLC FAULT (%s) — holding, operator RESET required",
+                         name, exc)
+            self._state.sequence_stop = True
+
         finally:
             self._active_sequence = None
             self._cooldowns[name] = time.time() + seq.get("cooldown_s", 0.0)
@@ -286,9 +300,15 @@ class SequenceEngine:
                 raise asyncio.CancelledError()
             await asyncio.sleep(0.1)
 
-        # Phase B: wait indefinitely for PLC complete flag to go HIGH
-        logger.info("[SEQ] Waiting PLC seq=%d done (flag HIGH) — no timeout", seq_num)
+        # Phase B: wait for the PLC complete flag to go HIGH, bounded by
+        # done_timeout. On timeout the AGV faults (stops and holds) — it must
+        # not silently resume with a possibly-unfinished load.
+        logger.info("[SEQ] Waiting PLC seq=%d done (flag HIGH) — timeout %.0fs",
+                    seq_num, done_timeout)
+        deadline = time.time() + done_timeout
         while not self._state.plc_sequence_complete[seq_num]:
+            if time.time() > deadline:
+                raise SequencePLCFault(f"wait_plc_complete done seq={seq_num}")
             if self._state.current_mode != "running":
                 raise asyncio.CancelledError()
             await asyncio.sleep(0.1)

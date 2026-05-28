@@ -49,8 +49,8 @@ async def safety_watchdog(state, watched: list):
                 )
                 state.system_error = True
                 # Zero speed outputs immediately without waiting for mode_manager
-                await state.ao_queue.put((0, 0.0))
-                await state.ao_queue.put((1, 0.0))
+                state.set_ao(0, 0.0)
+                state.set_ao(1, 0.0)
         else:
             if state.system_error:
                 logger.info("WATCHDOG: all drivers recovered — clearing system_error")

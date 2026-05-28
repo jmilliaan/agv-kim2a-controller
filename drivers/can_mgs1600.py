@@ -36,7 +36,7 @@ class CANReader(SensorDriver):
             bus      = None
             notifier = None
             try:
-                loop = asyncio.get_event_loop()
+                loop = asyncio.get_running_loop()
                 bus = await loop.run_in_executor(None, lambda: can.interface.Bus(
                     channel=channel,
                     interface="slcan",

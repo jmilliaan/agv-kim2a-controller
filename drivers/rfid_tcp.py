@@ -15,7 +15,7 @@ class RFIDReader(SensorDriver):
         super().__init__("RFID TCP")
 
     async def run(self, state):
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
 
         while True:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

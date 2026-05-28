@@ -5,6 +5,8 @@ Extracted from modes.py to be reusable across all auto-mode variants (forward,
 reverse, future docking modes, etc.).
 """
 
+import time
+
 
 class PIDController:
 
@@ -21,7 +23,6 @@ class PIDController:
         self._v_red_coef  = v_red_coef
         self._sr_alpha    = sr_alpha
         self._sr_cap      = sr_cap
-        self._alpha       = dt / ((td / n) + dt)
         self.reset()
 
     # ── State management ──────────────────────────────────────────────────────
@@ -34,17 +35,18 @@ class PIDController:
         self.last_pv         = 0.0
         self.filtered_d      = 0.0
         self.speed_reduction = 0.0
+        self._last_t         = None   # perf_counter ts of previous compute()
 
     def update_gains(self, kp, td, n, v_red_coef):
         """Live gain switching (e.g. HIGH speed ↔ SLOW speed).
 
         Does NOT reset integrator or filter state — the switch should be smooth.
-        Only the derivative filter coefficient needs recomputing."""
+        The derivative filter coefficient is recomputed per cycle from the
+        measured dt, so nothing to precompute here."""
         self._kp         = kp
         self._td         = td
         self._n          = n
         self._v_red_coef = v_red_coef
-        self._alpha      = self._dt / ((td / n) + self._dt)
 
     # ── Compute ───────────────────────────────────────────────────────────────
 
@@ -62,28 +64,42 @@ class PIDController:
         """
         e = error_sign * pv
 
+        # ── Measured loop period ──────────────────────────────────────────────
+        # Use the real elapsed time, not the nominal config.DT — frame timing
+        # jitters and the loop only runs on fresh sensor frames. Clamp to a sane
+        # band so a scheduling hiccup or a resume-after-stop gap can't blow up
+        # the I/D terms.
+        now = time.perf_counter()
+        if self._last_t is None:
+            dt = self._dt
+        else:
+            dt = now - self._last_t
+            dt = max(0.2 * self._dt, min(5.0 * self._dt, dt))
+        self._last_t = now
+
         # ── P ─────────────────────────────────────────────────────────────────
         p_term = self._kp * e
 
         # ── I (with deadband) ─────────────────────────────────────────────────
         if self._ti is not None:
             if abs(e) < self._ti_deadband:
-                self.integral += e * self._dt
+                self.integral += e * dt
                 self.integral  = max(-self._ti_max, min(self._ti_max, self.integral))
             i_term = self._kp * (1.0 / self._ti) * self.integral
         else:
             i_term = 0.0
 
         # ── D (low-pass filtered) ─────────────────────────────────────────────
-        raw_d           = -self._kp * self._td * ((pv - self.last_pv) / self._dt)
-        self.filtered_d += self._alpha * (raw_d - self.filtered_d)
+        alpha            = dt / ((self._td / self._n) + dt)
+        raw_d            = -self._kp * self._td * ((pv - self.last_pv) / dt)
+        self.filtered_d += alpha * (raw_d - self.filtered_d)
 
         # ── Output clamp ──────────────────────────────────────────────────────
         output = p_term + i_term + self.filtered_d
         output = max(-self._output_clamp, min(self._output_clamp, output))
 
         # ── Speed reduction (low-pass filtered, capped) ───────────────────────
-        raw_sr               = abs(e * self._v_red_coef) + abs((pv - self.last_pv) / self._dt) * 0.5
+        raw_sr               = abs(e * self._v_red_coef) + abs((pv - self.last_pv) / dt) * 0.5
         raw_sr               = min(raw_sr, base_rpm * self._sr_cap)
         self.speed_reduction += self._sr_alpha * (raw_sr - self.speed_reduction)
 

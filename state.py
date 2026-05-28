@@ -75,8 +75,16 @@ class AMRState:
         self.di_queue     = asyncio.Queue()  # DI readings
         self.rfid_queue   = asyncio.Queue()  # RFID tag reads
         self.sensor_queue = asyncio.Queue()  # CAN magnetic sensor readings
-        self.do_queue     = asyncio.Queue()  # commands: (channel_no, state)
-        self.ao_queue     = asyncio.Queue()  # commands: (channel_no, voltage)
+
+        # ── Output setpoint tables (latest-wins, non-blocking) ────────────────
+        # Producers (motion, auto_mode, watchdog) call set_ao/set_do; the AO/DO
+        # writer tasks wake on the dirty Event and assert the *latest* values.
+        # This bounds memory and prevents replay of stale commands after a
+        # comms reconnect (a FIFO queue would replay the backlog).
+        self.ao_setpoints = {}            # {channel_no: voltage}
+        self.do_setpoints = {}            # {channel_no: bool}
+        self.ao_dirty     = asyncio.Event()
+        self.do_dirty     = asyncio.Event()
 
         # ── Typed domains ──────────────────────────────────────────────────────
         self.system     = SystemState()
@@ -84,6 +92,17 @@ class AMRState:
         self.perception = PerceptionState()
         self.plc        = PLCState()
         self.trolley    = TrolleyState()
+
+    # ── Output setpoint setters (synchronous: a group of calls with no await
+    #    between them is applied atomically before a writer can wake) ──────────
+
+    def set_ao(self, channel_no, voltage):
+        self.ao_setpoints[channel_no] = voltage
+        self.ao_dirty.set()
+
+    def set_do(self, channel_no, active_state):
+        self.do_setpoints[channel_no] = bool(active_state)
+        self.do_dirty.set()
 
     # ── SystemState shims ─────────────────────────────────────────────────────
 

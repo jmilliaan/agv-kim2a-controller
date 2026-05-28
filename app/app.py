@@ -23,8 +23,9 @@ logger = logging.getLogger(__name__)
 _here = os.path.dirname(os.path.abspath(__file__))
 app   = Flask(__name__, template_folder=os.path.join(_here, "templates"))
 
-_state  = None   # set once by run_server()
-_engine = None   # set once by run_server()
+_state   = None   # set once by run_server()
+_engine  = None   # set once by run_server()
+_manager = None   # set once by run_server() — toggles RFID/SLMP drivers live
 
 _NUM_SEQ_BITS = 9
 
@@ -361,6 +362,41 @@ def api_params():
     })
 
 
+@app.route("/api/params/features", methods=["POST"])
+def api_set_features():
+    import config
+    if _state is None:
+        return jsonify({"error": "state not initialised"}), 503
+
+    mode = _state.current_mode
+    if mode in ("running", "reverse", "emergency"):
+        return jsonify({"error": f"Cannot change settings while AGV is {mode}"}), 403
+
+    if _manager is None:
+        return jsonify({"error": "driver manager unavailable"}), 503
+
+    data    = request.get_json(silent=True) or {}
+    allowed = {"RFID_ENABLED", "SLMP_ENABLED"}
+    updates = {k: v for k, v in data.items() if k in allowed}
+    if not updates:
+        return jsonify({"error": "no valid feature flags provided"}), 400
+    for k, v in updates.items():
+        if not isinstance(v, bool):
+            return jsonify({"error": f"{k} must be true or false"}), 400
+
+    try:
+        for k, v in updates.items():
+            _manager.set_enabled(k, v)
+    except Exception as e:
+        return jsonify({"error": f"failed to apply: {e}"}), 500
+
+    return jsonify({
+        "ok": True,
+        "RFID_ENABLED": config.RFID_ENABLED,
+        "SLMP_ENABLED": config.SLMP_ENABLED,
+    })
+
+
 @app.route("/trolley")
 def trolley():
     return render_template("trolley.html")
@@ -427,10 +463,11 @@ def api_wifi():
         return jsonify({"ok": False, "signal": None, "ssid": None, "error": str(e)})
 
 
-def run_server(state, engine=None):
-    global _state, _engine
+def run_server(state, engine=None, manager=None):
+    global _state, _engine, _manager
     import config
-    _state  = state
-    _engine = engine
+    _state   = state
+    _engine  = engine
+    _manager = manager
     logger.info("[Flask] Dashboard at http://%s:5000", config.LOCAL_IP)
     app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)

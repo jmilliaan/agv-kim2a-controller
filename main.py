@@ -22,6 +22,78 @@ from app.app import run_server
 logger = logging.getLogger(__name__)
 
 
+class DriverManager:
+    """Starts/stops the toggleable hardware drivers (RFID, SLMP) at runtime.
+
+    The Flask server runs in a separate thread, so set_enabled() marshals the
+    start/stop onto the asyncio loop via run_coroutine_threadsafe. Toggles are
+    NOT persisted — on restart the controller boots from the profile JSON.
+    """
+
+    _SPEC = {
+        "RFID_ENABLED": {"factory": RFIDReader, "watch": True},
+        "SLMP_ENABLED": {"factory": SLMPDriver, "watch": False},
+    }
+
+    def __init__(self, state, watched):
+        self._state   = state
+        self._watched = watched          # shared list read by safety_watchdog
+        self._loop    = None
+        self._tasks   = {}               # flag -> asyncio.Task
+        self._drivers = {}               # flag -> driver instance
+
+    def bind_loop(self, loop):
+        self._loop = loop
+
+    def is_running(self, flag):
+        t = self._tasks.get(flag)
+        return t is not None and not t.done()
+
+    async def _start(self, flag):
+        if self.is_running(flag):
+            return
+        spec = self._SPEC[flag]
+        drv  = spec["factory"]()
+        self._drivers[flag] = drv
+        self._tasks[flag]   = asyncio.create_task(drv.run(self._state))
+        if spec["watch"]:
+            self._watched.append((drv, config.WATCHDOG_RFID_TIMEOUT_S))
+        setattr(config, flag, True)
+        logger.info("[DriverManager] %s ENABLED (live)", flag)
+
+    async def _stop(self, flag):
+        # Remove from the watchdog first so a cancelled driver can't trip a
+        # stale-data fault between cancellation and removal.
+        drv = self._drivers.pop(flag, None)
+        if drv is not None:
+            self._watched[:] = [(d, t) for (d, t) in self._watched if d is not drv]
+        task = self._tasks.pop(flag, None)
+        if task is not None and not task.done():
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+        setattr(config, flag, False)
+        logger.info("[DriverManager] %s DISABLED (live)", flag)
+
+    async def _apply(self, flag, enabled):
+        if enabled:
+            await self._start(flag)
+        else:
+            await self._stop(flag)
+
+    def set_enabled(self, flag, enabled):
+        """Thread-safe entry point for the Flask server. Blocks until applied."""
+        if flag not in self._SPEC:
+            raise ValueError(f"unknown feature flag: {flag}")
+        if self._loop is None:
+            raise RuntimeError("driver manager loop not bound")
+        fut = asyncio.run_coroutine_threadsafe(
+            self._apply(flag, bool(enabled)), self._loop)
+        return fut.result(timeout=10)
+
+
 async def shutdown():
     """Zero all DO and AO outputs via direct Modbus writes, bypassing the queues."""
     logger.info("Shutting down — zeroing all outputs...")
@@ -54,12 +126,12 @@ async def run():
                 config.AGV_ID, len(config.SEQUENCES))
 
     # ── Instantiate drivers (feature-flag gated) ──────────────────────────────
+    # DIO and CAN are fixed at boot. RFID and SLMP are managed by DriverManager
+    # so they can be toggled live from the HMI.
     di_drv   = DIReader()   if config.DIO_ENABLED  else None
     can_drv  = CANReader()  if config.CAN_ENABLED  else None
-    rfid_drv = RFIDReader() if config.RFID_ENABLED else None
     do_drv   = DOWriter()   if config.DIO_ENABLED  else None
     ao_drv   = AOWriter()
-    slmp_drv = SLMPDriver() if config.SLMP_ENABLED else None
 
     for name, enabled in [
         ("DIO (DI+DO)", config.DIO_ENABLED),
@@ -69,7 +141,11 @@ async def run():
     ]:
         logger.info("%-12s %s", name, "ENABLED" if enabled else "DISABLED")
 
-    threading.Thread(target=run_server, args=(state, engine), daemon=True).start()
+    watched = []
+    manager = DriverManager(state, watched)
+    manager.bind_loop(loop)
+
+    threading.Thread(target=run_server, args=(state, engine, manager), daemon=True).start()
 
     def terminate_gracefully():
         logger.info("Termination signal received. Cancelling tasks...")
@@ -80,7 +156,6 @@ async def run():
     loop.add_signal_handler(signal.SIGINT, terminate_gracefully)
 
     # ── Build task list ───────────────────────────────────────────────────────
-    watched = []
     core_tasks = [ao_drv.run(state)]
 
     if do_drv:
@@ -91,15 +166,17 @@ async def run():
     if can_drv:
         core_tasks.append(can_drv.run(state))
         watched.append((can_drv, config.WATCHDOG_CAN_TIMEOUT_S))
-    if rfid_drv:
-        core_tasks.append(rfid_drv.run(state))
-        watched.append((rfid_drv, config.WATCHDOG_RFID_TIMEOUT_S))
-    if slmp_drv:
-        core_tasks.append(slmp_drv.run(state))
 
     core_tasks.append(safety_watchdog(state, watched=watched))
     core_tasks.append(rfid_processor(state, engine))
     core_tasks.append(modes.mode_manager(state, engine))
+
+    # RFID and SLMP run under the manager so the HMI can toggle them live.
+    # Boots from the profile JSON values; toggles do not persist across restart.
+    if config.RFID_ENABLED:
+        await manager._apply("RFID_ENABLED", True)
+    if config.SLMP_ENABLED:
+        await manager._apply("SLMP_ENABLED", True)
 
     tasks = asyncio.gather(*core_tasks)
 

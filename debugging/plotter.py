@@ -35,7 +35,9 @@ recorder.record(
 import csv as csv_module
 import logging
 import os
+import threading
 import time
+from collections import deque
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -46,7 +48,13 @@ logger = logging.getLogger(__name__)
 
 PLOTTING_ENABLED = True
 
-PLOT_DIR = "/home/agv1-kim/src/analysis_plot"
+# Cap on samples kept in memory (≈20 min @100 Hz). Bounds RAM regardless of run
+# length; on a longer run the plot/CSV reflect the most recent window.
+PLOT_MAX_SAMPLES = 120000
+
+# Repo-relative: <repo>/analysis_plot  (debugging/ is one level under the repo)
+PLOT_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "analysis_plot")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -62,24 +70,24 @@ class RunRecorder:
 
     def __init__(self):
         self._t0          = None
-        self._times       = []
-        self._errors      = []
-        self._left_rpms   = []
-        self._right_rpms  = []
-        self._pid_outputs = []
-        self._d_terms     = []
+        self._times       = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._errors      = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._left_rpms   = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._right_rpms  = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._pid_outputs = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._d_terms     = deque(maxlen=PLOT_MAX_SAMPLES)
         self._active      = False
 
     def start(self):
         if not PLOTTING_ENABLED:
             return
         self._t0          = time.time()
-        self._times       = []
-        self._errors      = []
-        self._left_rpms   = []
-        self._right_rpms  = []
-        self._pid_outputs = []
-        self._d_terms     = []
+        self._times       = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._errors      = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._left_rpms   = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._right_rpms  = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._pid_outputs = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._d_terms     = deque(maxlen=PLOT_MAX_SAMPLES)
         self._active      = True
         logger.info("[PLOT] Recording started.")
 
@@ -119,21 +127,28 @@ class RunRecorder:
             # or an emergency stop in the first cycle. Not an error.
             logger.info("[PLOT] Run too short (%d samples) — no file saved.", n)
             return
-        logger.info("[PLOT] Run ended — %d samples over %.1fs. Saving...", n, self._times[-1])
-        try:
-            _save_outputs(
-                self._times, self._errors,
-                self._left_rpms, self._right_rpms,
-                self._pid_outputs, self._d_terms
-            )
-        except Exception as e:
-            # Never let a plotting failure crash the caller
-            logger.error("[PLOT] ERROR saving output: %s", e)
+        logger.info("[PLOT] Run ended — %d samples over %.1fs. Saving (background)...",
+                    n, self._times[-1])
+        # Copy to plain lists and save off-thread. stop() is called from
+        # auto_mode's finally (often during cancellation), so it MUST NOT block
+        # the event loop — matplotlib rendering can take hundreds of ms.
+        args = (list(self._times), list(self._errors),
+                list(self._left_rpms), list(self._right_rpms),
+                list(self._pid_outputs), list(self._d_terms))
+        threading.Thread(target=_save_safe, args=args, daemon=True).start()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  SAVE FUNCTION
 # ══════════════════════════════════════════════════════════════════════════════
+
+def _save_safe(times, errors, left_rpms, right_rpms, pid_outputs, d_terms):
+    """Thread entry point — never let a plotting failure escape the worker."""
+    try:
+        _save_outputs(times, errors, left_rpms, right_rpms, pid_outputs, d_terms)
+    except Exception as e:
+        logger.error("[PLOT] ERROR saving output: %s", e)
+
 
 def _save_outputs(times, errors, left_rpms, right_rpms, pid_outputs, d_terms):
     os.makedirs(PLOT_DIR, exist_ok=True)

@@ -55,6 +55,8 @@ async def auto_mode(state, direction="forward", engine=None):
     tape_was_lost        = False
     was_sequence_stopped = False
     last_speed_mode      = None   # tracks when gain set must change
+    last_valid_pv        = None   # last accepted lateral offset (mm) for slew limit
+    _dbg_count           = 0      # throttles the per-cycle PID debug log
 
     recorder = RunRecorder()
     recorder.start()
@@ -75,6 +77,7 @@ async def auto_mode(state, direction="forward", engine=None):
                     await motion.set_brake(state)
                     current_target_speed = 0.0
                     pid.reset()
+                    last_valid_pv = None
                     was_sequence_stopped = True
                 await asyncio.sleep(config.DT)
                 continue
@@ -126,6 +129,7 @@ async def auto_mode(state, direction="forward", engine=None):
                     await motion.set_brake(state)
                     current_target_speed = 0.0
                     pid.reset()
+                    last_valid_pv = None
                     tape_was_lost = True
                     await asyncio.sleep(0.01)
                     continue
@@ -158,15 +162,34 @@ async def auto_mode(state, direction="forward", engine=None):
 
                 base_rpm = motion.mps_to_rpm(current_target_speed)
 
-                # ── PID compute ───────────────────────────────────────────────
+                # ── Sensor sanity + slew limit ────────────────────────────────
+                # Reject physically impossible readings (a glitch frame would
+                # otherwise jerk the steering). Out-of-range → skip this frame
+                # and hold the last command; a large jump → clamp toward the
+                # last accepted value.
                 pv = sensor["left_mm"]
+                if pv is None or abs(pv) > config.SENSOR_MAX_MM:
+                    _dbg_count += 1
+                    if _dbg_count % 25 == 0:
+                        logger.warning("[%s] sensor pv out of range (%s mm) — skipping frame",
+                                       "AUTO" if direction == "forward" else "REVERSE", pv)
+                    await asyncio.sleep(config.DT)
+                    continue
+                if last_valid_pv is not None:
+                    step = pv - last_valid_pv
+                    if abs(step) > config.SENSOR_MAX_STEP_MM:
+                        pv = last_valid_pv + (config.SENSOR_MAX_STEP_MM
+                                              if step > 0 else -config.SENSOR_MAX_STEP_MM)
+                last_valid_pv = pv
+
+                # ── PID compute ───────────────────────────────────────────────
                 left_rpm, right_rpm, dbg = pid.compute(pv, base_rpm, error_sign)
 
                 left_v  = max(0.0, min(5.0, motion.rpm_to_voltage(left_rpm)))
                 right_v = max(0.0, min(5.0, motion.rpm_to_voltage(right_rpm)))
 
-                await state.ao_queue.put((0, left_v))
-                await state.ao_queue.put((1, right_v))
+                state.set_ao(0, left_v)
+                state.set_ao(1, right_v)
 
                 state.left_rpm     = left_rpm
                 state.right_rpm    = right_rpm
@@ -177,14 +200,18 @@ async def auto_mode(state, direction="forward", engine=None):
                                 right_rpm=right_rpm, pid_output=dbg["output"],
                                 d_term=dbg["d"])
 
-                label = state.speed_mode if direction == "forward" else "REVERSE"
-                logger.debug(
-                    "[%s] Target=%.2fm/s e=%+.1fmm P=%+.1f I=%+.1f D=%+.1f "
-                    "out=%+.1f L=%.1f R=%.1frpm Vred=%.1frpm",
-                    label, current_target_speed, dbg["e"],
-                    dbg["p"], dbg["i"], dbg["d"], dbg["output"],
-                    left_rpm, right_rpm, dbg["speed_reduction"],
-                )
+                # Throttle the per-cycle PID debug line (~every 25 cycles) so an
+                # accidental console DEBUG level can't flood at 100 Hz.
+                _dbg_count += 1
+                if _dbg_count % 25 == 0:
+                    label = state.speed_mode if direction == "forward" else "REVERSE"
+                    logger.debug(
+                        "[%s] Target=%.2fm/s e=%+.1fmm P=%+.1f I=%+.1f D=%+.1f "
+                        "out=%+.1f L=%.1f R=%.1frpm Vred=%.1frpm",
+                        label, current_target_speed, dbg["e"],
+                        dbg["p"], dbg["i"], dbg["d"], dbg["output"],
+                        left_rpm, right_rpm, dbg["speed_reduction"],
+                    )
 
             # ── CAN timeout ───────────────────────────────────────────────────
             if time.time() - state.can_last_rx > config.CAN_TIMEOUT:
@@ -194,6 +221,7 @@ async def auto_mode(state, direction="forward", engine=None):
                     await motion.set_brake(state)
                     current_target_speed = 0.0
                     pid.reset()
+                    last_valid_pv = None
                     tape_was_lost = True
 
                 await asyncio.sleep(config.DT)
@@ -304,17 +332,11 @@ async def mode_manager(state, engine=None):
             active_task = None
 
     async def _flush_and_idle():
-        while not state.do_queue.empty():
-            state.do_queue.get_nowait()
-        while not state.ao_queue.empty():
-            state.ao_queue.get_nowait()
+        # Setpoint tables are latest-wins, so asserting idle overwrites any
+        # prior command — no queue to drain.
         await motion.idle(state)
 
     async def _flush_and_brake():
-        while not state.do_queue.empty():
-            state.do_queue.get_nowait()
-        while not state.ao_queue.empty():
-            state.ao_queue.get_nowait()
         await motion.set_brake(state)
 
     def _reset_sequence_state():

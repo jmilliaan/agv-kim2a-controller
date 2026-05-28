@@ -10,7 +10,7 @@
     background: #d4d0c8;
     color: #000;
     font-family: Consolas, 'Courier New', Courier, monospace;
-    font-size: 25px;
+    font-size: 20px;
     padding: 15px;
     padding-bottom: 101px;
   }
@@ -31,11 +31,11 @@
     padding: 10px 19px;
     margin-bottom: 15px;
     font-weight: bold;
-    font-size: 28px;
+    font-size: 22px;
     letter-spacing: 2px;
   }
   #header .title { flex: 1; }
-  #ts { font-size: 22px; color: #c0c0c0; }
+  #ts { font-size: 18px; color: #c0c0c0; }
 
   .grid {
     display: grid;
@@ -52,7 +52,7 @@
     background: #000080;
     color: #fff;
     font-weight: bold;
-    font-size: 22px;
+    font-size: 18px;
     letter-spacing: 2px;
     padding: 6px 15px;
     text-transform: uppercase;
@@ -68,7 +68,7 @@
 
   td {
     padding: 6px 15px;
-    font-size: 24px;
+    font-size: 19px;
     vertical-align: middle;
   }
   td.param-name {
@@ -84,6 +84,73 @@
   }
   td.param-val.bool-true  { color: #006000; }
   td.param-val.bool-false { color: #a00000; }
+
+  /* ── Controller settings (editable) ── */
+  #settings-card { margin-bottom: 15px; }
+  .setting-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #b0b0b0;
+  }
+  .setting-row:last-of-type { border-bottom: none; }
+  .setting-name {
+    flex: 1;
+    color: #303060;
+    font-weight: bold;
+    font-size: 19px;
+    letter-spacing: 0.6px;
+  }
+  .toggle {
+    position: relative;
+    width: 116px; height: 38px;
+    flex-shrink: 0;
+    background: #a00000;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 14px;
+    letter-spacing: 1px;
+    color: #fff;
+    border-top:    2px solid #808080;
+    border-left:   2px solid #808080;
+    border-right:  2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transition: background 0.1s;
+  }
+  .toggle.on { background: #006000; }
+  .toggle::before {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    content: "OFF";
+    right: 13px;
+  }
+  .toggle.on::before { content: "ON"; left: 15px; right: auto; }
+  .toggle-knob {
+    position: absolute;
+    top: 2px; bottom: 2px;
+    left: 2px;
+    width: 46px;
+    background: #c0c0c0;
+    border-top:    2px solid #fff;
+    border-left:   2px solid #fff;
+    border-right:  2px solid #404040;
+    border-bottom: 2px solid #404040;
+    transition: left 0.1s;
+  }
+  .toggle.on .toggle-knob { left: calc(100% - 48px); }
+  #settings-card.locked .toggle { opacity: 0.5; cursor: not-allowed; }
+  #settings-msg {
+    padding: 8px 15px;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    border-top: 1px solid #b0b0b0;
+    min-height: 18px;
+  }
+  #settings-msg.info { color: #303060; }
+  #settings-msg.warn { color: #a00000; font-weight: bold; }
+  #settings-msg.ok   { color: #006000; font-weight: bold; }
 
   /* ── Nav bar ── */
   #nav-bar {
@@ -102,7 +169,7 @@
     justify-content: center;
     color: #a0a0e0;
     font-family: Consolas, 'Courier New', Courier, monospace;
-    font-size: 32px;
+    font-size: 26px;
     font-weight: bold;
     letter-spacing: 2px;
     text-decoration: none;
@@ -121,6 +188,23 @@
 <div id="header" class="raised">
   <span class="title">PARAMETER LIST</span>
   <span id="ts">—</span>
+</div>
+
+<div id="settings-card" class="section raised">
+  <div class="section-title">CONTROLLER SETTINGS</div>
+  <div class="setting-row">
+    <span class="setting-name">RFID TAG READING</span>
+    <button class="toggle" id="toggle-RFID_ENABLED" data-flag="RFID_ENABLED">
+      <span class="toggle-knob"></span>
+    </button>
+  </div>
+  <div class="setting-row">
+    <span class="setting-name">SLMP (PLC LINK)</span>
+    <button class="toggle" id="toggle-SLMP_ENABLED" data-flag="SLMP_ENABLED">
+      <span class="toggle-knob"></span>
+    </button>
+  </div>
+  <div id="settings-msg" class="info">—</div>
 </div>
 
 <div class="grid" id="params-grid"></div>
@@ -158,11 +242,69 @@ fetch('/api/params')
         `<table><tbody>${rows}</tbody></table>`;
       grid.appendChild(div);
     }
+    if (data['Features']) {
+      setToggle('RFID_ENABLED', data['Features']['RFID Enabled']);
+      setToggle('SLMP_ENABLED', data['Features']['SLMP Enabled']);
+    }
     document.getElementById('ts').textContent = new Date().toLocaleTimeString();
   })
   .catch(() => {
     document.getElementById('params-grid').textContent = 'Failed to load parameters.';
   });
+
+// ── Editable controller settings ──────────────────────────────────────────
+const _card = document.getElementById('settings-card');
+const _msg  = document.getElementById('settings-msg');
+let _locked = null;
+
+function _setMsg(text, cls) { _msg.textContent = text; _msg.className = cls; }
+
+function setToggle(flag, on) {
+  const btn = document.getElementById('toggle-' + flag);
+  if (btn) btn.classList.toggle('on', !!on);
+}
+
+['RFID_ENABLED', 'SLMP_ENABLED'].forEach(flag => {
+  document.getElementById('toggle-' + flag).addEventListener('click', () => {
+    if (_card.classList.contains('locked')) return;
+    const btn    = document.getElementById('toggle-' + flag);
+    const newVal = !btn.classList.contains('on');
+    _setMsg('Saving…', 'info');
+    fetch('/api/params/features', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [flag]: newVal })
+    })
+      .then(r => r.json().then(d => ({ ok: r.ok, d })))
+      .then(({ ok, d }) => {
+        if (!ok) { _setMsg(d.error || 'Failed to apply.', 'warn'); return; }
+        setToggle('RFID_ENABLED', d.RFID_ENABLED);
+        setToggle('SLMP_ENABLED', d.SLMP_ENABLED);
+        _setMsg('Applied. Resets to profile default on restart.', 'ok');
+      })
+      .catch(() => _setMsg('Connection error — not saved.', 'warn'));
+  });
+});
+
+function pollMode() {
+  fetch('/api/state')
+    .then(r => r.json())
+    .then(d => {
+      const mode     = d.agv && d.agv.mode;
+      const isLocked = ['running', 'reverse', 'emergency'].includes(mode);
+      if (isLocked !== _locked) {
+        _locked = isLocked;
+        _card.classList.toggle('locked', isLocked);
+        if (isLocked)
+          _setMsg('Locked — cannot change while AGV is ' + mode.toUpperCase() + '.', 'warn');
+        else
+          _setMsg('Changes apply immediately. Resets to profile default on restart.', 'info');
+      }
+    })
+    .catch(() => {});
+}
+pollMode();
+setInterval(pollMode, 1000);
 </script>
 </body>
 </html>

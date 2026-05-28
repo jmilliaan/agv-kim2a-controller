@@ -26,11 +26,15 @@ Output
 import logging
 import logging.handlers
 import os
+import queue
 from collections import deque
 from datetime import datetime
 
 # In-memory ring buffer for WARNING+ records — read by the Flask /errors page
 _error_log: deque = deque(maxlen=500)
+
+# Background log dispatcher — keeps file/console I/O off the control loop thread
+_listener = None
 
 
 class _MemoryLogHandler(logging.Handler):
@@ -72,11 +76,12 @@ def setup_logging(
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    # File handler: DEBUG and above, rotating at 10 MB, keep 5 backups
+    # File handler: INFO and above (was DEBUG — the 100 Hz PID debug line must
+    # not hit disk every cycle), rotating at 10 MB, keep 5 backups
     file_handler = logging.handlers.RotatingFileHandler(
         log_path, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
     )
-    file_handler.setLevel(logging.DEBUG)
+    file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(fmt)
 
     # Console handler: configurable level (default INFO)
@@ -87,11 +92,22 @@ def setup_logging(
     memory_handler = _MemoryLogHandler()
     memory_handler.setLevel(logging.WARNING)
 
+    # Decouple logging I/O from the control loop: the root logger only enqueues
+    # records (non-blocking); a background QueueListener thread runs the real
+    # file/console/memory handlers, so an SD-card write stall cannot jitter the
+    # asyncio control loop.
+    global _listener
+    log_queue: queue.Queue = queue.Queue(-1)
+    queue_handler = logging.handlers.QueueHandler(log_queue)
+
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)   # root captures all; handlers filter
-    root.addHandler(file_handler)
-    root.addHandler(console_handler)
-    root.addHandler(memory_handler)
+    root.addHandler(queue_handler)
+
+    _listener = logging.handlers.QueueListener(
+        log_queue, file_handler, console_handler, memory_handler,
+        respect_handler_level=True)
+    _listener.start()
 
     # Silence third-party library noise
     logging.getLogger("werkzeug").setLevel(logging.ERROR)

@@ -40,7 +40,10 @@
 
   "hardware": {
     "V_RANGE": 10.0,
-    "DAC_RES": 4095
+    "DAC_RES": 4095,
+    "_comment_cal": "Motor speed calibration: rpm = RPM_PER_VOLT * volts + RPM_VOLT_OFFSET",
+    "RPM_PER_VOLT": 646.59,
+    "RPM_VOLT_OFFSET": -101.2
   },
 
   "kinematics": {
@@ -86,7 +89,10 @@
     "FLAG_RIGHT_MARKER": 8,
     "FLAG_SENSOR_FAIL": 128,
     "CAN_TIMEOUT": 0.5,
-    "CAN_NODE_ID": 6
+    "CAN_NODE_ID": 6,
+    "_comment_limits": "Reject |left_mm|>SENSOR_MAX_MM; clamp per-cycle jumps > SENSOR_MAX_STEP_MM",
+    "SENSOR_MAX_MM": 100.0,
+    "SENSOR_MAX_STEP_MM": 40.0
   },
 
   "rfid": {

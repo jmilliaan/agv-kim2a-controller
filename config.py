@@ -79,6 +79,11 @@ MOTOR_CHANNELS = _params.get("motor_channels", {
 V_RANGE = _params["hardware"]["V_RANGE"]
 DAC_RES = _params["hardware"]["DAC_RES"]
 
+# Motor speed calibration: rpm = RPM_PER_VOLT * volts + RPM_VOLT_OFFSET.
+# Per-AGV (drive/motor specific) — defaults preserve the previous hardcoded fit.
+RPM_PER_VOLT    = _params["hardware"].get("RPM_PER_VOLT", 646.59)
+RPM_VOLT_OFFSET = _params["hardware"].get("RPM_VOLT_OFFSET", -101.2)
+
 # ── Kinematics ────────────────────────────────────────────────────────────────
 WHEEL_DIAMETER      = _params["kinematics"]["WHEEL_DIAMETER"]
 GEAR_RATIO          = _params["kinematics"]["GEAR_RATIO"]
@@ -126,6 +131,12 @@ FLAG_SENSOR_FAIL  = _params["can_sensor"]["FLAG_SENSOR_FAIL"]
 CAN_TIMEOUT      = _params["can_sensor"]["CAN_TIMEOUT"]
 CAN_NODE_ID      = _params["can_sensor"]["CAN_NODE_ID"]
 
+# Sensor sanity / slew limits for the lateral offset (left_mm) fed to the PID.
+# Reject readings beyond ±SENSOR_MAX_MM (sensor half-width is ~80 mm); clamp
+# per-cycle jumps larger than SENSOR_MAX_STEP_MM to reject glitch frames.
+SENSOR_MAX_MM      = _params["can_sensor"].get("SENSOR_MAX_MM", 100.0)
+SENSOR_MAX_STEP_MM = _params["can_sensor"].get("SENSOR_MAX_STEP_MM", 40.0)
+
 # ── RFID ──────────────────────────────────────────────────────────────────────
 RFID_INIT_CMD       = bytes.fromhex(_params["rfid"]["RFID_INIT_CMD_HEX"])
 # RFID_COMMANDS kept for backwards-compat if old parameters.json is used
@@ -147,3 +158,67 @@ _wd = _params.get("watchdog", {})
 WATCHDOG_DI_TIMEOUT_S   = _wd.get("DI_TIMEOUT_S",   1.0)
 WATCHDOG_CAN_TIMEOUT_S  = _wd.get("CAN_TIMEOUT_S",  1.0)
 WATCHDOG_RFID_TIMEOUT_S = _wd.get("RFID_TIMEOUT_S", 5.0)
+
+
+# ── Config validation (fail-fast at boot) ─────────────────────────────────────
+class ConfigError(ValueError):
+    """Raised at import time when a profile parameter is out of safe range."""
+
+
+_MAX_SPEED_MPS = 5.0   # sanity ceiling for any commanded speed
+
+
+def _validate():
+    """Range-check critical parameters so the controller refuses to start on a
+    bad profile rather than dividing by zero or running away mid-motion."""
+    errors = []
+
+    def check(cond, msg):
+        if not cond:
+            errors.append(msg)
+
+    # Division-by-zero / runaway guards
+    check(WHEEL_DIAMETER > 0, f"WHEEL_DIAMETER must be > 0 (got {WHEEL_DIAMETER})")
+    check(GEAR_RATIO    > 0, f"GEAR_RATIO must be > 0 (got {GEAR_RATIO})")
+    check(DT            > 0, f"DT must be > 0 (got {DT})")
+    check(TI is None or TI > 0, f"TI must be > 0 (used as 1/TI) (got {TI})")
+    check(V_RANGE       > 0, f"V_RANGE must be > 0 (got {V_RANGE})")
+    check(DAC_RES       > 0, f"DAC_RES must be > 0 (got {DAC_RES})")
+    check(RPM_PER_VOLT != 0, f"RPM_PER_VOLT must be != 0 (got {RPM_PER_VOLT})")
+    check(OUTPUT_CLAMP_RPM > 0, f"OUTPUT_CLAMP_RPM must be > 0 (got {OUTPUT_CLAMP_RPM})")
+    check(N      > 0, f"N must be > 0 (got {N})")
+    check(N_SLOW > 0, f"N_SLOW must be > 0 (got {N_SLOW})")
+    check(N_EXTRA_SLOW > 0, f"N_EXTRA_SLOW must be > 0 (got {N_EXTRA_SLOW})")
+
+    # Speeds: non-negative and within a sane ceiling
+    for name, val in [
+        ("MANUAL_TARGET_HIGH_SPEED", MANUAL_TARGET_HIGH_SPEED),
+        ("MANUAL_TARGET_SLOW_SPEED", MANUAL_TARGET_SLOW_SPEED),
+        ("AUTO_TARGET_HIGH_SPEED",   AUTO_TARGET_HIGH_SPEED),
+        ("AUTO_TARGET_SLOW_SPEED",   AUTO_TARGET_SLOW_SPEED),
+        ("AUTO_TARGET_EXTRA_SLOW_SPEED", AUTO_TARGET_EXTRA_SLOW_SPEED),
+    ]:
+        check(0 <= val <= _MAX_SPEED_MPS,
+              f"{name} must be in [0, {_MAX_SPEED_MPS}] m/s (got {val})")
+    check(ACCEL_RATE > 0, f"ACCEL_RATE must be > 0 (got {ACCEL_RATE})")
+
+    # IO mapping sanity
+    check(NUM_DI >= 0, f"NUM_DI must be >= 0 (got {NUM_DI})")
+    check(NUM_DO >= 0, f"NUM_DO must be >= 0 (got {NUM_DO})")
+    check(NUM_AO >= 0, f"NUM_AO must be >= 0 (got {NUM_AO})")
+
+    # Network ports
+    for name, val in [("MODBUS_PORT", MODBUS_PORT), ("RFID_PORT", RFID_PORT),
+                      ("SLMP_PORT", SLMP_PORT)]:
+        check(1 <= val <= 65535, f"{name} must be in 1..65535 (got {val})")
+
+    # Sensor limits
+    check(SENSOR_MAX_MM      > 0, f"SENSOR_MAX_MM must be > 0 (got {SENSOR_MAX_MM})")
+    check(SENSOR_MAX_STEP_MM > 0, f"SENSOR_MAX_STEP_MM must be > 0 (got {SENSOR_MAX_STEP_MM})")
+
+    if errors:
+        raise ConfigError(
+            f"Invalid profile '{_param_path}':\n  - " + "\n  - ".join(errors))
+
+
+_validate()
