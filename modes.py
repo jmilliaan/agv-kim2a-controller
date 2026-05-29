@@ -193,7 +193,7 @@ async def auto_mode(state, direction="forward", engine=None):
                 # step at corner entry/exit. ff = sign*0.5*base*(W/R).
                 ff_target = 0.0
                 if (config.FF_ENABLED and direction == "forward"
-                        and state.speed_mode in config.FF_CURVE_MODES):
+                        and state.nav_in_corner):
                     ff_target = (config.FF_DIRECTION_SIGN * 0.5 * base_rpm
                                  * (config.TRACK_WIDTH / config.CURVE_RADIUS))
                 ff_filtered += config.FF_ALPHA * (ff_target - ff_filtered)
@@ -361,6 +361,7 @@ async def mode_manager(state, engine=None):
     def _reset_sequence_state():
         state.speed_mode       = "HIGH"
         state.sequence_stop    = False
+        state.nav_in_corner    = False
         state.pending_sequence = None
         if engine is not None:
             engine.cancel_armed()

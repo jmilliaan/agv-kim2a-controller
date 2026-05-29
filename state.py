@@ -20,6 +20,7 @@ class KinematicState:
         self.reverse_auto_request = False   # set by Flask to start reverse tape-follow
         self.web_manual_command   = None    # set by Flask remote; "forward"|"reverse"|"left"|"right"|"fwd_left"|"fwd_right"|"rvs_left"|"rvs_right"|None
         self.web_manual_expire    = 0.0     # epoch after which web_manual_command is treated as None
+        self.nav_in_corner        = False   # True only while a NAV sequence holds SLOW; gates feedforward
 
 
 class PerceptionState:
@@ -138,6 +139,11 @@ class AMRState:
     def pending_sequence(self): return self.kinematic.pending_sequence
     @pending_sequence.setter
     def pending_sequence(self, v): self.kinematic.pending_sequence = v
+
+    @property
+    def nav_in_corner(self): return self.kinematic.nav_in_corner
+    @nav_in_corner.setter
+    def nav_in_corner(self, v): self.kinematic.nav_in_corner = v
 
     @property
     def reverse_auto_request(self): return self.kinematic.reverse_auto_request

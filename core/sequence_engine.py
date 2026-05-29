@@ -57,6 +57,7 @@ class SequenceEngine:
 
         # name of currently executing sequence (one at a time)
         self._active_sequence: str | None = None
+        self._current_seq: dict | None = None
 
         # asyncio Task for the running sequence — cancelled on mode transitions
         self._active_task: asyncio.Task | None = None
@@ -134,6 +135,9 @@ class SequenceEngine:
                 self._armed[seq["name"]] = seq
                 self._state.speed_mode       = approach_speed
                 self._state.pending_sequence = seq["name"]
+                # A SEQ approach arm is not a corner — clear feedforward so a
+                # station approach on a straight doesn't get the corner bias.
+                self._state.nav_in_corner = False
                 logger.info("[SEQ] Armed '%s' — approach at %s for marker", seq["name"], approach_speed)
 
     async def on_marker(self, side: str):
@@ -234,6 +238,7 @@ class SequenceEngine:
         name = seq["name"]
         logger.info("[SEQ] Running '%s'", name)
         self._active_sequence = name
+        self._current_seq = seq          # available to action handlers
 
         try:
             for action in seq["actions"]:
@@ -254,8 +259,8 @@ class SequenceEngine:
 
         except asyncio.CancelledError:
             logger.info("[SEQ] Cancelled '%s'", name)
-            # Ensure AGV is not left stopped if sequence is cancelled mid-run
             self._state.sequence_stop = False
+            self._state.nav_in_corner = False  # cancel always clears (mode reset follows)
             raise
 
         except SequenceTimeout as exc:
@@ -272,6 +277,12 @@ class SequenceEngine:
 
         finally:
             self._active_sequence = None
+            self._current_seq     = None
+            # Only clear nav_in_corner for SEQ sequences on completion.
+            # NAV sequences leave it set (they established a speed zone that
+            # persists until the next speed change or a reset).
+            if self._category(seq) != "navigation":
+                self._state.nav_in_corner = False
             self._cooldowns[name] = time.time() + seq.get("cooldown_s", 0.0)
 
     # ── Built-in action handlers ──────────────────────────────────────────────
@@ -279,6 +290,12 @@ class SequenceEngine:
 
     async def _act_set_speed(self, p: dict):
         self._state.speed_mode = p["speed"]
+        # Only a NAV sequence setting SLOW means "we are in a corner" — seq
+        # approaches may also use SLOW but must not get curvature feedforward.
+        if self._category(self._current_seq) == "navigation":
+            self._state.nav_in_corner = (p["speed"] == "SLOW")
+        else:
+            self._state.nav_in_corner = False
         logger.info("[SEQ] Speed → %s", p["speed"])
 
     async def _act_wait_marker(self, p: dict):
