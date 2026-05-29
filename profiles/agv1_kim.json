@@ -54,37 +54,37 @@
   "speeds": {
     "MANUAL_TARGET_HIGH_SPEED": 0.30,
     "MANUAL_TARGET_SLOW_SPEED": 0.15,
-    "AUTO_TARGET_HIGH_SPEED": 0.30,
-    "AUTO_TARGET_SLOW_SPEED": 0.16,
+    "AUTO_TARGET_HIGH_SPEED": 0.20,
+    "AUTO_TARGET_SLOW_SPEED": 0.12,
     "AUTO_TARGET_EXTRA_SLOW_SPEED": 0.12,
     "ACCEL_RATE": 0.8
   },
 
   "pid_tuning": {
-    "_comment_high": "HIGH speed gains — tuned for 0.4m/s with loaded trolley",
-    "KP": 1.4,
-    "TD": 0.12,
+    "_comment_high": "HIGH speed gains — retuned: less speed-reduction crawl, tighter tracking + more damping (heavier AGV, 0.20m/s baseline)",
+    "KP": 1.5,
+    "TD": 0.22,
     "N": 20,
-    "_comment_slow": "SLOW gains — tuned for 0.16m/s",
-    "KP_SLOW": 2.1,
+    "_comment_slow": "SLOW gains — retuned for 0.12m/s",
+    "KP_SLOW": 1.5,
     "TD_SLOW": 0.14,
     "N_SLOW": 12,
-    "_comment_extra_slow": "EXTRA_SLOW gains — tuned for 0.12m/s, gentle straight-line following for sequence approach",
-    "KP_EXTRA_SLOW": 0.8,
-    "TD_EXTRA_SLOW": 0.08,
-    "N_EXTRA_SLOW": 4,
+    "_comment_extra_slow": "EXTRA_SLOW gains — tuned for 0.10m/s, gentle straight-line following for sequence approach",
+    "KP_EXTRA_SLOW": 1.2,
+    "TD_EXTRA_SLOW": 0.12,
+    "N_EXTRA_SLOW": 12,
     "_comment_shared": "Shared — integral and timing constants",
-    "TI": 20,
-    "TI_DEADBAND": 25,
-    "TI_MAX": 500,
+    "TI": 40,
+    "TI_DEADBAND": 30,
+    "TI_MAX": 400,
     "DT": 0.01,
     "_comment_sr": "Speed reduction coefficients — split by speed mode",
-    "V_RED_COEF": 4,
+    "V_RED_COEF": 3,
     "V_RED_COEF_SLOW": 2,
     "V_RED_COEF_EXTRA_SLOW": 0,
     "OUTPUT_CLAMP_RPM": 800,
     "SR_ALPHA": 0.15,
-    "SR_CAP": 0.55
+    "SR_CAP": 0.45
   },
 
   "can_sensor": {
@@ -105,10 +105,21 @@
     "SEQUENCE_STOP_DELAY": 4.0
   },
 
+  "feedforward": {
+    "_comment": "Curvature feedforward for corners: output_ff = sign*0.5*base_rpm*(TRACK_WIDTH_M/CURVE_RADIUS_M), applied while speed_mode is a curve mode. Stadium is CCW => all left turns.",
+    "ENABLED": 1,
+    "TRACK_WIDTH_M": 0.46,
+    "CURVE_RADIUS_M": 1.5,
+    "CURVE_DIRECTION": "left",
+    "CURVE_SPEED_MODES": ["SLOW"],
+    "FF_ALPHA": 0.15
+  },
+
   "sequences": [
     {
       "_comment": "Slow down zone — RFID-only trigger",
       "name": "speed_zone_slow",
+      "category": "navigation",
       "trigger": { "type": "rfid", "rfid_tag": "0014" },
       "actions": [
         { "type": "set_speed", "speed": "SLOW" }
@@ -119,6 +130,7 @@
     {
       "_comment": "Resume high speed — RFID-only trigger",
       "name": "speed_zone_high",
+      "category": "navigation",
       "trigger": { "type": "rfid", "rfid_tag": "0016" },
       "actions": [
         { "type": "set_speed", "speed": "HIGH" }
@@ -129,6 +141,7 @@
     {
       "_comment": "Slow down zone (alt tag) — RFID-only trigger",
       "name": "speed_zone_slow_alt",
+      "category": "navigation",
       "trigger": { "type": "rfid", "rfid_tag": "001C" },
       "actions": [
         { "type": "set_speed", "speed": "SLOW" }
@@ -139,6 +152,7 @@
     {
       "_comment": "Timed checkpoint stop — RFID-only trigger",
       "name": "checkpoint_stop",
+      "category": "sequence",
       "trigger": { "type": "rfid", "rfid_tag": "000C" },
       "actions": [
         { "type": "sequence_stop", "duration": 4.0 }
@@ -147,17 +161,20 @@
       "requires_mode": "running"
     },
     {
-      "_comment": "Trolley load sequence 0 — RFID arms approach, left marker executes",
+      "_comment": "Trolley load 0 — RFID arms a SLOW curved approach (feedforward steers the corner); left marker then switches to EXTRA_SLOW straight crawl for a precise stop.",
       "name": "trolley_load_00",
+      "category": "sequence",
       "trigger": {
         "type": "rfid_then_marker",
         "rfid_tag": "0096",
         "marker_side": "left",
-        "approach_timeout": 15.0
+        "approach_timeout": 15.0,
+        "approach_speed": "SLOW"
       },
       "actions": [
         { "type": "set_speed",        "speed": "EXTRA_SLOW" },
         { "type": "wait_marker",      "side": "left", "timeout": 30.0 },
+        { "type": "wait_seconds",     "duration": 2.0 },
         { "type": "stop_agv" },
         { "type": "plc_request",      "seq_num": 0, "pulse_duration": 1.0 },
         { "type": "wait_plc_complete","seq_num": 0, "clear_timeout": 10.0 },
@@ -168,6 +185,7 @@
     },
     {
       "name": "trolley_load_01",
+      "category": "sequence",
       "trigger": {
         "type": "rfid_then_marker",
         "rfid_tag": "0098",
@@ -187,6 +205,7 @@
     },
     {
       "name": "trolley_load_02",
+      "category": "sequence",
       "trigger": {
         "type": "rfid_then_marker",
         "rfid_tag": "009A",
@@ -206,6 +225,7 @@
     },
     {
       "name": "trolley_load_03",
+      "category": "sequence",
       "trigger": {
         "type": "rfid_then_marker",
         "rfid_tag": "009C",
@@ -225,6 +245,7 @@
     },
     {
       "name": "trolley_load_04",
+      "category": "sequence",
       "trigger": {
         "type": "rfid_then_marker",
         "rfid_tag": "009E",
@@ -244,6 +265,7 @@
     },
     {
       "name": "trolley_load_05",
+      "category": "sequence",
       "trigger": {
         "type": "rfid_then_marker",
         "rfid_tag": "00A0",
@@ -264,10 +286,11 @@
   ],
 
   "features": {
-    "_comment": "Set to 0 to disable a driver/feature entirely (skips task + watchdog)",
+    "_comment": "RFID split into NAV (corner speed zones) -> SEQ (stops/PLC handshakes) -> SLMP. Hierarchy: disabling a parent disables its children.",
     "DIO_ENABLED":  1,
     "CAN_ENABLED":  1,
-    "RFID_ENABLED": 1,
+    "NAV_ENABLED":  1,
+    "SEQ_ENABLED":  1,
     "SLMP_ENABLED": 1
   },
 

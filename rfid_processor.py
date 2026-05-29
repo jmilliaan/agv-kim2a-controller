@@ -26,5 +26,6 @@ async def rfid_processor(state, engine):
     logger.info("[RFID Processor] Started.")
     while True:
         tag = await state.rfid_queue.get()
+        state.latest_rfid_tag = tag
         logger.debug("[RFID] Tag read: %s", tag)
         await engine.on_rfid_tag(tag)

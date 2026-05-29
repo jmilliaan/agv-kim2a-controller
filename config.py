@@ -147,17 +147,46 @@ SEQUENCE_STOP_DELAY = _params["rfid"]["SEQUENCE_STOP_DELAY"]
 SEQUENCES = _params.get("sequences", [])
 
 # ── Feature flags ────────────────────────────────────────────────────────────
+# RFID is split into two categories with a dependency hierarchy:
+#   NAV  (navigation) — corner speed-zone tags (set_speed). Independent base.
+#   SEQ  (sequence)   — stop/run/PLC-handshake sequences. Requires NAV.
+#   SLMP (PLC link)   — requires SEQ (and therefore NAV).
+# Cascade: disabling NAV disables SEQ disables SLMP.
+# Legacy profiles with a single RFID_ENABLED flag map onto both NAV and SEQ.
 _feat = _params.get("features", {})
-DIO_ENABLED  = bool(_feat.get("DIO_ENABLED",  1))
-CAN_ENABLED  = bool(_feat.get("CAN_ENABLED",  1))
-RFID_ENABLED = bool(_feat.get("RFID_ENABLED", 1))
+_legacy_rfid = _feat.get("RFID_ENABLED", 1)
+DIO_ENABLED  = bool(_feat.get("DIO_ENABLED", 1))
+CAN_ENABLED  = bool(_feat.get("CAN_ENABLED", 1))
+NAV_ENABLED  = bool(_feat.get("NAV_ENABLED", _legacy_rfid))
+SEQ_ENABLED  = bool(_feat.get("SEQ_ENABLED", _legacy_rfid))
 SLMP_ENABLED = bool(_feat.get("SLMP_ENABLED", 0))
+
+# Enforce the dependency hierarchy at load (a child can't outlive its parent).
+if not NAV_ENABLED:
+    SEQ_ENABLED = False
+if not SEQ_ENABLED:
+    SLMP_ENABLED = False
 
 # ── Watchdog timeouts (Phase 4) ───────────────────────────────────────────────
 _wd = _params.get("watchdog", {})
 WATCHDOG_DI_TIMEOUT_S   = _wd.get("DI_TIMEOUT_S",   1.0)
 WATCHDOG_CAN_TIMEOUT_S  = _wd.get("CAN_TIMEOUT_S",  1.0)
 WATCHDOG_RFID_TIMEOUT_S = _wd.get("RFID_TIMEOUT_S", 5.0)
+
+# ── Curvature feedforward (corner steering) ───────────────────────────────────
+# In a sustained turn a pure-feedback controller settles with a standing
+# cross-track error (it needs error to generate the turn). Feeding forward the
+# geometric differential removes that lag and lets corners be taken faster.
+#   output_ff = FF_DIRECTION_SIGN * 0.5 * base_rpm * (TRACK_WIDTH / CURVE_RADIUS)
+# applied while speed_mode is one of FF_CURVE_MODES (the corner zones).
+_ff = _params.get("feedforward", {})
+FF_ENABLED        = bool(_ff.get("ENABLED", 0))
+TRACK_WIDTH       = _ff.get("TRACK_WIDTH_M", 0.46)    # centre-to-centre wheel track
+CURVE_RADIUS      = _ff.get("CURVE_RADIUS_M", 1.5)
+_ff_dir           = str(_ff.get("CURVE_DIRECTION", "left")).lower()
+FF_DIRECTION_SIGN = -1.0 if _ff_dir == "left" else 1.0   # left turn => output < 0
+FF_CURVE_MODES    = set(_ff.get("CURVE_SPEED_MODES", ["SLOW"]))
+FF_ALPHA          = _ff.get("FF_ALPHA", 0.15)            # smooths corner entry/exit
 
 
 # ── Config validation (fail-fast at boot) ─────────────────────────────────────
@@ -215,6 +244,12 @@ def _validate():
     # Sensor limits
     check(SENSOR_MAX_MM      > 0, f"SENSOR_MAX_MM must be > 0 (got {SENSOR_MAX_MM})")
     check(SENSOR_MAX_STEP_MM > 0, f"SENSOR_MAX_STEP_MM must be > 0 (got {SENSOR_MAX_STEP_MM})")
+
+    # Feedforward geometry (only matters when enabled)
+    if FF_ENABLED:
+        check(TRACK_WIDTH  > 0, f"TRACK_WIDTH_M must be > 0 (got {TRACK_WIDTH})")
+        check(CURVE_RADIUS > 0, f"CURVE_RADIUS_M must be > 0 (got {CURVE_RADIUS})")
+        check(0.0 < FF_ALPHA <= 1.0, f"FF_ALPHA must be in (0,1] (got {FF_ALPHA})")
 
     if errors:
         raise ConfigError(

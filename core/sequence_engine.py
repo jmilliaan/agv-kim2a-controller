@@ -21,6 +21,8 @@ import asyncio
 import logging
 import time
 
+import config
+
 logger = logging.getLogger(__name__)
 
 
@@ -81,6 +83,29 @@ class SequenceEngine:
         """
         self._actions[name] = handler
 
+    # ── Feature category gating (navigation vs sequence) ─────────────────────
+
+    @staticmethod
+    def _category(seq: dict) -> str:
+        """Classify a sequence as 'navigation' or 'sequence'.
+
+        Explicit "category" in the JSON wins. Otherwise infer: a sequence whose
+        actions are purely speed changes (corner slow-downs) is navigation;
+        anything that stops the AGV, waits, or talks to the PLC is sequence."""
+        cat = seq.get("category")
+        if cat in ("navigation", "sequence"):
+            return cat
+        actions = seq.get("actions", [])
+        if actions and all(a.get("type") == "set_speed" for a in actions):
+            return "navigation"
+        return "sequence"
+
+    def _category_enabled(self, seq: dict) -> bool:
+        """True if the feature flag for this sequence's category is on."""
+        if self._category(seq) == "navigation":
+            return config.NAV_ENABLED
+        return config.SEQ_ENABLED
+
     # ── Public trigger interface (called by rfid_processor and auto_mode) ────
 
     async def on_rfid_tag(self, tag_hex: str):
@@ -90,18 +115,26 @@ class SequenceEngine:
             trig = seq["trigger"]
 
             if trig["type"] == "rfid" and trig["rfid_tag"] == tag_hex:
+                if not self._category_enabled(seq):
+                    continue
                 if not self._check_preconditions(seq, now):
                     continue
                 self._active_task = asyncio.create_task(self._run_sequence(seq))
 
             elif trig["type"] == "rfid_then_marker" and trig["rfid_tag"] == tag_hex:
+                if not self._category_enabled(seq):
+                    continue
                 if not self._check_preconditions(seq, now):
                     continue
-                # Arm: slow down for approach, record armed state
+                # Arm: slow down for approach, record armed state. The approach
+                # speed is configurable per trigger ("approach_speed"); e.g. SLOW
+                # lets a curved approach get curvature feedforward, vs EXTRA_SLOW
+                # for a straight precision crawl. Defaults to EXTRA_SLOW.
+                approach_speed = trig.get("approach_speed", "EXTRA_SLOW")
                 self._armed[seq["name"]] = seq
-                self._state.speed_mode       = "EXTRA_SLOW"
+                self._state.speed_mode       = approach_speed
                 self._state.pending_sequence = seq["name"]
-                logger.info("[SEQ] Armed '%s' — slowing for marker approach", seq["name"])
+                logger.info("[SEQ] Armed '%s' — approach at %s for marker", seq["name"], approach_speed)
 
     async def on_marker(self, side: str):
         """Called by auto_mode whenever a left/right marker is detected in the
@@ -113,6 +146,8 @@ class SequenceEngine:
         for name, seq in list(self._armed.items()):
             trig = seq["trigger"]
             if trig.get("marker_side") == side:
+                if not self._category_enabled(seq):
+                    continue
                 del self._armed[name]
                 self._state.pending_sequence = None
                 logger.info("[SEQ] Marker '%s' detected — launching '%s'", side, name)
@@ -123,6 +158,8 @@ class SequenceEngine:
         for seq in self._sequences:
             trig = seq["trigger"]
             if trig["type"] == "marker" and trig.get("marker_side") == side:
+                if not self._category_enabled(seq):
+                    continue
                 if not self._check_preconditions(seq, now):
                     continue
                 self._active_task = asyncio.create_task(self._run_sequence(seq))
@@ -188,8 +225,11 @@ class SequenceEngine:
     async def _run_sequence(self, seq: dict, skip_approach: bool = False):
         """Execute the action list for a sequence.
 
-        skip_approach=True skips set_speed and wait_marker steps because they
-        were already handled during the RFID arm phase.
+        skip_approach=True skips the wait_marker step (the marker that triggered
+        this sequence already satisfied it). set_speed steps still run, so a
+        sequence can switch speed zones after the marker — e.g. a SLOW curved
+        approach (with feedforward) followed by an EXTRA_SLOW straight crawl to
+        a precise stop.
         """
         name = seq["name"]
         logger.info("[SEQ] Running '%s'", name)
@@ -199,7 +239,7 @@ class SequenceEngine:
             for action in seq["actions"]:
                 atype = action["type"]
 
-                if skip_approach and atype in ("set_speed", "wait_marker"):
+                if skip_approach and atype == "wait_marker":
                     continue
 
                 handler = self._actions.get(atype)

@@ -73,7 +73,8 @@ class AMRState:
     def __init__(self):
         # ── Queues for cross-task communication ───────────────────────────────
         self.di_queue     = asyncio.Queue()  # DI readings
-        self.rfid_queue   = asyncio.Queue()  # RFID tag reads
+        self.rfid_queue    = asyncio.Queue()  # RFID tag reads
+        self.latest_rfid_tag: str | None = None  # last tag seen (hex string)
         self.sensor_queue = asyncio.Queue()  # CAN magnetic sensor readings
 
         # ── Output setpoint tables (latest-wins, non-blocking) ────────────────

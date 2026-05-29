@@ -23,16 +23,32 @@ logger = logging.getLogger(__name__)
 
 
 class DriverManager:
-    """Starts/stops the toggleable hardware drivers (RFID, SLMP) at runtime.
+    """Starts/stops the toggleable features (NAV, SEQ, SLMP) at runtime.
+
+    Dependency hierarchy:  NAV (base) -> SEQ -> SLMP.
+      - NAV  drives the RFID reader (factory). SEQ also needs RFID tags, so the
+        reader runs whenever NAV is on; SEQ has no driver of its own — it is a
+        pure gate flag the sequence engine reads.
+      - SLMP drives the PLC link.
+    Enabling a child requires its parent on; disabling a parent cascades down to
+    its dependents.
 
     The Flask server runs in a separate thread, so set_enabled() marshals the
     start/stop onto the asyncio loop via run_coroutine_threadsafe. Toggles are
     NOT persisted — on restart the controller boots from the profile JSON.
     """
 
+    # factory=None means a pure gate flag (no driver task).
     _SPEC = {
-        "RFID_ENABLED": {"factory": RFIDReader, "watch": True},
-        "SLMP_ENABLED": {"factory": SLMPDriver, "watch": False},
+        "NAV_ENABLED":  {"factory": RFIDReader, "watch": True,  "requires": None},
+        "SEQ_ENABLED":  {"factory": None,       "watch": False, "requires": "NAV_ENABLED"},
+        "SLMP_ENABLED": {"factory": SLMPDriver, "watch": False, "requires": "SEQ_ENABLED"},
+    }
+    # Direct dependents that must be disabled when a flag is disabled.
+    _DEPENDENTS = {
+        "NAV_ENABLED":  ["SEQ_ENABLED"],
+        "SEQ_ENABLED":  ["SLMP_ENABLED"],
+        "SLMP_ENABLED": [],
     }
 
     def __init__(self, state, watched):
@@ -50,18 +66,24 @@ class DriverManager:
         return t is not None and not t.done()
 
     async def _start(self, flag):
-        if self.is_running(flag):
-            return
         spec = self._SPEC[flag]
-        drv  = spec["factory"]()
-        self._drivers[flag] = drv
-        self._tasks[flag]   = asyncio.create_task(drv.run(self._state))
-        if spec["watch"]:
-            self._watched.append((drv, config.WATCHDOG_RFID_TIMEOUT_S))
+        req  = spec["requires"]
+        if req is not None and not getattr(config, req):
+            raise ValueError(f"{flag} requires {req} to be enabled first")
+        if spec["factory"] is not None and not self.is_running(flag):
+            drv = spec["factory"]()
+            self._drivers[flag] = drv
+            self._tasks[flag]   = asyncio.create_task(drv.run(self._state))
+            if spec["watch"]:
+                self._watched.append((drv, config.WATCHDOG_RFID_TIMEOUT_S))
         setattr(config, flag, True)
         logger.info("[DriverManager] %s ENABLED (live)", flag)
 
     async def _stop(self, flag):
+        # Cascade: disable dependents first so a child never outlives its parent.
+        for dep in self._DEPENDENTS.get(flag, []):
+            if getattr(config, dep):
+                await self._stop(dep)
         # Remove from the watchdog first so a cancelled driver can't trip a
         # stale-data fault between cancellation and removal.
         drv = self._drivers.pop(flag, None)
@@ -136,8 +158,9 @@ async def run():
     for name, enabled in [
         ("DIO (DI+DO)", config.DIO_ENABLED),
         ("CAN sensor",  config.CAN_ENABLED),
-        ("RFID",       config.RFID_ENABLED),
-        ("SLMP",       config.SLMP_ENABLED),
+        ("RFID NAV",    config.NAV_ENABLED),
+        ("RFID SEQ",    config.SEQ_ENABLED),
+        ("SLMP",        config.SLMP_ENABLED),
     ]:
         logger.info("%-12s %s", name, "ENABLED" if enabled else "DISABLED")
 
@@ -171,10 +194,14 @@ async def run():
     core_tasks.append(rfid_processor(state, engine))
     core_tasks.append(modes.mode_manager(state, engine))
 
-    # RFID and SLMP run under the manager so the HMI can toggle them live.
-    # Boots from the profile JSON values; toggles do not persist across restart.
-    if config.RFID_ENABLED:
-        await manager._apply("RFID_ENABLED", True)
+    # NAV/SEQ/SLMP run under the manager so the HMI can toggle them live.
+    # Boots from the profile JSON values (hierarchy already enforced in config);
+    # toggles do not persist across restart. Order matters: parents before
+    # children so the dependency guard in _start is satisfied.
+    if config.NAV_ENABLED:
+        await manager._apply("NAV_ENABLED", True)
+    if config.SEQ_ENABLED:
+        await manager._apply("SEQ_ENABLED", True)
     if config.SLMP_ENABLED:
         await manager._apply("SLMP_ENABLED", True)
 

@@ -68,6 +68,11 @@
   .filter-btn { background: #c0c0c0; color: #000; }
   .filter-btn.active { background: #000080; color: #fff; }
   #toolbar label { font-size: 14px; font-weight: bold; color: #404040; }
+  #btn-restart { margin-left: auto; background: #b06000; color: #fff; }
+  #btn-restart:disabled { opacity: 0.4; cursor: not-allowed; }
+  #restart-status { font-size: 13px; font-weight: bold; letter-spacing: 0.5px; }
+  #restart-status.warn { color: #a00000; }
+  #restart-status.ok   { color: #006000; }
 
   #log-container {
     background: #1a1a1a;
@@ -157,6 +162,8 @@
   <label id="auto-scroll-label">
     <input type="checkbox" id="chk-autoscroll" checked> AUTO-SCROLL
   </label>
+  <span id="restart-status"></span>
+  <button id="btn-restart" onclick="restartController()" disabled>RESTART CONTROLLER</button>
 </div>
 
 <div id="log-container">
@@ -238,6 +245,62 @@ function poll() {
 
 poll();
 setInterval(poll, 1000);
+
+// ── Restart controller button ──────────────────────────────────────────────
+const _BLOCK_MODES = ['running', 'reverse', 'emergency'];
+
+function setRestartStatus(text, cls) {
+  const el = document.getElementById('restart-status');
+  el.textContent = text;
+  el.className = cls || '';
+}
+
+function pollRestartMode() {
+  fetch('/api/state')
+    .then(r => r.json())
+    .then(d => {
+      const mode    = (d.agv && d.agv.mode) || null;
+      const blocked = _BLOCK_MODES.includes(mode);
+      const btn     = document.getElementById('btn-restart');
+      btn.disabled  = blocked;
+      if (blocked && !btn.dataset.restarting)
+        setRestartStatus('Disabled — AGV is ' + mode.toUpperCase(), 'warn');
+      else if (!btn.dataset.restarting)
+        setRestartStatus('', '');
+    })
+    .catch(() => {
+      document.getElementById('btn-restart').disabled = true;
+    });
+}
+
+function restartController() {
+  const btn = document.getElementById('btn-restart');
+  if (btn.disabled) return;
+  if (!confirm('Restart agv-controller.service now?\nThe controller will briefly stop.')) return;
+  btn.dataset.restarting = '1';
+  btn.disabled = true;
+  setRestartStatus('Restarting…', 'warn');
+  fetch('/api/restart', { method: 'POST' })
+    .then(r => r.json().then(d => ({ ok: r.ok, d })))
+    .then(({ ok, d }) => {
+      if (!ok) {
+        delete btn.dataset.restarting;
+        setRestartStatus(d.error || 'Restart failed', 'warn');
+      } else {
+        setRestartStatus('Restarting — page will reconnect…', 'ok');
+        // Service is going down; reload shortly to pick up the fresh instance.
+        setTimeout(() => location.reload(), 6000);
+      }
+    })
+    .catch(() => {
+      // Connection drop is expected as the service stops; treat as success.
+      setRestartStatus('Restarting — page will reconnect…', 'ok');
+      setTimeout(() => location.reload(), 6000);
+    });
+}
+
+pollRestartMode();
+setInterval(pollRestartMode, 1000);
 </script>
 </body>
 </html>

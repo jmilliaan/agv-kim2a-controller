@@ -161,18 +161,18 @@
     display: flex;
     align-items: center;
     gap: 0;
-    height: 30px;
+    height: 36px;
     background: #b8b8b0;
     border: 1px solid #a8a8a0;
   }
   .flag-cell .bit-addr {
     width: 62px;
-    font-size: 11px;
+    font-size: 14px;
     background: #a8a4a0;
     border-right: 1px solid #989490;
   }
   .flag-cell .bit-name {
-    font-size: 11px;
+    font-size: 14px;
   }
 
   /* ── Bit row ── */
@@ -252,10 +252,10 @@
     background: #b8b4ac;
     border: 1px solid #a0a0a0;
   }
-  .seq-cell .lamp { width: 24px; height: 24px; flex-shrink: 0; margin-right: 0; }
+  .seq-cell .lamp { width: 17px; height: 17px; flex-shrink: 0; margin-right: 0; }
   .seq-cell .seq-label { display: flex; flex-direction: column; line-height: 1.2; }
-  .seq-cell .seq-name { font-size: 18px; font-weight: bold; color: #1a1a1a; }
-  .seq-cell .seq-addr { font-size: 14px; color: #606060; }
+  .seq-cell .seq-name { font-size: 14px; font-weight: bold; color: #1a1a1a; }
+  .seq-cell .seq-addr { font-size: 12px; color: #606060; }
 
   /* ── Control bar ── */
   #ctrl {
@@ -415,16 +415,16 @@
     margin-top: 15px;
   }
   #sensor-body {
-    padding: 15px 19px;
+    padding: 8px 16px;
     display: flex;
     align-items: center;
-    gap: 39px;
+    gap: 22px;
     flex-wrap: wrap;
   }
   .sensor-field {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
   }
   .sensor-field-label {
     font-size: 18px;
@@ -434,14 +434,14 @@
     color: #000;
   }
   #pos-display {
-    font-size: 31px;
+    font-size: 22px;
     font-weight: bold;
     font-family: Consolas, 'Courier New', Courier, monospace;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     color: #000080;
     background: #fff;
-    padding: 2px 19px;
-    min-width: 156px;
+    padding: 2px 12px;
+    min-width: 104px;
     text-align: right;
     border-top:    2px solid #808080;
     border-left:   2px solid #808080;
@@ -451,13 +451,57 @@
   .sensor-lamp-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-size: 19px;
+    gap: 10px;
+    font-size: 18px;
     font-weight: bold;
     color: #404040;
     letter-spacing: 0.10px;
   }
-  .sensor-lamp-item .lamp { width: 35px; height: 35px; }
+  .sensor-lamp-item .lamp { width: 22px; height: 22px; }
+
+  /* ── Drive / motion panel (top) — PID + wheel RPM + linear velocity ── */
+  #drive-panel { background: #c0c0c0; padding: 0; margin-bottom: 15px; }
+  #drive-body {
+    padding: 8px 16px 10px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .drive-field {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    flex: 1;
+    min-width: 88px;
+    background: #b8b4ac;
+    border: 1px solid #a0a0a0;
+    padding: 6px 9px;
+  }
+  .drive-label {
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #404040;
+  }
+  .drive-value {
+    font-size: 20px;
+    font-weight: bold;
+    font-family: Consolas, 'Courier New', Courier, monospace;
+    color: #004080;
+    background: #fff;
+    padding: 3px 10px;
+    min-width: 84px;
+    text-align: right;
+    border-top:    2px solid #808080;
+    border-left:   2px solid #808080;
+    border-right:  2px solid #fff;
+    border-bottom: 2px solid #fff;
+  }
+  .drive-value.pid { color: #600060; }
+  .drive-value.vel { color: #006030; }
+  .drive-unit { font-size: 11px; color: #606060; letter-spacing: 1px; }
   .nav-btn.errors-btn { color: #ff8080; }
   .nav-btn.errors-btn.active { background: #800000; color: #fff; border-top: 2px solid #ff8080; }
 </style>
@@ -484,6 +528,66 @@
     <span id="wifi-label">—</span>
   </div>
   <span id="ts" style="font-size: 9px;color:#c0c0c0;letter-spacing:1px;">—</span>
+</div>
+
+<!-- Magnetic sensor + drive/motion telemetry — top of page -->
+<div id="drive-panel" class="raised">
+  <div class="panel-title" style="display:flex;align-items:center;">
+    <span style="flex:1;">MAGNETIC SENSOR &amp; DRIVE &nbsp;[ MGS1600 &middot; PID &middot; RPM &middot; VELOCITY ]</span>
+    <span style="font-size:14px;font-weight:normal;letter-spacing:1px;color:#a0a0e0;margin-right:6px;">RFID</span>
+    <span id="rfid-tag-display" style="font-size:15px;font-weight:bold;letter-spacing:2px;color:#fff;background:#00006a;padding:2px 10px;min-width:60px;text-align:center;border:1px solid #4040a0;">—</span>
+  </div>
+  <div id="sensor-body">
+    <div class="sensor-field">
+      <span class="sensor-field-label">Position:</span>
+      <span id="pos-display">—</span>
+      <span class="sensor-field-label" style="color:#606060;">mm</span>
+    </div>
+    <div style="width:2px;height:32px;background:#a0a0a0;"></div>
+    <div class="sensor-lamp-item">
+      <span class="lamp" id="lamp-tape"></span>TAPE
+    </div>
+    <div class="sensor-lamp-item">
+      <span class="lamp" id="lamp-lm"></span>LEFT MARKER
+    </div>
+    <div class="sensor-lamp-item">
+      <span class="lamp" id="lamp-rm"></span>RIGHT MARKER
+    </div>
+    <div class="sensor-lamp-item">
+      <span class="lamp" id="lamp-fail"></span>SENSOR FAIL
+    </div>
+    <div style="width:2px;height:32px;background:#a0a0a0;"></div>
+    <div class="sensor-field">
+      <span class="sensor-field-label">Speed:</span>
+      <span id="speed-mode-display" style="font-size: 16px;font-weight:bold;color:#000080;background:#fff;padding:2px 10px;border-top:2px solid #808080;border-left:2px solid #808080;border-right:2px solid #fff;border-bottom:2px solid #fff;">—</span>
+      <span id="target-speed-display" style="font-size: 16px;font-weight:bold;color:#000080;background:#fff;padding:2px 10px;border-top:2px solid #808080;border-left:2px solid #808080;border-right:2px solid #fff;border-bottom:2px solid #fff;">—</span>
+      <span class="sensor-field-label" style="color:#606060;">m/s</span>
+    </div>
+  </div>
+  <div id="drive-body">
+    <div class="drive-field">
+      <span class="drive-label">PID OUT</span>
+      <span class="drive-value pid" id="pid-output-display">—</span>
+    </div>
+    <div class="drive-field">
+      <span class="drive-label">L-RPM</span>
+      <span class="drive-value" id="left-rpm-display">—</span>
+    </div>
+    <div class="drive-field">
+      <span class="drive-label">R-RPM</span>
+      <span class="drive-value" id="right-rpm-display">—</span>
+    </div>
+    <div class="drive-field">
+      <span class="drive-label">V-LEFT</span>
+      <span class="drive-value vel" id="v-left-display">—</span>
+      <span class="drive-unit">m/s</span>
+    </div>
+    <div class="drive-field">
+      <span class="drive-label">V-RIGHT</span>
+      <span class="drive-value vel" id="v-right-display">—</span>
+      <span class="drive-unit">m/s</span>
+    </div>
+  </div>
 </div>
 
 <div class="columns">
@@ -547,52 +651,6 @@
   </div>
 </div>
 
-<!-- Sensor panel -->
-<div id="sensor-panel" class="raised">
-  <div class="panel-title">MAGNETIC SENSOR &nbsp;[ MGS1600 / CAN ]</div>
-  <div id="sensor-body">
-    <div class="sensor-field">
-      <span class="sensor-field-label">Position:</span>
-      <span id="pos-display">—</span>
-      <span class="sensor-field-label" style="color:#606060;">mm</span>
-    </div>
-    <div style="width:2px;height:32px;background:#a0a0a0;"></div>
-    <div class="sensor-lamp-item">
-      <span class="lamp" id="lamp-tape"></span>TAPE
-    </div>
-    <div class="sensor-lamp-item">
-      <span class="lamp" id="lamp-lm"></span>LEFT MARKER
-    </div>
-    <div class="sensor-lamp-item">
-      <span class="lamp" id="lamp-rm"></span>RIGHT MARKER
-    </div>
-    <div class="sensor-lamp-item">
-      <span class="lamp" id="lamp-fail"></span>SENSOR FAIL
-    </div>
-    <div style="width:2px;height:32px;background:#a0a0a0;"></div>
-    <div class="sensor-field">
-      <span class="sensor-field-label">Speed:</span>
-      <span id="speed-mode-display" style="font-size: 10px;font-weight:bold;color:#000080;background:#fff;padding:2px 8px;border-top:2px solid #808080;border-left:2px solid #808080;border-right:2px solid #fff;border-bottom:2px solid #fff;">—</span>
-      <span id="target-speed-display" style="font-size: 10px;font-weight:bold;color:#000080;background:#fff;padding:2px 8px;border-top:2px solid #808080;border-left:2px solid #808080;border-right:2px solid #fff;border-bottom:2px solid #fff;">—</span>
-      <span class="sensor-field-label" style="color:#606060;">m/s</span>
-    </div>
-    <div style="width:2px;height:32px;background:#a0a0a0;"></div>
-    <div class="sensor-field">
-      <span class="sensor-field-label">PID:</span>
-      <span id="pid-output-display" style="font-size: 10px;font-weight:bold;color:#600060;background:#fff;padding:2px 8px;min-width:60px;text-align:right;border-top:2px solid #808080;border-left:2px solid #808080;border-right:2px solid #fff;border-bottom:2px solid #fff;">—</span>
-      <span class="sensor-field-label" style="color:#606060;">rpm</span>
-    </div>
-    <div style="width:2px;height:32px;background:#a0a0a0;"></div>
-    <div class="sensor-field">
-      <span class="sensor-field-label">L-RPM:</span>
-      <span id="left-rpm-display" style="font-size: 10px;font-weight:bold;color:#004080;background:#fff;padding:2px 8px;min-width:60px;text-align:right;border-top:2px solid #808080;border-left:2px solid #808080;border-right:2px solid #fff;border-bottom:2px solid #fff;">—</span>
-    </div>
-    <div class="sensor-field">
-      <span class="sensor-field-label">R-RPM:</span>
-      <span id="right-rpm-display" style="font-size: 10px;font-weight:bold;color:#004080;background:#fff;padding:2px 8px;min-width:60px;text-align:right;border-top:2px solid #808080;border-left:2px solid #808080;border-right:2px solid #fff;border-bottom:2px solid #fff;">—</span>
-    </div>
-  </div>
-</div>
 
 <!-- Sequence engine status panel -->
 <div id="seq-status-panel" class="raised">
@@ -740,6 +798,8 @@ function fetchState() {
       document.getElementById('pid-output-display').textContent  = (sen && sen.pid_output  != null) ? (sen.pid_output > 0 ? '+' : '') + sen.pid_output.toFixed(1) : '—';
       document.getElementById('left-rpm-display').textContent    = (sen && sen.left_rpm    != null) ? sen.left_rpm.toFixed(1)   : '—';
       document.getElementById('right-rpm-display').textContent   = (sen && sen.right_rpm   != null) ? sen.right_rpm.toFixed(1)  : '—';
+      document.getElementById('v-left-display').textContent      = (sen && sen.v_left      != null) ? sen.v_left.toFixed(3)    : '—';
+      document.getElementById('v-right-display').textContent     = (sen && sen.v_right     != null) ? sen.v_right.toFixed(3)   : '—';
 
       // Sequence engine status
       const seqs = d.sequences || {};
@@ -772,6 +832,10 @@ function fetchState() {
       document.getElementById('btn-rev-start').style.opacity = (revActive || agv.mode !== 'armed') ? '0.4' : '1';
       document.getElementById('btn-rev-stop').disabled  = !revActive;
       document.getElementById('btn-rev-stop').style.opacity  = !revActive ? '0.4' : '1';
+
+      // RFID last tag
+      const rfidEl = document.getElementById('rfid-tag-display');
+      rfidEl.textContent = agv.latest_rfid_tag || '—';
 
       document.getElementById('ts').textContent = new Date().toLocaleTimeString();
     })

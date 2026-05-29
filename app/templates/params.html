@@ -141,6 +141,8 @@
   }
   .toggle.on .toggle-knob { left: calc(100% - 48px); }
   #settings-card.locked .toggle { opacity: 0.5; cursor: not-allowed; }
+  .toggle.dep-disabled { opacity: 0.4; cursor: not-allowed; }
+  .dep-note { font-weight: normal; font-size: 13px; color: #707070; letter-spacing: 0; }
   #settings-msg {
     padding: 8px 15px;
     font-size: 15px;
@@ -193,13 +195,19 @@
 <div id="settings-card" class="section raised">
   <div class="section-title">CONTROLLER SETTINGS</div>
   <div class="setting-row">
-    <span class="setting-name">RFID TAG READING</span>
-    <button class="toggle" id="toggle-RFID_ENABLED" data-flag="RFID_ENABLED">
+    <span class="setting-name">RFID NAVIGATION <span class="dep-note">(corner speed zones)</span></span>
+    <button class="toggle" id="toggle-NAV_ENABLED" data-flag="NAV_ENABLED">
       <span class="toggle-knob"></span>
     </button>
   </div>
   <div class="setting-row">
-    <span class="setting-name">SLMP (PLC LINK)</span>
+    <span class="setting-name">RFID SEQUENCE <span class="dep-note">(needs NAV)</span></span>
+    <button class="toggle" id="toggle-SEQ_ENABLED" data-flag="SEQ_ENABLED">
+      <span class="toggle-knob"></span>
+    </button>
+  </div>
+  <div class="setting-row">
+    <span class="setting-name">SLMP (PLC LINK) <span class="dep-note">(needs SEQ)</span></span>
     <button class="toggle" id="toggle-SLMP_ENABLED" data-flag="SLMP_ENABLED">
       <span class="toggle-knob"></span>
     </button>
@@ -243,8 +251,10 @@ fetch('/api/params')
       grid.appendChild(div);
     }
     if (data['Features']) {
-      setToggle('RFID_ENABLED', data['Features']['RFID Enabled']);
+      setToggle('NAV_ENABLED',  data['Features']['RFID Navigation']);
+      setToggle('SEQ_ENABLED',  data['Features']['RFID Sequence']);
       setToggle('SLMP_ENABLED', data['Features']['SLMP Enabled']);
+      applyDeps();
     }
     document.getElementById('ts').textContent = new Date().toLocaleTimeString();
   })
@@ -264,10 +274,35 @@ function setToggle(flag, on) {
   if (btn) btn.classList.toggle('on', !!on);
 }
 
-['RFID_ENABLED', 'SLMP_ENABLED'].forEach(flag => {
+function isOn(flag) {
+  const btn = document.getElementById('toggle-' + flag);
+  return btn && btn.classList.contains('on');
+}
+
+// Dependency hierarchy: NAV -> SEQ -> SLMP. A child can't be enabled while its
+// parent is off, so grey out (and block) children whose parent is off.
+function applyDeps() {
+  const nav = isOn('NAV_ENABLED');
+  const seq = isOn('SEQ_ENABLED');
+  document.getElementById('toggle-SEQ_ENABLED').classList.toggle('dep-disabled', !nav);
+  document.getElementById('toggle-SLMP_ENABLED').classList.toggle('dep-disabled', !(nav && seq));
+}
+
+function applyResponse(d) {
+  setToggle('NAV_ENABLED',  d.NAV_ENABLED);
+  setToggle('SEQ_ENABLED',  d.SEQ_ENABLED);
+  setToggle('SLMP_ENABLED', d.SLMP_ENABLED);
+  applyDeps();
+}
+
+['NAV_ENABLED', 'SEQ_ENABLED', 'SLMP_ENABLED'].forEach(flag => {
   document.getElementById('toggle-' + flag).addEventListener('click', () => {
     if (_card.classList.contains('locked')) return;
-    const btn    = document.getElementById('toggle-' + flag);
+    const btn = document.getElementById('toggle-' + flag);
+    if (btn.classList.contains('dep-disabled')) {
+      _setMsg('Enable its parent feature first (NAV → SEQ → SLMP).', 'warn');
+      return;
+    }
     const newVal = !btn.classList.contains('on');
     _setMsg('Saving…', 'info');
     fetch('/api/params/features', {
@@ -278,8 +313,7 @@ function setToggle(flag, on) {
       .then(r => r.json().then(d => ({ ok: r.ok, d })))
       .then(({ ok, d }) => {
         if (!ok) { _setMsg(d.error || 'Failed to apply.', 'warn'); return; }
-        setToggle('RFID_ENABLED', d.RFID_ENABLED);
-        setToggle('SLMP_ENABLED', d.SLMP_ENABLED);
+        applyResponse(d);
         _setMsg('Applied. Resets to profile default on restart.', 'ok');
       })
       .catch(() => _setMsg('Connection error — not saved.', 'warn'));

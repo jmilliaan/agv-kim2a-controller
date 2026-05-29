@@ -57,6 +57,7 @@ async def auto_mode(state, direction="forward", engine=None):
     last_speed_mode      = None   # tracks when gain set must change
     last_valid_pv        = None   # last accepted lateral offset (mm) for slew limit
     _dbg_count           = 0      # throttles the per-cycle PID debug log
+    ff_filtered          = 0.0    # low-pass filtered curvature feedforward (rpm)
 
     recorder = RunRecorder()
     recorder.start()
@@ -65,8 +66,10 @@ async def auto_mode(state, direction="forward", engine=None):
         while True:
 
             # ── Emergency guard ───────────────────────────────────────────────
+            # Use idle (not brake) so the wheel brakes are released and the AGV
+            # can be pushed free by hand during an emergency.
             if state.emergency_active:
-                await motion.set_brake(state)
+                await motion.idle(state)
                 await asyncio.sleep(config.DT)
                 continue
 
@@ -78,6 +81,7 @@ async def auto_mode(state, direction="forward", engine=None):
                     current_target_speed = 0.0
                     pid.reset()
                     last_valid_pv = None
+                    ff_filtered   = 0.0
                     was_sequence_stopped = True
                 await asyncio.sleep(config.DT)
                 continue
@@ -130,6 +134,7 @@ async def auto_mode(state, direction="forward", engine=None):
                     current_target_speed = 0.0
                     pid.reset()
                     last_valid_pv = None
+                    ff_filtered   = 0.0
                     tape_was_lost = True
                     await asyncio.sleep(0.01)
                     continue
@@ -182,8 +187,20 @@ async def auto_mode(state, direction="forward", engine=None):
                                               if step > 0 else -config.SENSOR_MAX_STEP_MM)
                 last_valid_pv = pv
 
+                # ── Curvature feedforward (forward auto, corner zones only) ───
+                # Supply the geometric turn so the PID doesn't need a standing
+                # error to hold the curve. Low-pass filtered to smooth the
+                # step at corner entry/exit. ff = sign*0.5*base*(W/R).
+                ff_target = 0.0
+                if (config.FF_ENABLED and direction == "forward"
+                        and state.speed_mode in config.FF_CURVE_MODES):
+                    ff_target = (config.FF_DIRECTION_SIGN * 0.5 * base_rpm
+                                 * (config.TRACK_WIDTH / config.CURVE_RADIUS))
+                ff_filtered += config.FF_ALPHA * (ff_target - ff_filtered)
+
                 # ── PID compute ───────────────────────────────────────────────
-                left_rpm, right_rpm, dbg = pid.compute(pv, base_rpm, error_sign)
+                left_rpm, right_rpm, dbg = pid.compute(pv, base_rpm, error_sign,
+                                                       feedforward=ff_filtered)
 
                 left_v  = max(0.0, min(5.0, motion.rpm_to_voltage(left_rpm)))
                 right_v = max(0.0, min(5.0, motion.rpm_to_voltage(right_rpm)))
@@ -198,7 +215,8 @@ async def auto_mode(state, direction="forward", engine=None):
 
                 recorder.record(error_mm=dbg["e"], left_rpm=left_rpm,
                                 right_rpm=right_rpm, pid_output=dbg["output"],
-                                d_term=dbg["d"])
+                                d_term=dbg["d"],
+                                target_speed_ms=target_speed)
 
                 # Throttle the per-cycle PID debug line (~every 25 cycles) so an
                 # accidental console DEBUG level can't flood at 100 Hz.
@@ -222,6 +240,7 @@ async def auto_mode(state, direction="forward", engine=None):
                     current_target_speed = 0.0
                     pid.reset()
                     last_valid_pv = None
+                    ff_filtered   = 0.0
                     tape_was_lost = True
 
                 await asyncio.sleep(config.DT)
@@ -381,10 +400,9 @@ async def mode_manager(state, engine=None):
             if current_mode != "emergency":
                 logger.critical("!! EMERGENCY — all motion stopped")
                 await _cancel_active()
-                if current_mode == "manual":
-                    await _flush_and_idle()   # manual: cut power only, no brakes
-                else:
-                    await _flush_and_brake()  # auto/armed: brake to hold position
+                # Always idle (not brake) on emergency — brakes released so the
+                # AGV can be pushed free by hand.
+                await _flush_and_idle()
                 _reset_sequence_state()
                 state.emergency_active = True
                 current_mode           = "emergency"

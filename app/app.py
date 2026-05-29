@@ -79,6 +79,7 @@ _TROLLEY_WRITABLE = {
 
 def _build_state_snapshot():
     """Derive the full JSON payload from the shared state object."""
+    import config
     s = _state
     mode = s.current_mode
 
@@ -92,6 +93,7 @@ def _build_state_snapshot():
         "sequence_request":     s.plc_sequence_request,
         "seq_pulse_active":     s.plc_sequence_request is not None,
         "reverse_auto_request": s.reverse_auto_request,
+        "latest_rfid_tag":      s.latest_rfid_tag,
     }
 
     # ── What the AGV is writing to the PLC right now ──────────────────────────
@@ -123,6 +125,10 @@ def _build_state_snapshot():
         "sensor_failure": raw["sensor_failure"]  if raw else False,
         "left_rpm":       round(s.left_rpm,  1),
         "right_rpm":      round(s.right_rpm, 1),
+        # Actual per-wheel linear velocity (m/s) from motor RPM:
+        #   wheel_rpm = motor_rpm / GEAR_RATIO; v = wheel_rpm * circ / 60
+        "v_left":         round(s.left_rpm  / config.GEAR_RATIO * config.WHEEL_CIRCUMFERENCE / 60.0, 3),
+        "v_right":        round(s.right_rpm / config.GEAR_RATIO * config.WHEEL_CIRCUMFERENCE / 60.0, 3),
         "pid_output":     round(s.pid_output, 1),
         "target_speed":   round(s.target_speed, 3),
         "speed_mode":     s.speed_mode,
@@ -350,10 +356,11 @@ def api_params():
             "RFID Timeout (s)": config.WATCHDOG_RFID_TIMEOUT_S,
         },
         "Features": {
-            "DIO Enabled":  config.DIO_ENABLED,
-            "CAN Enabled":  config.CAN_ENABLED,
-            "RFID Enabled": config.RFID_ENABLED,
-            "SLMP Enabled": config.SLMP_ENABLED,
+            "DIO Enabled":        config.DIO_ENABLED,
+            "CAN Enabled":        config.CAN_ENABLED,
+            "RFID Navigation":    config.NAV_ENABLED,
+            "RFID Sequence":      config.SEQ_ENABLED,
+            "SLMP Enabled":       config.SLMP_ENABLED,
         },
         "Hardware": {
             "V Range":  config.V_RANGE,
@@ -376,7 +383,7 @@ def api_set_features():
         return jsonify({"error": "driver manager unavailable"}), 503
 
     data    = request.get_json(silent=True) or {}
-    allowed = {"RFID_ENABLED", "SLMP_ENABLED"}
+    allowed = {"NAV_ENABLED", "SEQ_ENABLED", "SLMP_ENABLED"}
     updates = {k: v for k, v in data.items() if k in allowed}
     if not updates:
         return jsonify({"error": "no valid feature flags provided"}), 400
@@ -384,17 +391,53 @@ def api_set_features():
         if not isinstance(v, bool):
             return jsonify({"error": f"{k} must be true or false"}), 400
 
+    # The manager enforces the NAV -> SEQ -> SLMP hierarchy: disabling a parent
+    # cascades to children; enabling a child whose parent is off is rejected.
     try:
         for k, v in updates.items():
             _manager.set_enabled(k, v)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         return jsonify({"error": f"failed to apply: {e}"}), 500
 
     return jsonify({
         "ok": True,
-        "RFID_ENABLED": config.RFID_ENABLED,
+        "NAV_ENABLED":  config.NAV_ENABLED,
+        "SEQ_ENABLED":  config.SEQ_ENABLED,
         "SLMP_ENABLED": config.SLMP_ENABLED,
     })
+
+
+_RESTART_CMD = ["/usr/bin/systemctl", "restart", "agv-controller.service"]
+
+@app.route("/api/restart", methods=["POST"])
+def api_restart():
+    """Restart the controller systemd service (operator button on /errors).
+
+    Allowed only when the AGV is not actively moving under auto and not in
+    emergency — i.e. mode must be manual / armed / idle. Requires a passwordless
+    sudoers rule for `systemctl restart agv-controller.service`."""
+    if _state is None:
+        return jsonify({"error": "state not initialised"}), 503
+
+    mode = _state.current_mode
+    if mode in ("running", "reverse", "emergency"):
+        return jsonify({"error": f"Cannot restart while AGV is {mode}"}), 403
+
+    # Verify passwordless sudo is configured for exactly this command before
+    # firing, so we can return a clear error instead of silently doing nothing.
+    check = subprocess.run(["sudo", "-n", "-l"] + _RESTART_CMD,
+                           capture_output=True, text=True)
+    if check.returncode != 0:
+        return jsonify({"error": "sudo not configured for systemctl restart — "
+                                 "add a /etc/sudoers.d rule"}), 500
+
+    logger.warning("[Restart] Operator requested controller restart via HMI (mode=%s)", mode)
+    # Fire and return: systemctl hands the restart job to PID 1, which performs
+    # it even after this process is terminated. Popen so we don't block/wait.
+    subprocess.Popen(["sudo", "-n"] + _RESTART_CMD)
+    return jsonify({"ok": True})
 
 
 @app.route("/trolley")

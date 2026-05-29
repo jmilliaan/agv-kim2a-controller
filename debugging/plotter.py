@@ -69,39 +69,42 @@ class RunRecorder:
     """
 
     def __init__(self):
-        self._t0          = None
-        self._times       = deque(maxlen=PLOT_MAX_SAMPLES)
-        self._errors      = deque(maxlen=PLOT_MAX_SAMPLES)
-        self._left_rpms   = deque(maxlen=PLOT_MAX_SAMPLES)
-        self._right_rpms  = deque(maxlen=PLOT_MAX_SAMPLES)
-        self._pid_outputs = deque(maxlen=PLOT_MAX_SAMPLES)
-        self._d_terms     = deque(maxlen=PLOT_MAX_SAMPLES)
-        self._active      = False
+        self._t0             = None
+        self._times          = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._errors         = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._left_rpms      = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._right_rpms     = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._pid_outputs    = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._d_terms        = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._target_speeds  = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._active         = False
 
     def start(self):
         if not PLOTTING_ENABLED:
             return
-        self._t0          = time.time()
-        self._times       = deque(maxlen=PLOT_MAX_SAMPLES)
-        self._errors      = deque(maxlen=PLOT_MAX_SAMPLES)
-        self._left_rpms   = deque(maxlen=PLOT_MAX_SAMPLES)
-        self._right_rpms  = deque(maxlen=PLOT_MAX_SAMPLES)
-        self._pid_outputs = deque(maxlen=PLOT_MAX_SAMPLES)
-        self._d_terms     = deque(maxlen=PLOT_MAX_SAMPLES)
-        self._active      = True
+        self._t0             = time.time()
+        self._times          = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._errors         = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._left_rpms      = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._right_rpms     = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._pid_outputs    = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._d_terms        = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._target_speeds  = deque(maxlen=PLOT_MAX_SAMPLES)
+        self._active         = True
         logger.info("[PLOT] Recording started.")
 
     def record(self, error_mm: float, left_rpm: float, right_rpm: float,
-               pid_output: float, d_term: float):
+               pid_output: float, d_term: float, target_speed_ms: float = 0.0):
         """
         Call once per PID cycle inside auto_mode.
 
-        Required keyword arguments (all five must be passed):
-            error_mm   — lateral error in mm
-            left_rpm   — commanded left wheel RPM
-            right_rpm  — commanded right wheel RPM
-            pid_output — combined PID output (variable: output)
-            d_term     — filtered derivative term (variable: filtered_d)
+        Args:
+            error_mm       — lateral error in mm
+            left_rpm       — commanded left wheel RPM
+            right_rpm      — commanded right wheel RPM
+            pid_output     — combined PID output
+            d_term         — filtered derivative term
+            target_speed_ms — current desired speed setpoint in m/s
         """
         if not PLOTTING_ENABLED or not self._active:
             return
@@ -111,6 +114,7 @@ class RunRecorder:
         self._right_rpms.append(right_rpm)
         self._pid_outputs.append(pid_output)
         self._d_terms.append(d_term)
+        self._target_speeds.append(target_speed_ms)
 
     def stop(self):
         """
@@ -134,7 +138,8 @@ class RunRecorder:
         # the event loop — matplotlib rendering can take hundreds of ms.
         args = (list(self._times), list(self._errors),
                 list(self._left_rpms), list(self._right_rpms),
-                list(self._pid_outputs), list(self._d_terms))
+                list(self._pid_outputs), list(self._d_terms),
+                list(self._target_speeds))
         threading.Thread(target=_save_safe, args=args, daemon=True).start()
 
 
@@ -142,15 +147,18 @@ class RunRecorder:
 #  SAVE FUNCTION
 # ══════════════════════════════════════════════════════════════════════════════
 
-def _save_safe(times, errors, left_rpms, right_rpms, pid_outputs, d_terms):
+def _save_safe(times, errors, left_rpms, right_rpms, pid_outputs, d_terms,
+               target_speeds):
     """Thread entry point — never let a plotting failure escape the worker."""
     try:
-        _save_outputs(times, errors, left_rpms, right_rpms, pid_outputs, d_terms)
+        _save_outputs(times, errors, left_rpms, right_rpms, pid_outputs,
+                      d_terms, target_speeds)
     except Exception as e:
         logger.error("[PLOT] ERROR saving output: %s", e)
 
 
-def _save_outputs(times, errors, left_rpms, right_rpms, pid_outputs, d_terms):
+def _save_outputs(times, errors, left_rpms, right_rpms, pid_outputs, d_terms,
+                  target_speeds):
     os.makedirs(PLOT_DIR, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     csv_path  = os.path.join(PLOT_DIR, f"{timestamp}_data.csv")
@@ -160,8 +168,9 @@ def _save_outputs(times, errors, left_rpms, right_rpms, pid_outputs, d_terms):
     with open(csv_path, "w", newline="") as f:
         writer = csv_module.writer(f)
         writer.writerow(["time_s", "error_mm", "left_rpm", "right_rpm",
-                         "pid_output", "d_term"])
-        for row in zip(times, errors, left_rpms, right_rpms, pid_outputs, d_terms):
+                         "pid_output", "d_term", "target_speed_ms"])
+        for row in zip(times, errors, left_rpms, right_rpms, pid_outputs,
+                       d_terms, target_speeds):
             writer.writerow([
                 f"{row[0]:.4f}",
                 f"{row[1]:.3f}",
@@ -169,6 +178,7 @@ def _save_outputs(times, errors, left_rpms, right_rpms, pid_outputs, d_terms):
                 f"{row[3]:.3f}",
                 f"{row[4]:.3f}",
                 f"{row[5]:.3f}",
+                f"{row[6]:.3f}",
             ])
     logger.info("[PLOT] CSV  saved → %s", csv_path)
 

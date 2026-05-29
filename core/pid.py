@@ -50,7 +50,7 @@ class PIDController:
 
     # ── Compute ───────────────────────────────────────────────────────────────
 
-    def compute(self, pv, base_rpm, error_sign=-1.0):
+    def compute(self, pv, base_rpm, error_sign=-1.0, feedforward=0.0):
         """One PID cycle.
 
         Args:
@@ -58,6 +58,11 @@ class PIDController:
             base_rpm:    current target RPM from the acceleration ramp
             error_sign:  -1.0 for forward (sensor at front),
                          +1.0 for reverse  (sensor at rear — geometry inverted)
+            feedforward: open-loop steering differential (rpm) added to the PID
+                         output — e.g. curvature feedforward in a corner. Not
+                         subject to the PID output clamp (it is a known-good
+                         command); the final wheel voltages are still clamped
+                         downstream.
 
         Returns:
             (left_rpm, right_rpm, debug_dict)
@@ -94,17 +99,20 @@ class PIDController:
         raw_d            = -self._kp * self._td * ((pv - self.last_pv) / dt)
         self.filtered_d += alpha * (raw_d - self.filtered_d)
 
-        # ── Output clamp ──────────────────────────────────────────────────────
+        # ── Output clamp (PID steering only) ──────────────────────────────────
         output = p_term + i_term + self.filtered_d
         output = max(-self._output_clamp, min(self._output_clamp, output))
+
+        # ── Total steering differential = PID + curvature feedforward ─────────
+        output_total = output + feedforward
 
         # ── Speed reduction (low-pass filtered, capped) ───────────────────────
         raw_sr               = abs(e * self._v_red_coef) + abs((pv - self.last_pv) / dt) * 0.5
         raw_sr               = min(raw_sr, base_rpm * self._sr_cap)
         self.speed_reduction += self._sr_alpha * (raw_sr - self.speed_reduction)
 
-        left_rpm  = base_rpm - self.speed_reduction + output
-        right_rpm = base_rpm - self.speed_reduction - output
+        left_rpm  = base_rpm - self.speed_reduction + output_total
+        right_rpm = base_rpm - self.speed_reduction - output_total
 
         self.last_pv = pv
 
@@ -114,5 +122,7 @@ class PIDController:
             "i":               i_term,
             "d":               self.filtered_d,
             "output":          output,
+            "feedforward":     feedforward,
+            "output_total":    output_total,
             "speed_reduction": self.speed_reduction,
         }
