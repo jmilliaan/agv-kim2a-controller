@@ -29,7 +29,8 @@
     "DI_RIGHT": 7,
     "DI_MODE_SWITCH": 2,
     "DI_START": 0,
-    "DI_RESET": 1
+    "DI_RESET": 1,
+    "DI_PROX": 8
   },
 
   "motor_channels": {
@@ -60,7 +61,7 @@
     "MANUAL_TARGET_SLOW_SPEED": 0.25,
     "AUTO_TARGET_HIGH_SPEED": 0.40,
     "AUTO_TARGET_SLOW_SPEED": 0.24,
-    "AUTO_TARGET_EXTRA_SLOW_SPEED": 0.16,
+    "AUTO_TARGET_EXTRA_SLOW_SPEED": 0.2,
     "ACCEL_RATE": 0.8
   },
 
@@ -129,13 +130,14 @@
   },
 
   "feedforward": {
-    "_comment": "Curvature feedforward for corners: output_ff = sign*0.5*base_rpm*(TRACK_WIDTH_M/CURVE_RADIUS_M), applied while speed_mode is a curve mode. Stadium is CCW => all left turns.",
+    "_comment": "Curvature feedforward for corners: output_ff = FF_SCALE*sign*0.5*base_rpm*(TRACK_WIDTH_M/CURVE_RADIUS_M), applied while speed_mode is a curve mode. Stadium is CCW => all left turns. FF_SCALE=0.5 halves the compensation (2026-05-30).",
     "ENABLED": 1,
     "TRACK_WIDTH_M": 0.46,
     "CURVE_RADIUS_M": 1.5,
     "CURVE_DIRECTION": "left",
     "CURVE_SPEED_MODES": ["SLOW"],
-    "FF_ALPHA": 0.15
+    "FF_ALPHA": 0.15,
+    "FF_SCALE": 0.4
   },
 
   "sequences": [
@@ -184,21 +186,21 @@
       "requires_mode": "running"
     },
     {
-      "_comment": "Trolley load 0 — RFID arms a SLOW curved approach (feedforward steers the corner); left marker then switches to EXTRA_SLOW straight crawl for a precise stop.",
+      "_comment": "Trolley load 0 — RFID arms a SLOW curved approach (feedforward steers the corner); DI08 magnetic proximity marker then switches to EXTRA_SLOW straight crawl for a precise stop.",
       "name": "trolley_load_00",
       "category": "sequence",
       "trigger": {
         "type": "rfid_then_marker",
         "rfid_tag": "0096",
-        "marker_side": "left",
+        "marker_side": "prox",
         "approach_timeout": 15.0,
         "approach_speed": "SLOW"
       },
       "actions": [
         { "type": "set_speed",        "speed": "EXTRA_SLOW" },
-        { "type": "wait_marker",      "side": "left", "timeout": 30.0 },
-        { "type": "wait_seconds",     "duration": 2.0 },
+        { "type": "wait_marker",      "side": "prox", "timeout": 30.0 },
         { "type": "stop_agv" },
+        { "type": "wait_seconds",     "duration": 2.0 },
         { "type": "plc_request",      "seq_num": 0, "pulse_duration": 1.0 },
         { "type": "wait_plc_complete","seq_num": 0, "clear_timeout": 10.0 },
         { "type": "resume",           "speed": "HIGH" }

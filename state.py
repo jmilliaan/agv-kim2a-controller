@@ -6,7 +6,7 @@ import asyncio
 class SystemState:
     """Owned by mode_manager and safety_watchdog."""
     def __init__(self):
-        self.current_mode     = None   # None | "manual" | "armed" | "running" | "reverse" | "emergency"
+        self.current_mode     = None   # None | "manual" | "armed" | "running" | "calibrate" | "emergency"
         self.emergency_active = False
         self.system_error     = False  # set by safety_watchdog on driver comms loss
 
@@ -17,7 +17,6 @@ class KinematicState:
         self.speed_mode           = "HIGH"  # "HIGH" | "SLOW"
         self.sequence_stop        = False   # True = AGV should brake and wait
         self.pending_sequence     = None    # name of armed rfid_then_marker sequence
-        self.reverse_auto_request = False   # set by Flask to start reverse tape-follow
         self.web_manual_command   = None    # set by Flask remote; "forward"|"reverse"|"left"|"right"|"fwd_left"|"fwd_right"|"rvs_left"|"rvs_right"|None
         self.web_manual_expire    = 0.0     # epoch after which web_manual_command is treated as None
         self.nav_in_corner        = False   # True only while a NAV sequence holds SLOW; gates feedforward
@@ -172,11 +171,6 @@ class AMRState:
     def calibration_wheel(self): return self.kinematic.calibration_wheel
     @calibration_wheel.setter
     def calibration_wheel(self, v): self.kinematic.calibration_wheel = v
-
-    @property
-    def reverse_auto_request(self): return self.kinematic.reverse_auto_request
-    @reverse_auto_request.setter
-    def reverse_auto_request(self, v): self.kinematic.reverse_auto_request = v
 
     @property
     def web_manual_command(self): return self.kinematic.web_manual_command

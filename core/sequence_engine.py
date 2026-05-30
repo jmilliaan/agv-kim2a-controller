@@ -305,9 +305,16 @@ class SequenceEngine:
         while time.time() < deadline:
             if self._state.current_mode != "running":
                 raise asyncio.CancelledError()
-            sen = self._state.latest_sensor
-            if sen and sen.get(f"{side}_marker"):
-                return
+            if side == "prox":
+                # Magnetic proximity sensor on DI_PROX (not the CAN tape frame).
+                di = self._state.latest_di
+                if config.DI_PROX >= 0 and di and len(di) > config.DI_PROX \
+                        and di[config.DI_PROX]:
+                    return
+            else:
+                sen = self._state.latest_sensor
+                if sen and sen.get(f"{side}_marker"):
+                    return
             await asyncio.sleep(0.02)
         raise SequenceTimeout(f"wait_marker side={side}")
 

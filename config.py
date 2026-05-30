@@ -66,6 +66,8 @@ DI_RIGHT       = _params["io_mapping"]["DI_RIGHT"]
 DI_MODE_SWITCH = _params["io_mapping"]["DI_MODE_SWITCH"]
 DI_START       = _params["io_mapping"]["DI_START"]
 DI_RESET       = _params["io_mapping"]["DI_RESET"]
+# Magnetic proximity sensor used as a station marker for sequences (-1 = none).
+DI_PROX        = _params["io_mapping"].get("DI_PROX", -1)
 
 # ── Motor Channels (parameterized — avoids hardcoded DO 0-5 in motion.py) ────
 # Falls back to the hardcoded mapping if the profile doesn't have this section
@@ -192,6 +194,7 @@ _ff_dir           = str(_ff.get("CURVE_DIRECTION", "left")).lower()
 FF_DIRECTION_SIGN = -1.0 if _ff_dir == "left" else 1.0   # left turn => output < 0
 FF_CURVE_MODES    = set(_ff.get("CURVE_SPEED_MODES", ["SLOW"]))
 FF_ALPHA          = _ff.get("FF_ALPHA", 0.15)            # smooths corner entry/exit
+FF_SCALE          = _ff.get("FF_SCALE", 1.0)             # overall multiplier on the corner compensation
 
 
 # ── Encoder (wheel-speed calibration) ─────────────────────────────────────────

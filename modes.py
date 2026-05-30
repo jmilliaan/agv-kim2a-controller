@@ -13,28 +13,22 @@ logger = logging.getLogger(__name__)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  AUTO MODE  (forward and reverse unified)
+#  AUTO MODE  (forward tape-following only)
 # ══════════════════════════════════════════════════════════════════════════════
 
-async def auto_mode(state, direction="forward", engine=None):
-    """Tape-following PID loop.
+async def auto_mode(state, engine=None):
+    """Forward tape-following PID loop.
+
+    Sensor at front, speed modes active, sequence stops active, RFID + proximity
+    marker hooks active. The AGV only ever runs auto forward.
 
     Args:
-        direction: "forward" — sensor at front, speed modes active, sequence
-                               stops active, RFID marker hooks active.
-                   "reverse" — sensor at rear (error sign inverted), fixed SLOW
-                               speed, no sequence stops, no RFID.
-        engine:    SequenceEngine instance (Phase 3).  Pass None until then;
-                   the marker-hook calls are guarded with `if engine`.
+        engine: SequenceEngine instance. The marker-hook calls are guarded with
+                `if engine`.
     """
-    if direction == "forward":
-        await motion.idle(state)
-        await motion.set_forward(state, 0.0)
-        error_sign = -1.0        # e = -pv  (standard: positive pv → steer left)
-    else:
-        await motion.idle(state)
-        await motion.set_reverse(state, 0.0)
-        error_sign = 1.0         # e = +pv  (inverted: sensor is at the rear)
+    await motion.idle(state)
+    await motion.set_forward(state, 0.0)
+    error_sign = -1.0            # e = -pv  (positive pv → steer left)
 
     # Initialise PID with SLOW gains; forward mode will switch to HIGH on first
     # cycle if speed_mode == "HIGH".
@@ -59,6 +53,7 @@ async def auto_mode(state, direction="forward", engine=None):
     last_valid_pv        = None   # last accepted lateral offset (mm) for slew limit
     _dbg_count           = 0      # throttles the per-cycle PID debug log
     ff_filtered          = 0.0    # low-pass filtered curvature feedforward (rpm)
+    prox_was_active      = False  # edge-detect for the DI proximity station marker
 
     recorder = RunRecorder()
     recorder.start()
@@ -74,8 +69,8 @@ async def auto_mode(state, direction="forward", engine=None):
                 await asyncio.sleep(config.DT)
                 continue
 
-            # ── Sequence stop (forward only) ──────────────────────────────────
-            if direction == "forward" and state.sequence_stop:
+            # ── Sequence stop ─────────────────────────────────────────────────
+            if state.sequence_stop:
                 if not was_sequence_stopped:
                     logger.info("[AUTO] Sequence stop — holding.")
                     await motion.set_brake(state)
@@ -93,29 +88,26 @@ async def auto_mode(state, direction="forward", engine=None):
                 was_sequence_stopped = False
 
             # ── Target speed and PID gain selection ───────────────────────────
-            if direction == "forward":
-                if state.speed_mode == "EXTRA_SLOW":
-                    target_speed = config.AUTO_TARGET_EXTRA_SLOW_SPEED
-                elif state.speed_mode == "SLOW":
-                    target_speed = config.AUTO_TARGET_SLOW_SPEED
-                else:
-                    target_speed = config.AUTO_TARGET_HIGH_SPEED
-
-                # Only switch gains when speed_mode actually changes — avoids
-                # redundant recomputation of the derivative filter coefficient.
-                if state.speed_mode != last_speed_mode:
-                    if state.speed_mode == "HIGH":
-                        pid.update_gains(config.KP, config.TD, config.N,
-                                         config.V_RED_COEF)
-                    elif state.speed_mode == "EXTRA_SLOW":
-                        pid.update_gains(config.KP_EXTRA_SLOW, config.TD_EXTRA_SLOW,
-                                         config.N_EXTRA_SLOW, config.V_RED_COEF_EXTRA_SLOW)
-                    else:
-                        pid.update_gains(config.KP_SLOW, config.TD_SLOW,
-                                         config.N_SLOW, config.V_RED_COEF_SLOW)
-                    last_speed_mode = state.speed_mode
+            if state.speed_mode == "EXTRA_SLOW":
+                target_speed = config.AUTO_TARGET_EXTRA_SLOW_SPEED
+            elif state.speed_mode == "SLOW":
+                target_speed = config.AUTO_TARGET_SLOW_SPEED
             else:
-                target_speed = config.AUTO_TARGET_SLOW_SPEED   # reverse: fixed
+                target_speed = config.AUTO_TARGET_HIGH_SPEED
+
+            # Only switch gains when speed_mode actually changes — avoids
+            # redundant recomputation of the derivative filter coefficient.
+            if state.speed_mode != last_speed_mode:
+                if state.speed_mode == "HIGH":
+                    pid.update_gains(config.KP, config.TD, config.N,
+                                     config.V_RED_COEF)
+                elif state.speed_mode == "EXTRA_SLOW":
+                    pid.update_gains(config.KP_EXTRA_SLOW, config.TD_EXTRA_SLOW,
+                                     config.N_EXTRA_SLOW, config.V_RED_COEF_EXTRA_SLOW)
+                else:
+                    pid.update_gains(config.KP_SLOW, config.TD_SLOW,
+                                     config.N_SLOW, config.V_RED_COEF_SLOW)
+                last_speed_mode = state.speed_mode
 
             # ── Drain sensor queue — keep only the latest frame ───────────────
             sensor = None
@@ -124,13 +116,11 @@ async def auto_mode(state, direction="forward", engine=None):
 
             if sensor is not None:
 
-                if direction == "forward":
-                    logger.debug("[AUTO] left_marker=%s", sensor["left_marker"])
+                logger.debug("[AUTO] left_marker=%s", sensor["left_marker"])
 
                 # ── Tape-loss guard ───────────────────────────────────────────
                 if not sensor["tape_detected"]:
-                    logger.warning("[%s] LOST TAPE — stopping",
-                                   "AUTO" if direction == "forward" else "REVERSE")
+                    logger.warning("[AUTO] LOST TAPE — stopping")
                     await motion.set_brake(state)
                     current_target_speed = 0.0
                     pid.reset()
@@ -141,16 +131,12 @@ async def auto_mode(state, direction="forward", engine=None):
                     continue
 
                 if tape_was_lost:
-                    logger.info("[%s] TAPE REACQUIRED — resuming",
-                                "AUTO" if direction == "forward" else "REVERSE")
-                    if direction == "forward":
-                        await motion.set_forward(state, 0.0)
-                    else:
-                        await motion.set_reverse(state, 0.0)
+                    logger.info("[AUTO] TAPE REACQUIRED — resuming")
+                    await motion.set_forward(state, 0.0)
                     tape_was_lost = False
 
-                # ── Marker hook (forward only — sequence engine, Phase 3) ──────
-                if direction == "forward" and engine is not None:
+                # ── Marker hook (sequence engine) ──────────────────────────────
+                if engine is not None:
                     if sensor["left_marker"]:
                         await engine.on_marker("left")
                     if sensor["right_marker"]:
@@ -177,8 +163,7 @@ async def auto_mode(state, direction="forward", engine=None):
                 if pv is None or abs(pv) > config.SENSOR_MAX_MM:
                     _dbg_count += 1
                     if _dbg_count % 25 == 0:
-                        logger.warning("[%s] sensor pv out of range (%s mm) — skipping frame",
-                                       "AUTO" if direction == "forward" else "REVERSE", pv)
+                        logger.warning("[AUTO] sensor pv out of range (%s mm) — skipping frame", pv)
                     await asyncio.sleep(config.DT)
                     continue
                 if last_valid_pv is not None:
@@ -193,9 +178,9 @@ async def auto_mode(state, direction="forward", engine=None):
                 # error to hold the curve. Low-pass filtered to smooth the
                 # step at corner entry/exit. ff = sign*0.5*base*(W/R).
                 ff_target = 0.0
-                if (config.FF_ENABLED and direction == "forward"
-                        and state.nav_in_corner):
-                    ff_target = (config.FF_DIRECTION_SIGN * 0.5 * base_rpm
+                if config.FF_ENABLED and state.nav_in_corner:
+                    ff_target = (config.FF_SCALE * config.FF_DIRECTION_SIGN
+                                 * 0.5 * base_rpm
                                  * (config.TRACK_WIDTH / config.CURVE_RADIUS))
                 ff_filtered += config.FF_ALPHA * (ff_target - ff_filtered)
 
@@ -223,20 +208,33 @@ async def auto_mode(state, direction="forward", engine=None):
                 # accidental console DEBUG level can't flood at 100 Hz.
                 _dbg_count += 1
                 if _dbg_count % 25 == 0:
-                    label = state.speed_mode if direction == "forward" else "REVERSE"
                     logger.debug(
                         "[%s] Target=%.2fm/s e=%+.1fmm P=%+.1f I=%+.1f D=%+.1f "
                         "out=%+.1f L=%.1f R=%.1frpm Vred=%.1frpm",
-                        label, current_target_speed, dbg["e"],
+                        state.speed_mode, current_target_speed, dbg["e"],
                         dbg["p"], dbg["i"], dbg["d"], dbg["output"],
                         left_rpm, right_rpm, dbg["speed_reduction"],
                     )
 
+            # ── DI proximity station marker ───────────────────────────────────
+            # A magnetic proximity sensor on DI_PROX acts as a station marker for
+            # sequences with marker_side "prox" (e.g. trolley_load_00). Fire on
+            # the rising edge so one pass triggers one marker event. Independent
+            # of the CAN tape frame, so it works even between sensor frames.
+            # Only active when both SEQ and SLMP are enabled (the prox marker only
+            # drives PLC-handshake sequences, which need SLMP).
+            if (engine is not None and config.DI_PROX >= 0
+                    and config.SEQ_ENABLED and config.SLMP_ENABLED):
+                di = state.latest_di
+                prox_active = bool(di and len(di) > config.DI_PROX and di[config.DI_PROX])
+                if prox_active and not prox_was_active:
+                    await engine.on_marker("prox")
+                prox_was_active = prox_active
+
             # ── CAN timeout ───────────────────────────────────────────────────
             if time.time() - state.can_last_rx > config.CAN_TIMEOUT:
                 if not tape_was_lost:
-                    logger.warning("[%s] CAN TIMEOUT — sensor lost, stopping",
-                                   "AUTO" if direction == "forward" else "REVERSE")
+                    logger.warning("[AUTO] CAN TIMEOUT — sensor lost, stopping")
                     await motion.set_brake(state)
                     current_target_speed = 0.0
                     pid.reset()
@@ -322,7 +320,7 @@ async def manual_mode(state):
 async def mode_manager(state, engine=None, manager=None):
     """Central state machine.
 
-    States: None | "manual" | "armed" | "running" | "reverse" | "calibrate" | "emergency"
+    States: None | "manual" | "armed" | "running" | "calibrate" | "emergency"
 
     DI conventions (from parameters.json / profile)
     ------------------------------------------------
@@ -490,25 +488,6 @@ async def mode_manager(state, engine=None, manager=None):
                 current_mode       = "running"
                 state.current_mode = current_mode
 
-        elif current_mode == "armed" and state.reverse_auto_request:
-            tape_present  = False
-            latest_sensor = None
-            while not state.sensor_queue.empty():
-                latest_sensor = state.sensor_queue.get_nowait()
-            if latest_sensor is not None:
-                tape_present = latest_sensor.get("tape_detected", False)
-                await state.sensor_queue.put(latest_sensor)
-
-            if not tape_present:
-                logger.warning("REVERSE START ignored — tape not detected.")
-                state.reverse_auto_request = False
-            else:
-                logger.info("REVERSE START — launching reverse auto mode.")
-                active_task        = asyncio.create_task(
-                    auto_mode(state, direction="reverse"))
-                current_mode       = "reverse"
-                state.current_mode = current_mode
-
         elif current_mode == "armed" and state.calibration_request:
             # Open-loop wheel-speed calibration ramp. No tape needed (no PID /
             # tape-following): the runner drives both wheels straight and logs
@@ -537,14 +516,5 @@ async def mode_manager(state, engine=None, manager=None):
             current_mode       = "armed"
             state.current_mode = current_mode
             logger.info("ARMED. Press START to run again.")
-
-        elif current_mode == "reverse" and (reset_rising or not state.reverse_auto_request):
-            logger.info("STOP — stopping reverse auto, returning to ARMED.")
-            await _cancel_active()
-            await _flush_and_idle()
-            state.reverse_auto_request = False
-            current_mode               = "armed"
-            state.current_mode         = current_mode
-            logger.info("ARMED.")
 
         await asyncio.sleep(0.01)

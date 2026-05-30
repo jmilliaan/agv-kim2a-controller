@@ -89,7 +89,6 @@
   .mode-manual    { background: #0000c0; color: #fff; }
   .mode-armed     { background: #c0a000; color: #000; }
   .mode-running   { background: #008000; color: #fff; }
-  .mode-reverse   { background: #8000c0; color: #fff; }
   .mode-emergency { background: #c00000; color: #fff; }
 
   /* Emergency indicator lamp */
@@ -673,20 +672,6 @@
   </div>
 </div>
 
-<!-- Reverse auto control panel -->
-<div id="rev-panel" class="raised" style="background:#c0c0c0;padding:0;margin-top:8px;">
-  <div class="panel-title">REVERSE AUTO &nbsp;[ TAPE FOLLOWING — REVERSE ]</div>
-  <div style="padding:8px 10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-    <button id="btn-rev-start" style="background:#006000;color:#fff;">&#9654; START REVERSE</button>
-    <button id="btn-rev-stop"  style="background:#c00000;color:#fff;">&#9632; STOP REVERSE</button>
-    <div style="width:2px;height:28px;background:#a0a0a0;"></div>
-    <div class="sensor-lamp-item">
-      <span class="lamp" id="lamp-rev-active" style="width:18px;height:18px;"></span>
-      REVERSE ACTIVE
-    </div>
-    <span id="rev-status" style="font-size: 9px;font-weight:bold;color:#000080;letter-spacing:1px;"></span>
-  </div>
-</div>
 
 <script>
 const N_SEQ = 9;
@@ -825,14 +810,6 @@ function fetchState() {
         cdEl.className = 'seq-status-value';
       }
 
-      // Reverse auto lamp + button state
-      const revActive = agv.reverse_auto_request || agv.mode === 'reverse';
-      setLamp(document.getElementById('lamp-rev-active'), revActive, 'on-blue');
-      document.getElementById('btn-rev-start').disabled = revActive || agv.mode !== 'armed';
-      document.getElementById('btn-rev-start').style.opacity = (revActive || agv.mode !== 'armed') ? '0.4' : '1';
-      document.getElementById('btn-rev-stop').disabled  = !revActive;
-      document.getElementById('btn-rev-stop').style.opacity  = !revActive ? '0.4' : '1';
-
       // RFID last tag
       const rfidEl = document.getElementById('rfid-tag-display');
       rfidEl.textContent = agv.latest_rfid_tag || '—';
@@ -878,24 +855,6 @@ document.getElementById('btn-clear').addEventListener('click', () => {
     setTimeout(() => { st.textContent = ''; }, 4000);
   });
 });
-
-function postRevAuto(running) {
-  fetch('/api/reverse_auto', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ running })
-  })
-  .then(r => r.json())
-  .then(d => {
-    const st = document.getElementById('rev-status');
-    st.style.color  = d.ok ? '#006000' : '#c00000';
-    st.textContent  = d.ok ? (running ? 'REVERSE STARTED' : 'STOPPED') : (d.error || 'ERROR');
-    setTimeout(() => { st.textContent = ''; }, 4000);
-  });
-}
-
-document.getElementById('btn-rev-start').addEventListener('click', () => postRevAuto(true));
-document.getElementById('btn-rev-stop').addEventListener('click',  () => postRevAuto(false));
 
 function fetchWifi() {
   fetch('/api/wifi')

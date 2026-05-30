@@ -387,7 +387,7 @@ function pollMode() {
     .then(r => r.json())
     .then(d => {
       const mode     = d.agv && d.agv.mode;
-      const isLocked = ['running', 'reverse', 'emergency'].includes(mode);
+      const isLocked = ['running', 'emergency'].includes(mode);
       if (isLocked !== _locked) {
         _locked = isLocked;
         _card.classList.toggle('locked', isLocked);

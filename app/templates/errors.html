@@ -247,7 +247,7 @@ poll();
 setInterval(poll, 1000);
 
 // ── Restart controller button ──────────────────────────────────────────────
-const _BLOCK_MODES = ['running', 'reverse', 'emergency'];
+const _BLOCK_MODES = ['running', 'emergency'];
 
 function setRestartStatus(text, cls) {
   const el = document.getElementById('restart-status');
