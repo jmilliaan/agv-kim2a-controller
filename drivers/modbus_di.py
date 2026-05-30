@@ -45,7 +45,7 @@ class DIReader(SensorDriver):
                 logger.error("DI Reader exception: %s", e)
                 client.close()
 
-            await asyncio.sleep(0.05)
+            await asyncio.sleep(config.DI_POLL_INTERVAL)
 
 
 # ── Module-level shim so io_hardware.di_reader still works ──────────────────

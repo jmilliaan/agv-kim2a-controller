@@ -129,9 +129,9 @@ class SequenceEngine:
                     continue
                 # Arm: slow down for approach, record armed state. The approach
                 # speed is configurable per trigger ("approach_speed"); e.g. SLOW
-                # lets a curved approach get curvature feedforward, vs EXTRA_SLOW
-                # for a straight precision crawl. Defaults to EXTRA_SLOW.
-                approach_speed = trig.get("approach_speed", "EXTRA_SLOW")
+                # for a curved approach (with feedforward), APPROACH for a precise
+                # 0.1 m/s station crawl. Defaults to APPROACH.
+                approach_speed = trig.get("approach_speed", "APPROACH")
                 self._armed[seq["name"]] = seq
                 self._state.speed_mode       = approach_speed
                 self._state.pending_sequence = seq["name"]
@@ -231,9 +231,7 @@ class SequenceEngine:
 
         skip_approach=True skips the wait_marker step (the marker that triggered
         this sequence already satisfied it). set_speed steps still run, so a
-        sequence can switch speed zones after the marker — e.g. a SLOW curved
-        approach (with feedforward) followed by an EXTRA_SLOW straight crawl to
-        a precise stop.
+        sequence can switch speed zones after the marker.
         """
         name = seq["name"]
         logger.info("[SEQ] Running '%s'", name)

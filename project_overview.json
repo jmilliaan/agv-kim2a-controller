@@ -42,7 +42,7 @@
       "motor_channels": "left/right → {do_fwd, do_rev, do_brake, ao_speed} channel indices",
       "hardware":       "V_RANGE(10.0V), DAC_RES(4095)",
       "kinematics":     "WHEEL_DIAMETER(0.18m), GEAR_RATIO(30)",
-      "speeds":         "MANUAL_TARGET_HIGH_SPEED, MANUAL_TARGET_SLOW_SPEED, AUTO_TARGET_HIGH_SPEED, AUTO_TARGET_SLOW_SPEED, AUTO_TARGET_EXTRA_SLOW_SPEED, ACCEL_RATE",
+      "speeds":         "MANUAL_TARGET_HIGH_SPEED, MANUAL_TARGET_SLOW_SPEED, AUTO_TARGET_HIGH_SPEED, AUTO_TARGET_SLOW_SPEED, AUTO_TARGET_APPROACH_SPEED, ACCEL_RATE",
       "pid_tuning":     "KP, TD, N (HIGH gains), KP_SLOW, TD_SLOW, N_SLOW (SLOW gains), TI, TI_DEADBAND, TI_MAX, DT, V_RED_COEF, V_RED_COEF_SLOW, OUTPUT_CLAMP_RPM, SR_ALPHA, SR_CAP",
       "can_sensor":     "SENSOR_COB_ID(390), FLAG_TAPE_DETECT(2), FLAG_LEFT_MARKER(4), FLAG_RIGHT_MARKER(8), FLAG_SENSOR_FAIL(128), CAN_TIMEOUT(0.5s), CAN_NODE_ID(6)",
       "rfid":           "RFID_INIT_CMD_HEX, SEQUENCE_STOP_DELAY",
@@ -68,7 +68,7 @@
       "KinematicState": {
         "owner": "sequence_engine, mode_manager",
         "fields": {
-          "speed_mode":           "'HIGH' | 'SLOW' | 'EXTRA_SLOW'",
+          "speed_mode":           "'HIGH' | 'SLOW' | 'APPROACH'",
           "sequence_stop":        "bool — True = AGV holds brake and waits",
           "pending_sequence":     "str name of armed rfid_then_marker sequence or None",
           "reverse_auto_request": "bool — set by Flask /api/reverse_auto to start reverse tape-follow"
@@ -166,7 +166,7 @@
       "rfid_then_marker": "RFID arms approach (slows to SLOW), marker fires execution"
     },
     "action_types": {
-      "set_speed":         "Sets state.speed_mode to 'HIGH' | 'SLOW' | 'EXTRA_SLOW'",
+      "set_speed":         "Sets state.speed_mode to 'HIGH' | 'SLOW' | 'APPROACH'",
       "wait_marker":       "Polls state.latest_sensor until side marker seen or timeout",
       "stop_agv":          "Sets state.sequence_stop = True (auto_mode brakes)",
       "resume":            "Clears sequence_stop, optionally sets speed",

@@ -66,6 +66,10 @@ async def auto_mode(state, engine=None):
             # can be pushed free by hand during an emergency.
             if state.emergency_active:
                 await motion.idle(state)
+                current_target_speed = 0.0
+                pid.reset()
+                last_valid_pv = None
+                ff_filtered   = 0.0
                 await asyncio.sleep(config.DT)
                 continue
 
@@ -88,8 +92,8 @@ async def auto_mode(state, engine=None):
                 was_sequence_stopped = False
 
             # ── Target speed and PID gain selection ───────────────────────────
-            if state.speed_mode == "EXTRA_SLOW":
-                target_speed = config.AUTO_TARGET_EXTRA_SLOW_SPEED
+            if state.speed_mode == "APPROACH":
+                target_speed = config.AUTO_TARGET_APPROACH_SPEED
             elif state.speed_mode == "SLOW":
                 target_speed = config.AUTO_TARGET_SLOW_SPEED
             else:
@@ -101,9 +105,9 @@ async def auto_mode(state, engine=None):
                 if state.speed_mode == "HIGH":
                     pid.update_gains(config.KP, config.TD, config.N,
                                      config.V_RED_COEF)
-                elif state.speed_mode == "EXTRA_SLOW":
-                    pid.update_gains(config.KP_EXTRA_SLOW, config.TD_EXTRA_SLOW,
-                                     config.N_EXTRA_SLOW, config.V_RED_COEF_EXTRA_SLOW)
+                elif state.speed_mode == "APPROACH":
+                    pid.update_gains(config.KP_APPROACH, config.TD_APPROACH,
+                                     config.N_APPROACH, config.V_RED_COEF_APPROACH)
                 else:
                     pid.update_gains(config.KP_SLOW, config.TD_SLOW,
                                      config.N_SLOW, config.V_RED_COEF_SLOW)
@@ -148,7 +152,7 @@ async def auto_mode(state, engine=None):
                     if current_target_speed > target_speed:
                         current_target_speed = target_speed
                 elif current_target_speed > target_speed:
-                    current_target_speed -= config.ACCEL_RATE * config.DT
+                    current_target_speed -= config.DECEL_RATE * config.DT
                     if current_target_speed < target_speed:
                         current_target_speed = target_speed
 
@@ -444,16 +448,15 @@ async def mode_manager(state, engine=None, manager=None):
         # ══════════════════════════════════════════════════════════════════════
 
         if current_mode is None:
-            await _flush_and_idle()   # force Modbus DO/AO writers to connect & init outputs
-            if switch_manual:
-                logger.info("Startup: MANUAL")
-                active_task        = asyncio.create_task(manual_mode(state))
-                current_mode       = "manual"
-                state.current_mode = current_mode
-            else:
-                logger.info("Startup: AUTO selector — ARMED. Press START.")
-                current_mode       = "armed"
-                state.current_mode = current_mode
+            await _flush_and_idle()   # trigger DO/AO writer connections; they connect async
+            # Always enter ARMED first so the DO/AO Modbus writers have time to
+            # establish their TCP connections before manual_mode accepts pendant
+            # input. The switch_manual check below fires on the very next loop
+            # iteration and immediately transitions to MANUAL if the selector is
+            # already in that position.
+            logger.info("Startup: ARMED (initializing outputs)")
+            current_mode       = "armed"
+            state.current_mode = current_mode
 
         elif switch_manual and current_mode != "manual":
             logger.info("Mode switch: MANUAL")

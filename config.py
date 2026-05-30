@@ -101,8 +101,9 @@ MANUAL_TARGET_HIGH_SPEED     = _params["speeds"]["MANUAL_TARGET_HIGH_SPEED"]
 MANUAL_TARGET_SLOW_SPEED     = _params["speeds"]["MANUAL_TARGET_SLOW_SPEED"]
 AUTO_TARGET_HIGH_SPEED       = _params["speeds"]["AUTO_TARGET_HIGH_SPEED"]
 AUTO_TARGET_SLOW_SPEED       = _params["speeds"]["AUTO_TARGET_SLOW_SPEED"]
-AUTO_TARGET_EXTRA_SLOW_SPEED = _params["speeds"]["AUTO_TARGET_EXTRA_SLOW_SPEED"]
+AUTO_TARGET_APPROACH_SPEED   = _params["speeds"].get("AUTO_TARGET_APPROACH_SPEED", 0.1)
 ACCEL_RATE                   = _params["speeds"]["ACCEL_RATE"]
+DECEL_RATE                   = _params["speeds"]["DECEL_RATE"]
 
 # ── PID Tuning ────────────────────────────────────────────────────────────────
 KP = _params["pid_tuning"]["KP"]
@@ -113,9 +114,9 @@ KP_SLOW = _params["pid_tuning"]["KP_SLOW"]
 TD_SLOW = _params["pid_tuning"]["TD_SLOW"]
 N_SLOW  = _params["pid_tuning"]["N_SLOW"]
 
-KP_EXTRA_SLOW = _params["pid_tuning"]["KP_EXTRA_SLOW"]
-TD_EXTRA_SLOW = _params["pid_tuning"]["TD_EXTRA_SLOW"]
-N_EXTRA_SLOW  = _params["pid_tuning"]["N_EXTRA_SLOW"]
+KP_APPROACH         = _params["pid_tuning"].get("KP_APPROACH",         1.6)
+TD_APPROACH         = _params["pid_tuning"].get("TD_APPROACH",         0.12)
+N_APPROACH          = _params["pid_tuning"].get("N_APPROACH",          12)
 
 TI          = _params["pid_tuning"]["TI"]
 TI_DEADBAND = _params["pid_tuning"]["TI_DEADBAND"]
@@ -124,7 +125,7 @@ DT          = _params["pid_tuning"]["DT"]
 
 V_RED_COEF            = _params["pid_tuning"]["V_RED_COEF"]
 V_RED_COEF_SLOW       = _params["pid_tuning"]["V_RED_COEF_SLOW"]
-V_RED_COEF_EXTRA_SLOW = _params["pid_tuning"]["V_RED_COEF_EXTRA_SLOW"]
+V_RED_COEF_APPROACH   = _params["pid_tuning"].get("V_RED_COEF_APPROACH", 0)
 OUTPUT_CLAMP_RPM = _params["pid_tuning"]["OUTPUT_CLAMP_RPM"]
 SR_ALPHA         = _params["pid_tuning"]["SR_ALPHA"]
 SR_CAP           = _params["pid_tuning"]["SR_CAP"]
@@ -179,6 +180,10 @@ _wd = _params.get("watchdog", {})
 WATCHDOG_DI_TIMEOUT_S   = _wd.get("DI_TIMEOUT_S",   1.0)
 WATCHDOG_CAN_TIMEOUT_S  = _wd.get("CAN_TIMEOUT_S",  1.0)
 WATCHDOG_RFID_TIMEOUT_S = _wd.get("RFID_TIMEOUT_S", 5.0)
+
+# ── Hardware poll intervals ────────────────────────────────────────────────────
+_timing = _params.get("timing", {})
+DI_POLL_INTERVAL = _timing.get("DI_POLL_INTERVAL", 0.02)
 
 # ── Curvature feedforward (corner steering) ───────────────────────────────────
 # In a sustained turn a pure-feedback controller settles with a standing
@@ -249,7 +254,7 @@ def _validate():
     check(OUTPUT_CLAMP_RPM > 0, f"OUTPUT_CLAMP_RPM must be > 0 (got {OUTPUT_CLAMP_RPM})")
     check(N      > 0, f"N must be > 0 (got {N})")
     check(N_SLOW > 0, f"N_SLOW must be > 0 (got {N_SLOW})")
-    check(N_EXTRA_SLOW > 0, f"N_EXTRA_SLOW must be > 0 (got {N_EXTRA_SLOW})")
+    check(N_APPROACH > 0, f"N_APPROACH must be > 0 (got {N_APPROACH})")
 
     # Speeds: non-negative and within a sane ceiling
     for name, val in [
@@ -257,7 +262,7 @@ def _validate():
         ("MANUAL_TARGET_SLOW_SPEED", MANUAL_TARGET_SLOW_SPEED),
         ("AUTO_TARGET_HIGH_SPEED",   AUTO_TARGET_HIGH_SPEED),
         ("AUTO_TARGET_SLOW_SPEED",   AUTO_TARGET_SLOW_SPEED),
-        ("AUTO_TARGET_EXTRA_SLOW_SPEED", AUTO_TARGET_EXTRA_SLOW_SPEED),
+        ("AUTO_TARGET_APPROACH_SPEED",   AUTO_TARGET_APPROACH_SPEED),
     ]:
         check(0 <= val <= _MAX_SPEED_MPS,
               f"{name} must be in [0, {_MAX_SPEED_MPS}] m/s (got {val})")

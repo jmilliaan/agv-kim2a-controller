@@ -294,7 +294,7 @@ def api_params():
             "Manual Slow (m/s)":      config.MANUAL_TARGET_SLOW_SPEED,
             "Auto High (m/s)":        config.AUTO_TARGET_HIGH_SPEED,
             "Auto Slow (m/s)":        config.AUTO_TARGET_SLOW_SPEED,
-            "Auto Extra Slow (m/s)":  config.AUTO_TARGET_EXTRA_SLOW_SPEED,
+            "Auto Approach (m/s)":    config.AUTO_TARGET_APPROACH_SPEED,
             "Accel Rate (m/s²)":      config.ACCEL_RATE,
         },
         "PID — High Speed": {

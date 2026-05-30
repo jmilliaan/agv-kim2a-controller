@@ -57,27 +57,28 @@
   },
 
   "speeds": {
-    "MANUAL_TARGET_HIGH_SPEED": 0.5,
-    "MANUAL_TARGET_SLOW_SPEED": 0.25,
-    "AUTO_TARGET_HIGH_SPEED": 0.40,
-    "AUTO_TARGET_SLOW_SPEED": 0.24,
-    "AUTO_TARGET_EXTRA_SLOW_SPEED": 0.2,
-    "ACCEL_RATE": 0.8
+    "MANUAL_TARGET_HIGH_SPEED": 0.48,
+    "MANUAL_TARGET_SLOW_SPEED": 0.3,
+    "AUTO_TARGET_HIGH_SPEED": 0.44,
+    "AUTO_TARGET_SLOW_SPEED": 0.28,
+    "AUTO_TARGET_APPROACH_SPEED": 0.18,
+    "ACCEL_RATE": 0.8,
+    "DECEL_RATE": 0.4
   },
 
   "pid_tuning": {
-    "_comment_high": "HIGH gains — bumped for 2x speed-up (post per-wheel cal). KP ~2x to restore spatial gain halved by higher base_rpm; staged at 0.30 before 0.40.",
-    "KP": 3.0,
-    "TD": 0.24,
+    "_comment_high": "HIGH gains — scaled for 0.48 m/s straights (KP scales linearly with speed: 3.0*1.2=3.6; straights-only so V_RED_COEF unchanged).",
+    "KP": 3.6,
+    "TD": 0.26,
     "N": 20,
-    "_comment_slow": "SLOW/corner gains — bumped for 0.24m/s; corners were the weak point (66mm peak at 0.12).",
+    "_comment_slow": "SLOW/corner gains — bumped for 0.32m/s; corners were the weak point (66mm peak at 0.12).",
     "KP_SLOW": 3.0,
     "TD_SLOW": 0.16,
     "N_SLOW": 12,
-    "_comment_extra_slow": "EXTRA_SLOW gains — for ~0.16m/s precise approach",
-    "KP_EXTRA_SLOW": 1.6,
-    "TD_EXTRA_SLOW": 0.12,
-    "N_EXTRA_SLOW": 12,
+    "_comment_approach": "APPROACH gains — for 0.18 m/s station crawl (seq00 prox deceleration).",
+    "KP_APPROACH": 1.6,
+    "TD_APPROACH": 0.12,
+    "N_APPROACH": 12,
     "_comment_shared": "Shared — integral and timing constants. TI/deadband lowered to null corner standing bias faster at higher speed.",
     "TI": 25,
     "TI_DEADBAND": 20,
@@ -86,7 +87,7 @@
     "_comment_sr": "Speed reduction coefficients — split by speed mode",
     "V_RED_COEF": 3,
     "V_RED_COEF_SLOW": 2,
-    "V_RED_COEF_EXTRA_SLOW": 0,
+    "V_RED_COEF_APPROACH": 0,
     "OUTPUT_CLAMP_RPM": 800,
     "SR_ALPHA": 0.15,
     "SR_CAP": 0.45
@@ -186,7 +187,7 @@
       "requires_mode": "running"
     },
     {
-      "_comment": "Trolley load 0 — RFID arms a SLOW curved approach (feedforward steers the corner); DI08 magnetic proximity marker then switches to EXTRA_SLOW straight crawl for a precise stop.",
+      "_comment": "Trolley load 0 — RFID arms APPROACH deceleration (0.1 m/s crawl); DI08 magnetic proximity marker triggers the stop.",
       "name": "trolley_load_00",
       "category": "sequence",
       "trigger": {
@@ -194,10 +195,10 @@
         "rfid_tag": "0096",
         "marker_side": "prox",
         "approach_timeout": 15.0,
-        "approach_speed": "SLOW"
+        "approach_speed": "APPROACH"
       },
       "actions": [
-        { "type": "set_speed",        "speed": "EXTRA_SLOW" },
+        { "type": "set_speed",        "speed": "APPROACH" },
         { "type": "wait_marker",      "side": "prox", "timeout": 30.0 },
         { "type": "stop_agv" },
         { "type": "wait_seconds",     "duration": 2.0 },
@@ -218,7 +219,7 @@
         "approach_timeout": 15.0
       },
       "actions": [
-        { "type": "set_speed",        "speed": "EXTRA_SLOW" },
+        { "type": "set_speed",        "speed": "APPROACH" },
         { "type": "wait_marker",      "side": "left", "timeout": 15.0 },
         { "type": "stop_agv" },
         { "type": "plc_request",      "seq_num": 1, "pulse_duration": 1.0 },
@@ -324,6 +325,11 @@
     "DI_TIMEOUT_S": 1.0,
     "CAN_TIMEOUT_S": 1.0,
     "RFID_TIMEOUT_S": 5.0
+  },
+
+  "timing": {
+    "_comment": "Hardware poll intervals (seconds). DI at 100 Hz so the prox station marker is fresher for precise stops.",
+    "DI_POLL_INTERVAL": 0.01
   },
 
   "slmp_plc": {
