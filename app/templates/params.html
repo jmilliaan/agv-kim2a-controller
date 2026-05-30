@@ -154,6 +154,30 @@
   #settings-msg.warn { color: #a00000; font-weight: bold; }
   #settings-msg.ok   { color: #006000; font-weight: bold; }
 
+  /* ── Wheel-speed calibration ── */
+  #calib-card { margin-bottom: 15px; }
+  .wheel-sel { display: flex; gap: 8px; flex-shrink: 0; }
+  .cal-btn {
+    width: 92px; height: 38px;
+    font-family: inherit; font-weight: bold; font-size: 15px; letter-spacing: 1px;
+    color: #fff; cursor: pointer; background: #505060;
+    border-top:    2px solid #fff;
+    border-left:   2px solid #fff;
+    border-right:  2px solid #808080;
+    border-bottom: 2px solid #808080;
+  }
+  .cal-btn.wheel-opt.sel { background: #000080; }
+  .cal-btn.start { background: #006000; }
+  .cal-btn.stop  { background: #a00000; }
+  .cal-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  #calib-msg {
+    padding: 8px 15px; font-size: 15px; letter-spacing: 0.5px;
+    border-top: 1px solid #b0b0b0; min-height: 18px;
+  }
+  #calib-msg.info { color: #303060; }
+  #calib-msg.warn { color: #a00000; font-weight: bold; }
+  #calib-msg.ok   { color: #006000; font-weight: bold; }
+
   /* ── Nav bar ── */
   #nav-bar {
     position: fixed;
@@ -195,6 +219,12 @@
 <div id="settings-card" class="section raised">
   <div class="section-title">CONTROLLER SETTINGS</div>
   <div class="setting-row">
+    <span class="setting-name">CAN SENSOR (MGS1600) <span class="dep-note">(disable when disconnected)</span></span>
+    <button class="toggle" id="toggle-CAN_ENABLED" data-flag="CAN_ENABLED">
+      <span class="toggle-knob"></span>
+    </button>
+  </div>
+  <div class="setting-row">
     <span class="setting-name">RFID NAVIGATION <span class="dep-note">(corner speed zones)</span></span>
     <button class="toggle" id="toggle-NAV_ENABLED" data-flag="NAV_ENABLED">
       <span class="toggle-knob"></span>
@@ -213,6 +243,36 @@
     </button>
   </div>
   <div id="settings-msg" class="info">—</div>
+</div>
+
+<div id="calib-card" class="section raised">
+  <div class="section-title">WHEEL SPEED CALIBRATION</div>
+  <div class="setting-row">
+    <span class="setting-name">ENCODER WHEEL
+      <span class="dep-note">(where the encoder is mounted)</span></span>
+    <div class="wheel-sel">
+      <button class="cal-btn wheel-opt" id="wheel-right" data-wheel="right">RIGHT</button>
+      <button class="cal-btn wheel-opt" id="wheel-left"  data-wheel="left">LEFT</button>
+    </div>
+  </div>
+  <div class="setting-row">
+    <span class="setting-name">RAMP CONTROL
+      <span class="dep-note">(0→0.8 m/s, +0.02 every 4s — start from ARMED)</span></span>
+    <div class="wheel-sel">
+      <button class="cal-btn start" id="calib-start" disabled>START</button>
+      <button class="cal-btn stop"  id="calib-stop"  disabled>STOP</button>
+    </div>
+  </div>
+  <table><tbody>
+    <tr><td class="param-name">STATUS</td><td class="param-val" id="calib-state">—</td></tr>
+    <tr><td class="param-name">COMMANDED</td><td class="param-val" id="calib-cmd">— m/s</td></tr>
+    <tr><td class="param-name">ENCODER ACTUAL</td><td class="param-val" id="calib-act">— m/s</td></tr>
+    <tr><td class="param-name">ENCODER RPM</td><td class="param-val" id="calib-rpm">—</td></tr>
+    <tr><td class="param-name">ENCODER LINK</td><td class="param-val" id="calib-link">—</td></tr>
+    <tr><td class="param-name">ELAPSED</td><td class="param-val" id="calib-elapsed">— s</td></tr>
+    <tr><td class="param-name">LAST CSV</td><td class="param-val" id="calib-csv" style="font-size:13px;">—</td></tr>
+  </tbody></table>
+  <div id="calib-msg" class="info">—</div>
 </div>
 
 <div class="grid" id="params-grid"></div>
@@ -251,6 +311,7 @@ fetch('/api/params')
       grid.appendChild(div);
     }
     if (data['Features']) {
+      setToggle('CAN_ENABLED',  data['Features']['CAN Enabled']);
       setToggle('NAV_ENABLED',  data['Features']['RFID Navigation']);
       setToggle('SEQ_ENABLED',  data['Features']['RFID Sequence']);
       setToggle('SLMP_ENABLED', data['Features']['SLMP Enabled']);
@@ -289,13 +350,14 @@ function applyDeps() {
 }
 
 function applyResponse(d) {
+  setToggle('CAN_ENABLED',  d.CAN_ENABLED);
   setToggle('NAV_ENABLED',  d.NAV_ENABLED);
   setToggle('SEQ_ENABLED',  d.SEQ_ENABLED);
   setToggle('SLMP_ENABLED', d.SLMP_ENABLED);
   applyDeps();
 }
 
-['NAV_ENABLED', 'SEQ_ENABLED', 'SLMP_ENABLED'].forEach(flag => {
+['CAN_ENABLED', 'NAV_ENABLED', 'SEQ_ENABLED', 'SLMP_ENABLED'].forEach(flag => {
   document.getElementById('toggle-' + flag).addEventListener('click', () => {
     if (_card.classList.contains('locked')) return;
     const btn = document.getElementById('toggle-' + flag);
@@ -339,6 +401,66 @@ function pollMode() {
 }
 pollMode();
 setInterval(pollMode, 1000);
+
+// ── Wheel-speed calibration ────────────────────────────────────────────────
+let _calWheel = 'right';
+const _calMsg = document.getElementById('calib-msg');
+function _setCalMsg(t, c) { _calMsg.textContent = t; _calMsg.className = c; }
+
+function _selWheel(w) {
+  _calWheel = w;
+  document.getElementById('wheel-right').classList.toggle('sel', w === 'right');
+  document.getElementById('wheel-left').classList.toggle('sel',  w === 'left');
+}
+document.getElementById('wheel-right').addEventListener('click', () => _selWheel('right'));
+document.getElementById('wheel-left').addEventListener('click',  () => _selWheel('left'));
+_selWheel('right');
+
+document.getElementById('calib-start').addEventListener('click', () => {
+  _setCalMsg('Starting…', 'info');
+  fetch('/api/calibration/start', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ wheel: _calWheel })
+  })
+    .then(r => r.json().then(d => ({ ok: r.ok, d })))
+    .then(({ ok, d }) => _setCalMsg(ok ? `Calibration started (${d.wheel}).` : (d.error || 'Failed.'),
+                                   ok ? 'ok' : 'warn'))
+    .catch(() => _setCalMsg('Connection error.', 'warn'));
+});
+document.getElementById('calib-stop').addEventListener('click', () => {
+  fetch('/api/calibration/stop', { method: 'POST' })
+    .then(r => r.json()).then(() => _setCalMsg('Stop sent.', 'info'))
+    .catch(() => _setCalMsg('Connection error.', 'warn'));
+});
+
+function _fmt(v, unit) { return (v !== null && v !== undefined ? v : '—') + (unit || ''); }
+
+function pollCalib() {
+  fetch('/api/calibration/status')
+    .then(r => r.json())
+    .then(d => {
+      const cal = d.calibration || {};
+      const enc = d.encoder || {};
+      const active = !!cal.active;
+      document.getElementById('calib-state').textContent =
+        !d.available ? 'DISABLED' : (active ? 'RUNNING' : (d.requested ? 'REQUESTED' : 'IDLE'));
+      document.getElementById('calib-cmd').textContent     = _fmt(cal.v_cmd, ' m/s');
+      document.getElementById('calib-act').textContent     = _fmt(enc.v, ' m/s');
+      document.getElementById('calib-rpm').textContent     = _fmt(enc.rpm);
+      document.getElementById('calib-elapsed').textContent = _fmt(cal.elapsed, ' s');
+      document.getElementById('calib-csv').textContent     = cal.csv_path || '—';
+      const link = document.getElementById('calib-link');
+      link.textContent = enc.connected ? 'CONNECTED' : 'NO LINK';
+      link.className = 'param-val ' + (enc.connected ? 'bool-true' : 'bool-false');
+      // Start only from ARMED + encoder available + not already running/requested.
+      document.getElementById('calib-start').disabled =
+        !(d.available && d.mode === 'armed' && !active && !d.requested);
+      document.getElementById('calib-stop').disabled = !(active || d.requested);
+    })
+    .catch(() => {});
+}
+pollCalib();
+setInterval(pollCalib, 500);
 </script>
 </body>
 </html>

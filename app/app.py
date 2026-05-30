@@ -383,7 +383,7 @@ def api_set_features():
         return jsonify({"error": "driver manager unavailable"}), 503
 
     data    = request.get_json(silent=True) or {}
-    allowed = {"NAV_ENABLED", "SEQ_ENABLED", "SLMP_ENABLED"}
+    allowed = {"CAN_ENABLED", "NAV_ENABLED", "SEQ_ENABLED", "SLMP_ENABLED"}
     updates = {k: v for k, v in data.items() if k in allowed}
     if not updates:
         return jsonify({"error": "no valid feature flags provided"}), 400
@@ -393,6 +393,7 @@ def api_set_features():
 
     # The manager enforces the NAV -> SEQ -> SLMP hierarchy: disabling a parent
     # cascades to children; enabling a child whose parent is off is rejected.
+    # CAN is independent (the magnetic sensor — can be disabled when disconnected).
     try:
         for k, v in updates.items():
             _manager.set_enabled(k, v)
@@ -403,6 +404,7 @@ def api_set_features():
 
     return jsonify({
         "ok": True,
+        "CAN_ENABLED":  config.CAN_ENABLED,
         "NAV_ENABLED":  config.NAV_ENABLED,
         "SEQ_ENABLED":  config.SEQ_ENABLED,
         "SLMP_ENABLED": config.SLMP_ENABLED,
@@ -437,6 +439,66 @@ def api_restart():
     # Fire and return: systemctl hands the restart job to PID 1, which performs
     # it even after this process is terminated. Popen so we don't block/wait.
     subprocess.Popen(["sudo", "-n"] + _RESTART_CMD)
+    return jsonify({"ok": True})
+
+
+# ── Wheel-speed calibration (open-loop encoder ramp) ──────────────────────────
+
+@app.route("/api/calibration/status")
+def api_calibration_status():
+    import config
+    if _state is None:
+        return jsonify({"error": "state not initialised"}), 503
+    s = _state
+    enc_age = (time.time() - s.encoder_last_rx) if s.encoder_last_rx else None
+    return jsonify({
+        "available":   config.ENCODER_ENABLED,
+        "mode":        s.current_mode,
+        "wheel":       s.calibration_wheel,
+        "requested":   s.calibration_request,
+        "calibration": dict(s.calibration_status),
+        "encoder": {
+            "connected": s.encoder_connected,
+            "rpm":       round(s.encoder_rpm, 2),
+            "v":         round(s.encoder_v, 4),
+            "count":     s.encoder_count,
+            "age_s":     round(enc_age, 2) if enc_age is not None else None,
+        },
+    })
+
+
+@app.route("/api/calibration/start", methods=["POST"])
+def api_calibration_start():
+    """Start the open-loop calibration ramp. Allowed only from ARMED (AUTO
+    selector, safe, not running/manual/emergency)."""
+    import config
+    if _state is None:
+        return jsonify({"error": "state not initialised"}), 503
+    if not config.ENCODER_ENABLED:
+        return jsonify({"error": "encoder disabled in profile"}), 403
+
+    mode = _state.current_mode
+    if mode != "armed":
+        return jsonify({"error": f"Calibration starts only from ARMED (current: {mode}). "
+                                 "Select AUTO and release START first."}), 403
+
+    data  = request.get_json(silent=True) or {}
+    wheel = data.get("wheel", _state.calibration_wheel)
+    if wheel not in ("left", "right"):
+        return jsonify({"error": "wheel must be 'left' or 'right'"}), 400
+
+    _state.calibration_wheel   = wheel
+    _state.calibration_request = True
+    logger.warning("[Calib] start requested via HMI (wheel=%s)", wheel)
+    return jsonify({"ok": True, "wheel": wheel})
+
+
+@app.route("/api/calibration/stop", methods=["POST"])
+def api_calibration_stop():
+    if _state is None:
+        return jsonify({"error": "state not initialised"}), 503
+    _state.calibration_request = False
+    logger.info("[Calib] stop requested via HMI")
     return jsonify({"ok": True})
 
 

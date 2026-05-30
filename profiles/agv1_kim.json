@@ -41,9 +41,13 @@
   "hardware": {
     "V_RANGE": 10.0,
     "DAC_RES": 4095,
-    "_comment_cal": "Motor speed calibration: rpm = RPM_PER_VOLT * volts + RPM_VOLT_OFFSET",
-    "RPM_PER_VOLT": 646.59,
-    "RPM_VOLT_OFFSET": -101.2
+    "_comment_cal": "Per-wheel motor cal from encoder run 2026-05-30 (rpm=RPM_PER_VOLT*V+OFFSET, R2=0.99 for V>=0.55). Old single fit 646.59/-101.2 was ~2x too low. Shared keys kept as fallback.",
+    "RPM_PER_VOLT": 1265.7,
+    "RPM_VOLT_OFFSET": -321.4,
+    "RPM_PER_VOLT_LEFT": 1269.8,
+    "RPM_VOLT_OFFSET_LEFT": -354.2,
+    "RPM_PER_VOLT_RIGHT": 1289.8,
+    "RPM_VOLT_OFFSET_RIGHT": -299.1
   },
 
   "kinematics": {
@@ -52,8 +56,8 @@
   },
 
   "speeds": {
-    "MANUAL_TARGET_HIGH_SPEED": 0.30,
-    "MANUAL_TARGET_SLOW_SPEED": 0.15,
+    "MANUAL_TARGET_HIGH_SPEED": 0.5,
+    "MANUAL_TARGET_SLOW_SPEED": 0.25,
     "AUTO_TARGET_HIGH_SPEED": 0.20,
     "AUTO_TARGET_SLOW_SPEED": 0.12,
     "AUTO_TARGET_EXTRA_SLOW_SPEED": 0.12,
@@ -103,6 +107,25 @@
   "rfid": {
     "RFID_INIT_CMD_HEX": "CFFF0070002415",
     "SEQUENCE_STOP_DELAY": 4.0
+  },
+
+  "encoder": {
+    "_comment": "CANopen friction-wheel encoder for wheel-speed calibration. Multi-turn: TPDO1 maps 0x6004 (24-bit), wraps at TOTAL_RANGE not per-rev. WHEEL_DIAMETER_M is the encoder friction wheel contact diameter; v_ground = omega_enc * (WHEEL_DIAMETER_M/2).",
+    "ENABLED": 1,
+    "NODE_ID": 1,
+    "BITRATE": 125000,
+    "COUNTS_PER_REV": 4096,
+    "TOTAL_RANGE": 16777216,
+    "WHEEL_DIAMETER_M": 0.060,
+    "TPDO_COB_ID_BASE": 384
+  },
+
+  "calibration": {
+    "_comment": "Open-loop straight ramp for input-vs-actual wheel speed.",
+    "V_START": 0.0,
+    "V_STEP": 0.02,
+    "V_MAX": 0.80,
+    "DWELL_S": 4.0
   },
 
   "feedforward": {

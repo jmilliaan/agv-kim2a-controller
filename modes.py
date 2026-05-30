@@ -4,6 +4,7 @@ import time
 
 import config
 import motion
+import calibration
 
 from core.pid import PIDController
 from debugging.plotter import RunRecorder
@@ -202,8 +203,8 @@ async def auto_mode(state, direction="forward", engine=None):
                 left_rpm, right_rpm, dbg = pid.compute(pv, base_rpm, error_sign,
                                                        feedforward=ff_filtered)
 
-                left_v  = max(0.0, min(5.0, motion.rpm_to_voltage(left_rpm)))
-                right_v = max(0.0, min(5.0, motion.rpm_to_voltage(right_rpm)))
+                left_v  = motion.rpm_to_voltage(left_rpm,  "left")
+                right_v = motion.rpm_to_voltage(right_rpm, "right")
 
                 state.set_ao(0, left_v)
                 state.set_ao(1, right_v)
@@ -260,8 +261,9 @@ async def manual_mode(state):
     """Handles pendant jogging and web remote.
     Web remote (state.web_manual_command) takes priority over physical DI buttons.
     Emergency is fully owned by mode_manager — this task does not check it."""
-    v_high = motion.rpm_to_voltage(motion.mps_to_rpm(config.MANUAL_TARGET_HIGH_SPEED))
-    v_slow = motion.rpm_to_voltage(motion.mps_to_rpm(config.MANUAL_TARGET_SLOW_SPEED))
+    # Target motor RPM for each speed; motion helpers convert to per-wheel volts.
+    rpm_high = motion.mps_to_rpm(config.MANUAL_TARGET_HIGH_SPEED)
+    rpm_slow = motion.mps_to_rpm(config.MANUAL_TARGET_SLOW_SPEED)
     current_motion = None
 
     while True:
@@ -299,14 +301,14 @@ async def manual_mode(state):
 
         if motion_state != current_motion:
             logger.debug("Manual: %s", motion_state.upper())
-            if   motion_state == "fwd_left":  await motion.set_forward_left(state, v_high, v_slow)
-            elif motion_state == "fwd_right": await motion.set_forward_right(state, v_high, v_slow)
-            elif motion_state == "rvs_left":  await motion.set_reverse_left(state, v_high, v_slow)
-            elif motion_state == "rvs_right": await motion.set_reverse_right(state, v_high, v_slow)
-            elif motion_state == "forward":   await motion.set_forward(state, v_high)
-            elif motion_state == "reverse":   await motion.set_reverse(state, v_high)
-            elif motion_state == "left":      await motion.set_left(state, v_slow)
-            elif motion_state == "right":     await motion.set_right(state, v_slow)
+            if   motion_state == "fwd_left":  await motion.set_forward_left(state, rpm_high, rpm_slow)
+            elif motion_state == "fwd_right": await motion.set_forward_right(state, rpm_high, rpm_slow)
+            elif motion_state == "rvs_left":  await motion.set_reverse_left(state, rpm_high, rpm_slow)
+            elif motion_state == "rvs_right": await motion.set_reverse_right(state, rpm_high, rpm_slow)
+            elif motion_state == "forward":   await motion.set_forward(state, rpm_high)
+            elif motion_state == "reverse":   await motion.set_reverse(state, rpm_high)
+            elif motion_state == "left":      await motion.set_left(state, rpm_slow)
+            elif motion_state == "right":     await motion.set_right(state, rpm_slow)
             elif motion_state == "idle":      await motion.idle(state)
             current_motion = motion_state
 
@@ -317,10 +319,10 @@ async def manual_mode(state):
 #  MODE MANAGER
 # ══════════════════════════════════════════════════════════════════════════════
 
-async def mode_manager(state, engine=None):
+async def mode_manager(state, engine=None, manager=None):
     """Central state machine.
 
-    States: None | "manual" | "armed" | "running" | "reverse" | "emergency"
+    States: None | "manual" | "armed" | "running" | "reverse" | "calibrate" | "emergency"
 
     DI conventions (from parameters.json / profile)
     ------------------------------------------------
@@ -359,10 +361,11 @@ async def mode_manager(state, engine=None):
         await motion.set_brake(state)
 
     def _reset_sequence_state():
-        state.speed_mode       = "HIGH"
-        state.sequence_stop    = False
-        state.nav_in_corner    = False
-        state.pending_sequence = None
+        state.speed_mode          = "HIGH"
+        state.sequence_stop       = False
+        state.nav_in_corner       = False
+        state.pending_sequence    = None
+        state.calibration_request = False
         if engine is not None:
             engine.cancel_armed()
 
@@ -505,6 +508,26 @@ async def mode_manager(state, engine=None):
                     auto_mode(state, direction="reverse"))
                 current_mode       = "reverse"
                 state.current_mode = current_mode
+
+        elif current_mode == "armed" and state.calibration_request:
+            # Open-loop wheel-speed calibration ramp. No tape needed (no PID /
+            # tape-following): the runner drives both wheels straight and logs
+            # the encoder. Allowed only from ARMED (AUTO selector, safe).
+            logger.info("CALIBRATION START — launching open-loop wheel-speed ramp.")
+            await _cancel_active()
+            await _flush_and_idle()
+            active_task        = asyncio.create_task(
+                calibration.calibrate_mode(state, manager))
+            current_mode       = "calibrate"
+            state.current_mode = current_mode
+
+        elif current_mode == "calibrate" and (reset_rising or not state.calibration_request):
+            logger.info("CALIBRATION STOP — returning to ARMED.")
+            await _cancel_active()
+            await _flush_and_idle()
+            state.calibration_request = False
+            current_mode       = "armed"
+            state.current_mode = current_mode
 
         elif current_mode == "running" and reset_rising:
             logger.info("RESET — stopping AUTO, returning to ARMED.")

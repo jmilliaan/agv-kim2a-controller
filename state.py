@@ -21,6 +21,8 @@ class KinematicState:
         self.web_manual_command   = None    # set by Flask remote; "forward"|"reverse"|"left"|"right"|"fwd_left"|"fwd_right"|"rvs_left"|"rvs_right"|None
         self.web_manual_expire    = 0.0     # epoch after which web_manual_command is treated as None
         self.nav_in_corner        = False   # True only while a NAV sequence holds SLOW; gates feedforward
+        self.calibration_request  = False   # set by Flask to start the wheel-speed calibration ramp
+        self.calibration_wheel    = "right" # "right" | "left" — which wheel the encoder is mounted on
 
 
 class PerceptionState:
@@ -35,6 +37,12 @@ class PerceptionState:
         self.right_rpm     = 0.0
         self.pid_output    = 0.0
         self.target_speed  = 0.0    # current ramp target in m/s
+        # Encoder telemetry — written by EncoderReader during calibration only
+        self.encoder_count     = 0
+        self.encoder_rpm       = 0.0   # encoder shaft rpm (signed)
+        self.encoder_v         = 0.0   # AGV ground speed from encoder rim (m/s)
+        self.encoder_last_rx   = 0.0   # epoch of last encoder frame (0.0 = never)
+        self.encoder_connected = False
 
 
 class PLCState:
@@ -87,6 +95,16 @@ class AMRState:
         self.do_setpoints = {}            # {channel_no: bool}
         self.ao_dirty     = asyncio.Event()
         self.do_dirty     = asyncio.Event()
+
+        # ── Wheel-speed calibration live status (read by Flask dashboard) ─────
+        self.calibration_status = {
+            "active":   False,
+            "v_cmd":    0.0,
+            "voltage":  0.0,
+            "elapsed":  0.0,
+            "wheel":    "right",
+            "csv_path": None,
+        }
 
         # ── Typed domains ──────────────────────────────────────────────────────
         self.system     = SystemState()
@@ -146,6 +164,16 @@ class AMRState:
     def nav_in_corner(self, v): self.kinematic.nav_in_corner = v
 
     @property
+    def calibration_request(self): return self.kinematic.calibration_request
+    @calibration_request.setter
+    def calibration_request(self, v): self.kinematic.calibration_request = v
+
+    @property
+    def calibration_wheel(self): return self.kinematic.calibration_wheel
+    @calibration_wheel.setter
+    def calibration_wheel(self, v): self.kinematic.calibration_wheel = v
+
+    @property
     def reverse_auto_request(self): return self.kinematic.reverse_auto_request
     @reverse_auto_request.setter
     def reverse_auto_request(self, v): self.kinematic.reverse_auto_request = v
@@ -201,6 +229,31 @@ class AMRState:
     def target_speed(self): return self.perception.target_speed
     @target_speed.setter
     def target_speed(self, v): self.perception.target_speed = v
+
+    @property
+    def encoder_count(self): return self.perception.encoder_count
+    @encoder_count.setter
+    def encoder_count(self, v): self.perception.encoder_count = v
+
+    @property
+    def encoder_rpm(self): return self.perception.encoder_rpm
+    @encoder_rpm.setter
+    def encoder_rpm(self, v): self.perception.encoder_rpm = v
+
+    @property
+    def encoder_v(self): return self.perception.encoder_v
+    @encoder_v.setter
+    def encoder_v(self, v): self.perception.encoder_v = v
+
+    @property
+    def encoder_last_rx(self): return self.perception.encoder_last_rx
+    @encoder_last_rx.setter
+    def encoder_last_rx(self, v): self.perception.encoder_last_rx = v
+
+    @property
+    def encoder_connected(self): return self.perception.encoder_connected
+    @encoder_connected.setter
+    def encoder_connected(self, v): self.perception.encoder_connected = v
 
     # ── PLCState shims ────────────────────────────────────────────────────────
 

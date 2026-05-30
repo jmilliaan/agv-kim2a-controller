@@ -1,12 +1,27 @@
 import config
 
 # ── Kinematic Math ────────────────────────────────────────────────────────────
+# Motor map is per-wheel: rpm = RPM_PER_VOLT[side] * V + RPM_VOLT_OFFSET[side].
+# Left and right differ ~6% (measured), so the inverse used to command voltage
+# is side-aware — this corrects both the speed scale and the L/R drift.
 
-def voltage_to_rpm(voltage):
-    return config.RPM_PER_VOLT * voltage + config.RPM_VOLT_OFFSET
+def _cal(side):
+    if side == "right":
+        return config.RPM_PER_VOLT_RIGHT, config.RPM_VOLT_OFFSET_RIGHT
+    return config.RPM_PER_VOLT_LEFT, config.RPM_VOLT_OFFSET_LEFT
 
-def rpm_to_voltage(rpm):
-    return (rpm - config.RPM_VOLT_OFFSET) / config.RPM_PER_VOLT
+def voltage_to_rpm(voltage, side="left"):
+    k, o = _cal(side)
+    return k * voltage + o
+
+def rpm_to_voltage(rpm, side="left"):
+    """Inverse motor map for one wheel, clamped to [0, 5] V. rpm <= 0 → 0 V so
+    a zero/negative command is a true stop (no creep from the affine offset, and
+    we never command reverse through the speed AO here)."""
+    if rpm <= 0:
+        return 0.0
+    k, o = _cal(side)
+    return max(0.0, min(5.0, (rpm - o) / k))
 
 def mps_to_rpm(v_meter_per_second):
     v_meter_per_minute = v_meter_per_second * 60
@@ -35,35 +50,46 @@ async def _drive(state, left_fwd: bool, left_v: float, right_fwd: bool, right_v:
     state.set_ao(lch["ao_speed"], left_v)
     state.set_ao(rch["ao_speed"], right_v)
 
-async def set_forward(state, v):
-    await _drive(state, True, v, True, v)
+# High-level helpers take target motor RPM (not voltage) and convert per-wheel.
+# A target of 0 → 0 V (true stop). Callers pass mps_to_rpm(speed) or 0.0.
 
-async def set_reverse(state, v):
-    await _drive(state, False, v, False, v)
+async def set_forward(state, rpm):
+    await _drive(state, True, rpm_to_voltage(rpm, "left"),
+                        True, rpm_to_voltage(rpm, "right"))
 
-async def set_left(state, v):
+async def set_reverse(state, rpm):
+    await _drive(state, False, rpm_to_voltage(rpm, "left"),
+                        False, rpm_to_voltage(rpm, "right"))
+
+async def set_left(state, rpm):
     # spin left: left wheel reverse, right wheel forward
-    await _drive(state, False, v, True, v)
+    await _drive(state, False, rpm_to_voltage(rpm, "left"),
+                        True,  rpm_to_voltage(rpm, "right"))
 
-async def set_right(state, v):
+async def set_right(state, rpm):
     # spin right: left wheel forward, right wheel reverse
-    await _drive(state, True, v, False, v)
+    await _drive(state, True,  rpm_to_voltage(rpm, "left"),
+                        False, rpm_to_voltage(rpm, "right"))
 
-async def set_forward_left(state, v_fast, v_slow):
+async def set_forward_left(state, rpm_fast, rpm_slow):
     # both wheels forward, right (outer) faster than left (inner)
-    await _drive(state, True, v_slow, True, v_fast)
+    await _drive(state, True, rpm_to_voltage(rpm_slow, "left"),
+                        True, rpm_to_voltage(rpm_fast, "right"))
 
-async def set_forward_right(state, v_fast, v_slow):
+async def set_forward_right(state, rpm_fast, rpm_slow):
     # both wheels forward, left (outer) faster than right (inner)
-    await _drive(state, True, v_fast, True, v_slow)
+    await _drive(state, True, rpm_to_voltage(rpm_fast, "left"),
+                        True, rpm_to_voltage(rpm_slow, "right"))
 
-async def set_reverse_left(state, v_fast, v_slow):
+async def set_reverse_left(state, rpm_fast, rpm_slow):
     # both wheels reverse, right (outer) faster than left (inner)
-    await _drive(state, False, v_slow, False, v_fast)
+    await _drive(state, False, rpm_to_voltage(rpm_slow, "left"),
+                        False, rpm_to_voltage(rpm_fast, "right"))
 
-async def set_reverse_right(state, v_fast, v_slow):
+async def set_reverse_right(state, rpm_fast, rpm_slow):
     # both wheels reverse, left (outer) faster than right (inner)
-    await _drive(state, False, v_fast, False, v_slow)
+    await _drive(state, False, rpm_to_voltage(rpm_fast, "left"),
+                        False, rpm_to_voltage(rpm_slow, "right"))
 
 async def set_brake(state):
     lch = config.MOTOR_CHANNELS["left"]

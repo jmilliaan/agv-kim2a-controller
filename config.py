@@ -80,9 +80,14 @@ V_RANGE = _params["hardware"]["V_RANGE"]
 DAC_RES = _params["hardware"]["DAC_RES"]
 
 # Motor speed calibration: rpm = RPM_PER_VOLT * volts + RPM_VOLT_OFFSET.
-# Per-AGV (drive/motor specific) — defaults preserve the previous hardcoded fit.
+# Per-wheel (left/right differ ~6%); each falls back to the shared value if a
+# profile only provides the single pair.
 RPM_PER_VOLT    = _params["hardware"].get("RPM_PER_VOLT", 646.59)
 RPM_VOLT_OFFSET = _params["hardware"].get("RPM_VOLT_OFFSET", -101.2)
+RPM_PER_VOLT_LEFT     = _params["hardware"].get("RPM_PER_VOLT_LEFT",     RPM_PER_VOLT)
+RPM_VOLT_OFFSET_LEFT  = _params["hardware"].get("RPM_VOLT_OFFSET_LEFT",  RPM_VOLT_OFFSET)
+RPM_PER_VOLT_RIGHT    = _params["hardware"].get("RPM_PER_VOLT_RIGHT",    RPM_PER_VOLT)
+RPM_VOLT_OFFSET_RIGHT = _params["hardware"].get("RPM_VOLT_OFFSET_RIGHT", RPM_VOLT_OFFSET)
 
 # ── Kinematics ────────────────────────────────────────────────────────────────
 WHEEL_DIAMETER      = _params["kinematics"]["WHEEL_DIAMETER"]
@@ -189,6 +194,28 @@ FF_CURVE_MODES    = set(_ff.get("CURVE_SPEED_MODES", ["SLOW"]))
 FF_ALPHA          = _ff.get("FF_ALPHA", 0.15)            # smooths corner entry/exit
 
 
+# ── Encoder (wheel-speed calibration) ─────────────────────────────────────────
+# CANopen friction-wheel encoder used to measure ACTUAL wheel ground speed.
+# Multi-turn: TPDO1 maps object 0x6004 (24-bit), so the count wraps at
+# TOTAL_RANGE, not every revolution. Rolling contact => v_ground = omega * RADIUS.
+_enc = _params.get("encoder", {})
+ENCODER_ENABLED          = bool(_enc.get("ENABLED", 0))
+ENCODER_NODE_ID          = int(_enc.get("NODE_ID", 1))
+ENCODER_BITRATE          = int(_enc.get("BITRATE", 125000))
+ENCODER_COUNTS_PER_REV   = int(_enc.get("COUNTS_PER_REV", 4096))
+ENCODER_TOTAL_RANGE      = int(_enc.get("TOTAL_RANGE", 16777216))
+ENCODER_WHEEL_DIAMETER_M = float(_enc.get("WHEEL_DIAMETER_M", 0.060))
+ENCODER_RADIUS_M         = ENCODER_WHEEL_DIAMETER_M / 2.0
+ENCODER_TPDO_COB_ID_BASE = int(_enc.get("TPDO_COB_ID_BASE", 0x180))
+
+# ── Wheel-speed calibration ramp (open-loop straight) ─────────────────────────
+_cal = _params.get("calibration", {})
+CAL_V_START = float(_cal.get("V_START", 0.0))
+CAL_V_STEP  = float(_cal.get("V_STEP", 0.02))
+CAL_V_MAX   = float(_cal.get("V_MAX", 0.80))
+CAL_DWELL_S = float(_cal.get("DWELL_S", 4.0))
+
+
 # ── Config validation (fail-fast at boot) ─────────────────────────────────────
 class ConfigError(ValueError):
     """Raised at import time when a profile parameter is out of safe range."""
@@ -213,7 +240,9 @@ def _validate():
     check(TI is None or TI > 0, f"TI must be > 0 (used as 1/TI) (got {TI})")
     check(V_RANGE       > 0, f"V_RANGE must be > 0 (got {V_RANGE})")
     check(DAC_RES       > 0, f"DAC_RES must be > 0 (got {DAC_RES})")
-    check(RPM_PER_VOLT != 0, f"RPM_PER_VOLT must be != 0 (got {RPM_PER_VOLT})")
+    check(RPM_PER_VOLT       != 0, f"RPM_PER_VOLT must be != 0 (got {RPM_PER_VOLT})")
+    check(RPM_PER_VOLT_LEFT  != 0, f"RPM_PER_VOLT_LEFT must be != 0 (got {RPM_PER_VOLT_LEFT})")
+    check(RPM_PER_VOLT_RIGHT != 0, f"RPM_PER_VOLT_RIGHT must be != 0 (got {RPM_PER_VOLT_RIGHT})")
     check(OUTPUT_CLAMP_RPM > 0, f"OUTPUT_CLAMP_RPM must be > 0 (got {OUTPUT_CLAMP_RPM})")
     check(N      > 0, f"N must be > 0 (got {N})")
     check(N_SLOW > 0, f"N_SLOW must be > 0 (got {N_SLOW})")
@@ -250,6 +279,19 @@ def _validate():
         check(TRACK_WIDTH  > 0, f"TRACK_WIDTH_M must be > 0 (got {TRACK_WIDTH})")
         check(CURVE_RADIUS > 0, f"CURVE_RADIUS_M must be > 0 (got {CURVE_RADIUS})")
         check(0.0 < FF_ALPHA <= 1.0, f"FF_ALPHA must be in (0,1] (got {FF_ALPHA})")
+
+    # Encoder / calibration (only matters when the encoder is enabled)
+    if ENCODER_ENABLED:
+        check(ENCODER_COUNTS_PER_REV > 0,
+              f"encoder COUNTS_PER_REV must be > 0 (got {ENCODER_COUNTS_PER_REV})")
+        check(ENCODER_TOTAL_RANGE   > 0,
+              f"encoder TOTAL_RANGE must be > 0 (got {ENCODER_TOTAL_RANGE})")
+        check(ENCODER_RADIUS_M      > 0,
+              f"encoder WHEEL_DIAMETER_M must be > 0 (got {ENCODER_WHEEL_DIAMETER_M})")
+        check(CAL_V_STEP > 0, f"calibration V_STEP must be > 0 (got {CAL_V_STEP})")
+        check(0 < CAL_V_MAX <= _MAX_SPEED_MPS,
+              f"calibration V_MAX must be in (0, {_MAX_SPEED_MPS}] (got {CAL_V_MAX})")
+        check(CAL_DWELL_S > 0, f"calibration DWELL_S must be > 0 (got {CAL_DWELL_S})")
 
     if errors:
         raise ConfigError(

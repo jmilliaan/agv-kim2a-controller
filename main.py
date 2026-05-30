@@ -39,13 +39,19 @@ class DriverManager:
     """
 
     # factory=None means a pure gate flag (no driver task).
+    # CAN is managed (not a fixed core task) so the calibration flow can release
+    # the shared CANable adapter for the encoder, then restore it.
     _SPEC = {
-        "NAV_ENABLED":  {"factory": RFIDReader, "watch": True,  "requires": None},
+        "CAN_ENABLED":  {"factory": CANReader,  "watch": True,  "requires": None,
+                         "watch_timeout": config.WATCHDOG_CAN_TIMEOUT_S},
+        "NAV_ENABLED":  {"factory": RFIDReader, "watch": True,  "requires": None,
+                         "watch_timeout": config.WATCHDOG_RFID_TIMEOUT_S},
         "SEQ_ENABLED":  {"factory": None,       "watch": False, "requires": "NAV_ENABLED"},
         "SLMP_ENABLED": {"factory": SLMPDriver, "watch": False, "requires": "SEQ_ENABLED"},
     }
     # Direct dependents that must be disabled when a flag is disabled.
     _DEPENDENTS = {
+        "CAN_ENABLED":  [],
         "NAV_ENABLED":  ["SEQ_ENABLED"],
         "SEQ_ENABLED":  ["SLMP_ENABLED"],
         "SLMP_ENABLED": [],
@@ -75,7 +81,8 @@ class DriverManager:
             self._drivers[flag] = drv
             self._tasks[flag]   = asyncio.create_task(drv.run(self._state))
             if spec["watch"]:
-                self._watched.append((drv, config.WATCHDOG_RFID_TIMEOUT_S))
+                self._watched.append((drv, spec.get("watch_timeout",
+                                                     config.WATCHDOG_RFID_TIMEOUT_S)))
         setattr(config, flag, True)
         logger.info("[DriverManager] %s ENABLED (live)", flag)
 
@@ -150,8 +157,9 @@ async def run():
     # ── Instantiate drivers (feature-flag gated) ──────────────────────────────
     # DIO and CAN are fixed at boot. RFID and SLMP are managed by DriverManager
     # so they can be toggled live from the HMI.
+    # CAN is started via the DriverManager (see boot block below) so calibration
+    # can release the shared adapter for the encoder; DIO and AO stay fixed.
     di_drv   = DIReader()   if config.DIO_ENABLED  else None
-    can_drv  = CANReader()  if config.CAN_ENABLED  else None
     do_drv   = DOWriter()   if config.DIO_ENABLED  else None
     ao_drv   = AOWriter()
 
@@ -186,18 +194,17 @@ async def run():
     if di_drv:
         core_tasks.append(di_drv.run(state))
         watched.append((di_drv, config.WATCHDOG_DI_TIMEOUT_S))
-    if can_drv:
-        core_tasks.append(can_drv.run(state))
-        watched.append((can_drv, config.WATCHDOG_CAN_TIMEOUT_S))
 
     core_tasks.append(safety_watchdog(state, watched=watched))
     core_tasks.append(rfid_processor(state, engine))
-    core_tasks.append(modes.mode_manager(state, engine))
+    core_tasks.append(modes.mode_manager(state, engine, manager))
 
     # NAV/SEQ/SLMP run under the manager so the HMI can toggle them live.
     # Boots from the profile JSON values (hierarchy already enforced in config);
     # toggles do not persist across restart. Order matters: parents before
     # children so the dependency guard in _start is satisfied.
+    if config.CAN_ENABLED:
+        await manager._apply("CAN_ENABLED", True)
     if config.NAV_ENABLED:
         await manager._apply("NAV_ENABLED", True)
     if config.SEQ_ENABLED:
