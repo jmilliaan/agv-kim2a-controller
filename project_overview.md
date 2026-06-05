@@ -3,7 +3,7 @@
 > Orientation doc for coding agents (and humans). Describes architecture and the
 > implementation patterns you must respect when editing. It is **not** a line-by-line
 > code reference — read the cited files for exact logic. Verified against the codebase
-> on 2026-06-02.
+> on 2026-06-05.
 
 ---
 
@@ -71,7 +71,7 @@ sub-domain **and** add a property shim pair.
 | Domain | Owner | Notable fields |
 |---|---|---|
 | `SystemState` | mode_manager, watchdog | `current_mode` (`None`/`manual`/`armed`/`running`/`calibrate`/`emergency`), `emergency_active`, `system_error` |
-| `KinematicState` | sequence_engine, mode_manager | `speed_mode` (`HIGH`/`SLOW`/`APPROACH`), `sequence_stop`, `pending_sequence`, `nav_in_corner` (gates feedforward), `web_manual_command`/`web_manual_expire`, `calibration_request`/`calibration_wheel` |
+| `KinematicState` | sequence_engine, mode_manager | `speed_mode` (`HIGH`/`SLOW`/`APPROACH`), `sequence_stop`, `pending_sequence`, `nav_in_corner` (gates feedforward), `web_manual_command`/`web_manual_expire`, `calibration_request`/`calibration_wheel`, `web_button_mode` + `web_btn_start`/`web_btn_reset`/`web_btn_manual`/`web_btn_emergency` (HMI button bypass — see §5) |
 | `PerceptionState` | hardware drivers + auto_mode | `latest_di`, `latest_do`, `latest_sensor`, `can_last_rx`, motion telemetry (`left_rpm`/`right_rpm`/`pid_output`/`target_speed`), encoder telemetry |
 | `PLCState` | SLMPDriver | `plc_inputs` (M0–M4), `plc_sequence_request` (int → one-hot, `None`=clear), `plc_sequence_pulse_expire`, `plc_sequence_complete` (list[bool]) |
 | `TrolleyState` | SLMPDriver | `y_bits`/`x_bits` (read), `top_m_bits`/`bot_m_bits` (read), `write_bits` (set by Flask, written each cycle) |
@@ -109,6 +109,19 @@ pending_sequence, calibration_request, and disarms the sequence engine on transi
 
 > **There is no reverse driving mode.** `auto_mode` is forward-only. (Old docs mention a
 > `reverse` state / `reverse_auto_request` — that has been removed.)
+
+#### Web-button bypass
+
+When `state.web_button_mode` is True (toggled from the `/manual` HMI), `mode_manager`
+reads **start / reset / man-auto-switch** from `web_btn_start`/`web_btn_reset`/
+`web_btn_manual` instead of the physical DI bits — software mirrors of the four panel
+buttons. `web_btn_start`/`web_btn_reset` are momentary: `mode_manager` clears them after
+detecting their rising edge so each press fires once.
+
+> **Emergency is never bypassed.** `emergency_safe` always ANDs the physical
+> `DI_EMERGENCY` with the web flag: `emergency_safe = not phys_emergency and not
+> web_btn_emergency`. Either the physical e-stop **or** the web emergency button halts the
+> AGV, in bypass mode or not.
 
 ### `auto_mode` (forward tape-following PID loop)
 
@@ -263,8 +276,9 @@ Sync read/write cycle every ~20 ms in an executor. `_NUM_SEQ_BITS = 9`.
 > `M{2010+N}` and complete flag `M{2040+N}`. The PLC bit map / descriptions live in the
 > profile under `slmp_plc` and `slmp_manual`.
 
-> Legacy: root-level `slmp_handler.py` is an **orphan** (older `_NUM_SEQ_BITS=17` copy),
-> not imported anywhere. `drivers/slmp_plc.py` is the live driver.
+> The live driver is `drivers/slmp_plc.py` (its `run` wraps a module-level
+> `slmp_handler(state)` cycle function). The old root-level `slmp_handler.py` orphan
+> has been removed.
 
 ---
 
@@ -288,6 +302,8 @@ Serves on `http://<LOCAL_IP>:5000`. Shares `AMRState`, `SequenceEngine`, and
 
 - `GET /api/state` — full snapshot (AGV summary, PLC writes/reads, sensor + wheel velocities, sequence engine status).
 - `POST /api/manual/command` — web jog (manual mode only; 400 ms expiry).
+- `POST /api/web_button/mode` — `{"enable": bool}` toggles `web_button_mode` (clears all `web_btn_*` on disable).
+- `POST /api/web_button/press` — `{"button": "start"|"reset"|"manual"|"emergency", "value": bool}` mirrors a panel button (403 unless bypass is active). See §5.
 - `POST /api/sequence` — set/clear `plc_sequence_request` (gated by PLC `MASTER_ON` + `MANUAL` bits).
 - `POST /api/params/features` — live feature toggles via `DriverManager` (blocked while `running`/`emergency`).
 - `GET /api/calibration/status`, `POST /api/calibration/start|stop`.
