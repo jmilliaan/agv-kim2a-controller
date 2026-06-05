@@ -34,6 +34,7 @@ recorder.record(
 
 import csv as csv_module
 import logging
+import math
 import os
 import threading
 import time
@@ -195,7 +196,12 @@ def _save_outputs(times, errors, left_rpms, right_rpms, pid_outputs, d_terms,
     line_r, = ax_rpm.plot(times, right_rpms, color="#4CAF50", linewidth=1.0,
                           label="Right RPM", alpha=0.85)
 
-    ax_rpm.set_ylim(0, 2000)
+    _k = 60 * 30 / (math.pi * 0.18)   # mps_to_rpm factor (wheel dia=0.18m, ratio=30)
+    line_t, = ax_rpm.plot(times, [s * _k for s in target_speeds],
+                          color="#FF9800", linewidth=1.3, linestyle="--",
+                          label="Target RPM", alpha=0.9)
+
+    ax_rpm.set_ylim(0, 2500)
     ax_rpm.set_ylabel("Wheel RPM", color="#333333")
     ax_rpm.tick_params(axis="y", labelcolor="#333333")
     ax_rpm.set_xlabel("Time (s)")
@@ -208,7 +214,7 @@ def _save_outputs(times, errors, left_rpms, right_rpms, pid_outputs, d_terms,
     ax_err.set_ylabel("Tracking Error (mm)", color="#F44336")
     ax_err.tick_params(axis="y", labelcolor="#F44336")
 
-    lines  = [line_l, line_r, line_e]
+    lines  = [line_l, line_r, line_t, line_e]
     labels = [l.get_label() for l in lines]
     ax_rpm.legend(lines, labels, loc="upper left", fontsize=9)
 

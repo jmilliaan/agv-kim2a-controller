@@ -152,7 +152,13 @@ async def auto_mode(state, engine=None):
                     if current_target_speed > target_speed:
                         current_target_speed = target_speed
                 elif current_target_speed > target_speed:
-                    current_target_speed -= config.DECEL_RATE * config.DT
+                    # APPROACH crawl uses a gentler decel so the RFID-armed
+                    # slow-down is smooth before the prox marker hard-stops;
+                    # corner/HIGH->SLOW slowdowns use the normal decel rate.
+                    decel_rate = (config.APPROACH_DECEL_RATE
+                                  if state.speed_mode == "APPROACH"
+                                  else config.DECEL_RATE)
+                    current_target_speed -= decel_rate * config.DT
                     if current_target_speed < target_speed:
                         current_target_speed = target_speed
 
@@ -376,17 +382,32 @@ async def mode_manager(state, engine=None, manager=None):
             await asyncio.sleep(0.01)
             continue
 
-        di             = state.latest_di
-        emergency_safe = not di[config.DI_EMERGENCY]
-        switch_manual  = di[config.DI_MODE_SWITCH]
-        btn_start      = di[config.DI_START]
-        btn_reset      = di[config.DI_RESET]
+        di = state.latest_di
+
+        # Physical emergency is always active regardless of web_button_mode.
+        # Web emergency adds on top: either source can trigger emergency.
+        phys_emergency = di[config.DI_EMERGENCY]
+        if state.web_button_mode:
+            emergency_safe = not phys_emergency and not state.web_btn_emergency
+            switch_manual  = state.web_btn_manual
+            btn_start      = state.web_btn_start
+            btn_reset      = state.web_btn_reset
+        else:
+            emergency_safe = not phys_emergency
+            switch_manual  = di[config.DI_MODE_SWITCH]
+            btn_start      = di[config.DI_START]
+            btn_reset      = di[config.DI_RESET]
 
         start_rising = btn_start and not last_start
         reset_rising = btn_reset and not last_reset
 
         last_start = btn_start
         last_reset = btn_reset
+
+        # Clear momentary web buttons after reading so they act as single pulses
+        if state.web_button_mode:
+            if state.web_btn_start: state.web_btn_start = False
+            if state.web_btn_reset: state.web_btn_reset = False
 
         # ── System error guard (watchdog — Phase 4) ───────────────────────────
         if state.system_error and current_mode not in ("emergency", None):

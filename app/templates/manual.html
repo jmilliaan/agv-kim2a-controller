@@ -225,9 +225,182 @@
   .lamp-sm.on { background: radial-gradient(circle at 35% 35%, #80ff80, #00a000); border-color: #005000; box-shadow: 0 0 8px 1px #00cc0066; }
   .nav-btn.errors-btn { color: #ff8080; }
   .nav-btn.errors-btn.active { background: #800000; color: #fff; border-top: 2px solid #ff8080; }
+
+  /* ══════════════════════════════════════════════
+     WEB BUTTON BYPASS PANEL
+     ══════════════════════════════════════════════ */
+
+  #bypass-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    flex-shrink: 0;
+  }
+
+  /* Bypass mode entry/exit buttons */
+  .byp-mode-btn {
+    width: 260px;
+    padding: 14px 8px;
+    background: #c0c000;
+    border-top:    4px solid #ffff80;
+    border-left:   4px solid #ffff80;
+    border-right:  4px solid #606000;
+    border-bottom: 4px solid #606000;
+    cursor: pointer;
+    font-family: Consolas, 'Courier New', Courier, monospace;
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    text-align: center;
+    line-height: 1.3;
+    color: #000;
+    touch-action: manipulation;
+  }
+  .byp-mode-btn:active {
+    border-top:    4px solid #606000;
+    border-left:   4px solid #606000;
+    border-right:  4px solid #ffff80;
+    border-bottom: 4px solid #ffff80;
+    background: #a0a000;
+  }
+  .byp-mode-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  /* 2×2 grid of virtual buttons */
+  #vbtn-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 24px 28px;
+  }
+
+  /* Each virtual button cell: shape on top, label below */
+  .vbtn-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Base virtual button shape */
+  .vbtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Consolas, 'Courier New', Courier, monospace;
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 0.3px;
+    text-align: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: filter 0.05s;
+    line-height: 1.2;
+  }
+
+  /* Momentary push-buttons (START, RESET): circles */
+  .vbtn-pb {
+    width: 116px;
+    height: 116px;
+    border-radius: 50%;
+    border: 6px solid rgba(0,0,0,0.35);
+  }
+  .vbtn-pb:active { filter: brightness(0.75); }
+  body.web-btn-off .vbtn-pb { opacity: 0.4; pointer-events: none; }
+
+  /* START — green */
+  .vbtn-start {
+    background: radial-gradient(circle at 38% 38%, #80ff80, #00a000);
+    color: #003000;
+    box-shadow: 0 5px 0 #004400, inset 0 2px 4px #80ff8040;
+  }
+  .vbtn-start:active { box-shadow: 0 2px 0 #004400; }
+
+  /* RESET — yellow */
+  .vbtn-reset {
+    background: radial-gradient(circle at 38% 38%, #ffff80, #c0a000);
+    color: #302000;
+    box-shadow: 0 5px 0 #806000, inset 0 2px 4px #ffff8040;
+  }
+  .vbtn-reset:active { box-shadow: 0 2px 0 #806000; }
+
+  /* EMERGENCY — red rounded rect */
+  .vbtn-emg {
+    width: 116px;
+    height: 116px;
+    border-radius: 22px;
+    border: 6px solid rgba(0,0,0,0.35);
+    background: radial-gradient(circle at 38% 38%, #ff8080, #c00000);
+    color: #fff;
+    box-shadow: 0 5px 0 #600000, inset 0 2px 4px #ff808040;
+  }
+  .vbtn-emg:active { box-shadow: 0 2px 0 #600000; filter: brightness(0.8); }
+  .vbtn-emg.active-emg {
+    background: radial-gradient(circle at 38% 38%, #ff4040, #800000);
+    box-shadow: 0 2px 0 #600000, 0 0 18px 5px #ff000088;
+  }
+  body.web-btn-off .vbtn-emg { opacity: 0.4; pointer-events: none; }
+
+  /* MAN/AUTO toggle — grey switch body */
+  .vbtn-switch {
+    width: 116px;
+    height: 116px;
+    border-radius: 10px;
+    border: 5px solid #606060;
+    background: #505050;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 8px;
+    cursor: pointer;
+    touch-action: manipulation;
+    position: relative;
+    overflow: hidden;
+  }
+  body.web-btn-off .vbtn-switch { opacity: 0.4; pointer-events: none; }
+  .sw-label {
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    color: #ccc;
+    z-index: 1;
+  }
+  .sw-knob {
+    width: 90px;
+    height: 36px;
+    border-radius: 6px;
+    background: #c0c0c0;
+    border-top:   3px solid #fff;
+    border-left:  3px solid #fff;
+    border-right: 3px solid #606060;
+    border-bottom:3px solid #606060;
+    transition: transform 0.12s;
+    z-index: 1;
+  }
+  /* Manual = knob at top */
+  .vbtn-switch.sw-manual .sw-knob { transform: translateY(-4px); }
+  /* Auto = knob at bottom */
+  .vbtn-switch.sw-auto   .sw-knob { transform: translateY(4px); }
+
+  .vbtn-label {
+    font-size: 18px;
+    font-weight: bold;
+    color: #404040;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  /* Active highlight on EMG lamp-sm */
+  .lamp-sm.on-red { background: radial-gradient(circle at 35% 35%, #ff8080, #c00000); border-color: #600000; box-shadow: 0 0 8px 1px #ff000066; }
 </style>
 </head>
-<body class="not-manual">
+<body class="not-manual web-btn-off">
 
 <div id="header">
   <span class="title">AGV MANUAL REMOTE</span>
@@ -237,6 +410,48 @@
 <div id="status-bar" class="warn">Connecting...</div>
 
 <div id="main">
+
+  <!-- ── Web button bypass panel ── -->
+  <div id="bypass-panel">
+    <!-- Bypass activation buttons -->
+    <button class="byp-mode-btn" id="btn-byp-enter">WEB BUTTON<br>MODE</button>
+    <button class="byp-mode-btn" id="btn-byp-exit">END WEB<br>BUTTON MODE</button>
+
+    <!-- 2×2 virtual button grid -->
+    <div id="vbtn-grid">
+
+      <!-- START -->
+      <div class="vbtn-cell">
+        <button class="vbtn vbtn-pb vbtn-start" id="vbtn-start">STA.</button>
+        <span class="vbtn-label">START</span>
+      </div>
+
+      <!-- RESET -->
+      <div class="vbtn-cell">
+        <button class="vbtn vbtn-pb vbtn-reset" id="vbtn-reset">RST</button>
+        <span class="vbtn-label">RESET</span>
+      </div>
+
+      <!-- MAN/AUTO switch -->
+      <div class="vbtn-cell">
+        <div class="vbtn-switch sw-auto" id="vbtn-switch">
+          <span class="sw-label">MAN</span>
+          <div class="sw-knob"></div>
+          <span class="sw-label">AUTO</span>
+        </div>
+        <span class="vbtn-label">MAN / AUTO</span>
+      </div>
+
+      <!-- EMERGENCY -->
+      <div class="vbtn-cell">
+        <button class="vbtn vbtn-emg" id="vbtn-emg">EMG</button>
+        <span class="vbtn-label">EMERGENCY</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Compass grid ── -->
   <div id="compass">
     <!-- Row 1 -->
     <button class="btn diag" data-cmd="fwd_left"  id="btn-fwd-left">
@@ -311,8 +526,7 @@
   let   activeBtn  = null;
   let   lastMode   = null;
 
-  // ── Send command to backend ───────────────────────────────────────────────
-  // Heartbeat: resend active command every 100ms so backend watchdog never fires
+  // ── Send movement command to backend ─────────────────────────────────────────
   let _heartbeatTimer = null;
   let _activeCmd      = null;
 
@@ -334,13 +548,13 @@
     }
   }
 
-  // ── Button press / release ────────────────────────────────────────────────
+  // ── Movement button press / release ──────────────────────────────────────────
   function onPress(btn) {
     if (activeBtn && activeBtn !== btn) onRelease(activeBtn);
     activeBtn = btn;
     btn.classList.add('pressed');
     const cmd = btn.dataset.cmd;
-    activeCmd.textContent = '\u25ba ' + cmd.toUpperCase().replace('_', ' ') + ' [BTN]';
+    activeCmd.textContent = '► ' + cmd.toUpperCase().replace('_', ' ') + ' [BTN]';
     sendCommand(cmd);
   }
 
@@ -352,9 +566,7 @@
     sendCommand(null);
   }
 
-  // ── Attach events to all buttons ──────────────────────────────────────────
-
-  // Keyboard arrow keys (diagonal supported)
+  // ── Keyboard arrow keys ───────────────────────────────────────────────────────
   const _keysDown  = new Set();
   const _arrowKeys = new Set(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight']);
 
@@ -375,11 +587,11 @@
   }
 
   function _updateKeyCmd() {
-    if (activeBtn) return;   // button press takes priority
+    if (activeBtn) return;
     const cmd = _keyToCmd();
     if (cmd === _activeCmd) return;
     activeCmd.textContent = cmd
-      ? '\u25ba ' + cmd.toUpperCase().replace('_', ' ') + ' [KEY]'
+      ? '► ' + cmd.toUpperCase().replace('_', ' ') + ' [KEY]'
       : '';
     sendCommand(cmd);
   }
@@ -397,34 +609,124 @@
     _keysDown.delete(e.key);
     _updateKeyCmd();
   });
+
   document.querySelectorAll('.btn[data-cmd]').forEach(btn => {
-    // Mouse
     btn.addEventListener('mousedown',  e => { e.preventDefault(); onPress(btn); });
     btn.addEventListener('mouseup',    e => onRelease(btn));
     btn.addEventListener('mouseleave', e => { if (activeBtn === btn) onRelease(btn); });
-
-    // Touch
     btn.addEventListener('touchstart',  e => { e.preventDefault(); onPress(btn); }, { passive: false });
     btn.addEventListener('touchend',    e => { e.preventDefault(); onRelease(btn); }, { passive: false });
     btn.addEventListener('touchcancel', e => { e.preventDefault(); onRelease(btn); }, { passive: false });
   });
 
-  // Safety: if window loses focus, stop the AGV
   window.addEventListener('blur', () => { if (activeBtn) onRelease(activeBtn); });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && activeBtn) onRelease(activeBtn);
   });
 
-  // ── State polling ─────────────────────────────────────────────────────────
+  // ══════════════════════════════════════════════════════════════════════════════
+  //  WEB BUTTON BYPASS
+  // ══════════════════════════════════════════════════════════════════════════════
+
+  let webBtnActive   = false;   // mirrors server web_button_mode
+  let webEmgActive   = false;   // mirrors server web_btn_emergency (level)
+  let webManualState = false;   // mirrors server web_btn_manual (level)
+
+  function postBtn(url, body) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).catch(() => {});
+  }
+
+  function applyWebBtnUi() {
+    if (webBtnActive) {
+      body.classList.remove('web-btn-off');
+      document.getElementById('btn-byp-enter').disabled = true;
+      document.getElementById('btn-byp-exit').disabled  = false;
+    } else {
+      body.classList.add('web-btn-off');
+      document.getElementById('btn-byp-enter').disabled = false;
+      document.getElementById('btn-byp-exit').disabled  = true;
+      // Reset visual states when exiting
+      webEmgActive   = false;
+      webManualState = false;
+    }
+    updateSwitchUi();
+    updateEmgUi();
+  }
+
+  function updateSwitchUi() {
+    const sw = document.getElementById('vbtn-switch');
+    sw.classList.toggle('sw-manual', webManualState);
+    sw.classList.toggle('sw-auto',  !webManualState);
+  }
+
+  function updateEmgUi() {
+    const emg = document.getElementById('vbtn-emg');
+    emg.classList.toggle('active-emg', webEmgActive);
+  }
+
+  // Enter / exit bypass mode
+  document.getElementById('btn-byp-enter').addEventListener('click', () => {
+    postBtn('/api/web_button/mode', { enable: true }).then(() => {
+      webBtnActive = true;
+      applyWebBtnUi();
+    });
+  });
+
+  document.getElementById('btn-byp-exit').addEventListener('click', () => {
+    postBtn('/api/web_button/mode', { enable: false }).then(() => {
+      webBtnActive = false;
+      applyWebBtnUi();
+    });
+  });
+
+  // START — momentary
+  document.getElementById('vbtn-start').addEventListener('click', () => {
+    if (!webBtnActive) return;
+    postBtn('/api/web_button/press', { button: 'start', value: true });
+  });
+
+  // RESET — momentary
+  document.getElementById('vbtn-reset').addEventListener('click', () => {
+    if (!webBtnActive) return;
+    postBtn('/api/web_button/press', { button: 'reset', value: true });
+  });
+
+  // MAN/AUTO switch — toggle level
+  document.getElementById('vbtn-switch').addEventListener('click', () => {
+    if (!webBtnActive) return;
+    webManualState = !webManualState;
+    updateSwitchUi();
+    postBtn('/api/web_button/press', { button: 'manual', value: webManualState });
+  });
+
+  // EMERGENCY — toggle level
+  document.getElementById('vbtn-emg').addEventListener('click', () => {
+    if (!webBtnActive) return;
+    webEmgActive = !webEmgActive;
+    updateEmgUi();
+    postBtn('/api/web_button/press', { button: 'emergency', value: webEmgActive });
+  });
+
+  // Initialise disabled state
+  document.getElementById('btn-byp-exit').disabled = true;
+
+  // ══════════════════════════════════════════════════════════════════════════════
+  //  STATE POLLING
+  // ══════════════════════════════════════════════════════════════════════════════
+
   function applyMode(mode) {
     if (mode === lastMode) return;
     lastMode = mode;
 
     modeBadge.className = 'mode-badge';
     modeBadge.textContent = mode ? mode.toUpperCase() : '---';
-    if (mode === 'manual')    modeBadge.classList.add('mode-manual');
-    else if (mode === 'armed')    modeBadge.classList.add('mode-armed');
-    else if (mode === 'running')  modeBadge.classList.add('mode-running');
+    if (mode === 'manual')      modeBadge.classList.add('mode-manual');
+    else if (mode === 'armed')     modeBadge.classList.add('mode-armed');
+    else if (mode === 'running')   modeBadge.classList.add('mode-running');
     else if (mode === 'emergency') modeBadge.classList.add('mode-emergency');
 
     if (mode === 'manual') {
@@ -452,6 +754,16 @@
       if (!r.ok) throw new Error(r.status);
       const d = await r.json();
       applyMode(d.agv.mode);
+
+      // Sync web button state from server (handles page reload / multi-tab)
+      const serverWbm = d.agv.web_button_mode;
+      if (serverWbm !== webBtnActive) {
+        webBtnActive   = serverWbm;
+        webManualState = d.agv.web_btn_manual   || false;
+        webEmgActive   = d.agv.web_btn_emergency || false;
+        applyWebBtnUi();
+      }
+
       const sen = d.sensor || {};
       document.getElementById('m-pos').textContent =
         (sen.left_mm != null) ? sen.left_mm : '—';

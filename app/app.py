@@ -93,6 +93,9 @@ def _build_state_snapshot():
         "sequence_request":     s.plc_sequence_request,
         "seq_pulse_active":     s.plc_sequence_request is not None,
         "latest_rfid_tag":      s.latest_rfid_tag,
+        "web_button_mode":      s.web_button_mode,
+        "web_btn_manual":       s.web_btn_manual,
+        "web_btn_emergency":    s.web_btn_emergency,
     }
 
     # ── What the AGV is writing to the PLC right now ──────────────────────────
@@ -389,6 +392,51 @@ def api_set_features():
 
 
 _RESTART_CMD = ["/usr/bin/systemctl", "restart", "agv-controller.service"]
+
+@app.route("/api/web_button/mode", methods=["POST"])
+def api_web_button_mode():
+    """Enable or disable web button bypass mode."""
+    if _state is None:
+        return jsonify({"error": "state not initialised"}), 503
+    data = request.get_json(silent=True) or {}
+    enable = data.get("enable")
+    if not isinstance(enable, bool):
+        return jsonify({"error": "enable must be true or false"}), 400
+    _state.web_button_mode = enable
+    if not enable:
+        _state.web_btn_start     = False
+        _state.web_btn_reset     = False
+        _state.web_btn_manual    = False
+        _state.web_btn_emergency = False
+    logger.info("[WebBtn] bypass mode %s", "ON" if enable else "OFF")
+    return jsonify({"ok": True, "web_button_mode": enable})
+
+
+@app.route("/api/web_button/press", methods=["POST"])
+def api_web_button_press():
+    """Send a virtual button press. Requires web_button_mode active."""
+    if _state is None:
+        return jsonify({"error": "state not initialised"}), 503
+    if not _state.web_button_mode:
+        return jsonify({"error": "web button mode not active"}), 403
+
+    data   = request.get_json(silent=True) or {}
+    button = data.get("button")   # "start" | "reset" | "manual" | "emergency"
+    value  = data.get("value", True)
+
+    if button == "start":
+        _state.web_btn_start = bool(value)
+    elif button == "reset":
+        _state.web_btn_reset = bool(value)
+    elif button == "manual":
+        _state.web_btn_manual = bool(value)
+    elif button == "emergency":
+        _state.web_btn_emergency = bool(value)
+    else:
+        return jsonify({"error": f"unknown button: {button}"}), 400
+
+    return jsonify({"ok": True, "button": button, "value": bool(value)})
+
 
 @app.route("/api/restart", methods=["POST"])
 def api_restart():

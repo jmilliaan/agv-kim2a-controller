@@ -245,6 +245,8 @@
   <div id="settings-msg" class="info">—</div>
 </div>
 
+<div class="grid" id="params-grid"></div>
+
 <div id="calib-card" class="section raised">
   <div class="section-title">WHEEL SPEED CALIBRATION</div>
   <div class="setting-row">
@@ -275,8 +277,6 @@
   <div id="calib-msg" class="info">—</div>
 </div>
 
-<div class="grid" id="params-grid"></div>
-
 <nav id="nav-bar">
   <a class="nav-btn" href="/">HOME</a>
   <a class="nav-btn" href="/manual">MANUAL</a>
@@ -298,7 +298,14 @@ fetch('/api/params')
   .then(r => r.json())
   .then(data => {
     const grid = document.getElementById('params-grid');
-    for (const [section, entries] of Object.entries(data)) {
+    // Render Speeds and PID sections first, then everything else
+    const PRIORITY = ['Speeds', 'PID — High Speed', 'PID — Slow Speed', 'PID — Shared'];
+    const ordered = [
+      ...PRIORITY.filter(k => k in data),
+      ...Object.keys(data).filter(k => !PRIORITY.includes(k)),
+    ];
+    for (const section of ordered) {
+      const entries = data[section];
       const div = document.createElement('div');
       div.className = 'section raised';
       let rows = '';

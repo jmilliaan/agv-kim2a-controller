@@ -22,6 +22,13 @@ class KinematicState:
         self.nav_in_corner        = False   # True only while a NAV sequence holds SLOW; gates feedforward
         self.calibration_request  = False   # set by Flask to start the wheel-speed calibration ramp
         self.calibration_wheel    = "right" # "right" | "left" — which wheel the encoder is mounted on
+        # Web button bypass — when True, web_btn_* override the physical DI signals
+        # for START/RESET/MODE_SWITCH/EMERGENCY in mode_manager.
+        self.web_button_mode      = False
+        self.web_btn_start        = False   # momentary; mode_manager clears after detecting rising edge
+        self.web_btn_reset        = False   # momentary; mode_manager clears after detecting rising edge
+        self.web_btn_manual       = False   # level signal: True = MANUAL, False = AUTO
+        self.web_btn_emergency    = False   # level signal: True = emergency active
 
 
 class PerceptionState:
@@ -181,6 +188,31 @@ class AMRState:
     def web_manual_expire(self): return self.kinematic.web_manual_expire
     @web_manual_expire.setter
     def web_manual_expire(self, v): self.kinematic.web_manual_expire = v
+
+    @property
+    def web_button_mode(self): return self.kinematic.web_button_mode
+    @web_button_mode.setter
+    def web_button_mode(self, v): self.kinematic.web_button_mode = v
+
+    @property
+    def web_btn_start(self): return self.kinematic.web_btn_start
+    @web_btn_start.setter
+    def web_btn_start(self, v): self.kinematic.web_btn_start = v
+
+    @property
+    def web_btn_reset(self): return self.kinematic.web_btn_reset
+    @web_btn_reset.setter
+    def web_btn_reset(self, v): self.kinematic.web_btn_reset = v
+
+    @property
+    def web_btn_manual(self): return self.kinematic.web_btn_manual
+    @web_btn_manual.setter
+    def web_btn_manual(self, v): self.kinematic.web_btn_manual = v
+
+    @property
+    def web_btn_emergency(self): return self.kinematic.web_btn_emergency
+    @web_btn_emergency.setter
+    def web_btn_emergency(self, v): self.kinematic.web_btn_emergency = v
 
     # ── PerceptionState shims ─────────────────────────────────────────────────
 

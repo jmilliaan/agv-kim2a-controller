@@ -104,6 +104,7 @@ AUTO_TARGET_SLOW_SPEED       = _params["speeds"]["AUTO_TARGET_SLOW_SPEED"]
 AUTO_TARGET_APPROACH_SPEED   = _params["speeds"].get("AUTO_TARGET_APPROACH_SPEED", 0.1)
 ACCEL_RATE                   = _params["speeds"]["ACCEL_RATE"]
 DECEL_RATE                   = _params["speeds"]["DECEL_RATE"]
+APPROACH_DECEL_RATE          = _params["speeds"]["APPROACH_DECEL_RATE"]
 
 # ── PID Tuning ────────────────────────────────────────────────────────────────
 KP = _params["pid_tuning"]["KP"]
