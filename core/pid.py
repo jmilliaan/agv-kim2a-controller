@@ -19,7 +19,12 @@ class PIDController:
         self._ti_deadband = ti_deadband
         self._ti_max      = ti_max
         self._dt          = dt
-        self._output_clamp = output_clamp
+        # Output clamp as an asymmetric (low, high) pair. The constructor keeps a
+        # single symmetric magnitude for backwards compatibility; update_gains can
+        # swap in asymmetric bounds per speed mode (e.g. a tight into-the-guide-bar
+        # limit during APPROACH).
+        self._clamp_hi    = +output_clamp
+        self._clamp_lo    = -output_clamp
         self._v_red_coef  = v_red_coef
         self._sr_alpha    = sr_alpha
         self._sr_cap      = sr_cap
@@ -37,16 +42,26 @@ class PIDController:
         self.speed_reduction = 0.0
         self._last_t         = None   # perf_counter ts of previous compute()
 
-    def update_gains(self, kp, td, n, v_red_coef):
+    def update_gains(self, kp, td, n, v_red_coef, clamp_hi=None, clamp_lo=None):
         """Live gain switching (e.g. HIGH speed ↔ SLOW speed).
 
         Does NOT reset integrator or filter state — the switch should be smooth.
         The derivative filter coefficient is recomputed per cycle from the
-        measured dt, so nothing to precompute here."""
+        measured dt, so nothing to precompute here.
+
+        clamp_hi/clamp_lo optionally swap the PID-output clamp bounds (rpm). They
+        are asymmetric on purpose: in APPROACH the AGV is guided by a one-sided
+        physical bar, so the bound on the into-the-bar steering direction is held
+        much tighter than the off-the-bar direction. When None, the current bounds
+        are kept."""
         self._kp         = kp
         self._td         = td
         self._n          = n
         self._v_red_coef = v_red_coef
+        if clamp_hi is not None:
+            self._clamp_hi = clamp_hi
+        if clamp_lo is not None:
+            self._clamp_lo = clamp_lo
 
     # ── Compute ───────────────────────────────────────────────────────────────
 
@@ -101,7 +116,7 @@ class PIDController:
 
         # ── Output clamp (PID steering only) ──────────────────────────────────
         output = p_term + i_term + self.filtered_d
-        output = max(-self._output_clamp, min(self._output_clamp, output))
+        output = max(self._clamp_lo, min(self._clamp_hi, output))
 
         # ── Total steering differential = PID + curvature feedforward ─────────
         output_total = output + feedforward

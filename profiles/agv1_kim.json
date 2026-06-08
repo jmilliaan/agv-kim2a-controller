@@ -1,4 +1,4 @@
-{
+    {
   "_agv_id": "agv1_kim",
   "_description": "AGV1 KIM2A — primary unit",
 
@@ -45,7 +45,7 @@
     "_comment_cal": "Per-wheel motor cal from encoder run 2026-05-30 (rpm=RPM_PER_VOLT*V+OFFSET, R2=0.99 for V>=0.55). Old single fit 646.59/-101.2 was ~2x too low. Shared keys kept as fallback.",
     "RPM_PER_VOLT": 1265.7,
     "RPM_VOLT_OFFSET": -321.4,
-    "RPM_PER_VOLT_LEFT": 1269.8,
+    "RPM_PER_VOLT_LEFT": 1295,
     "RPM_VOLT_OFFSET_LEFT": -354.2,
     "RPM_PER_VOLT_RIGHT": 1289.8,
     "RPM_VOLT_OFFSET_RIGHT": -299.1
@@ -57,39 +57,41 @@
   },
 
   "speeds": {
-    "MANUAL_TARGET_HIGH_SPEED": 0.5,
-    "MANUAL_TARGET_SLOW_SPEED": 0.3,
-    "AUTO_TARGET_HIGH_SPEED": 0.46,
-    "AUTO_TARGET_SLOW_SPEED": 0.32,
+    "MANUAL_TARGET_HIGH_SPEED": 0.3,
+    "MANUAL_TARGET_SLOW_SPEED": 0.2,
+    "AUTO_TARGET_HIGH_SPEED": 0.32,
+    "AUTO_TARGET_SLOW_SPEED": 0.18,
     "AUTO_TARGET_APPROACH_SPEED": 0.18,
-    "ACCEL_RATE": 0.8,
-    "DECEL_RATE": 0.8, 
+    "ACCEL_RATE": 0.5,
+    "DECEL_RATE": 0.5, 
     "APPROACH_DECEL_RATE": 0.4
   },
 
   "pid_tuning": {
-    "_comment_high": "HIGH gains — scaled for 0.48 m/s straights (KP scales linearly with speed: 3.0*1.2=3.6; straights-only so V_RED_COEF unchanged).",
-    "KP": 3.8,
-    "TD": 0.30,
+    "_comment_high": "HIGH gains",
+    "KP": 2.8,
+    "TD": 0.26,
     "N": 20,
-    "_comment_slow": "SLOW/corner gains — retuned for 0.31 m/s (+10% from 0.28). KP scales linearly (3.0*1.10=3.3); TD/N bumped for extra derivative lead to hold stability margin at the higher corner speed. FF auto-scales with base_rpm (no FF_SCALE change). V_RED_COEF_SLOW left at 2 so error-based reduction doesn't undercut the speed gain.",
-    "KP_SLOW": 4.25,
-    "TD_SLOW": 0.22,
-    "N_SLOW": 18,
-    "_comment_approach": "APPROACH gains — for 0.18 m/s station crawl (seq00 prox deceleration).",
-    "KP_APPROACH": 1.6,
-    "TD_APPROACH": 0.12,
-    "N_APPROACH": 12,
+    "_comment_slow": "SLOW/corner gains",
+    "KP_SLOW": 2.6,
+    "TD_SLOW": 0.16,
+    "N_SLOW": 12,
+    "_comment_approach": "APPROACH gains — 0.2 m/s station crawl.The approach is guided by a one-sided physical bar on the AGV's RIGHT; tape is straight here so the PID needs little authority. Asymmetric clamp: INTO_BAR (positive output = yaw right into the bar) held tight at 8 rpm so the bar centers the AGV mechanically instead of the PID over-pressing the bearings; AWAY (off the bar) kept at 80 rpm for recovery. INTO_BAR is the tuning dial — lower toward 0 if it still binds, raise if it drifts left off the bar.",
+    "KP_APPROACH": 0.45,
+    "TD_APPROACH": 0.2,
+    "N_APPROACH": 10  ,
+    "OUTPUT_CLAMP_INTO_BAR_APPROACH": 8,
+    "OUTPUT_CLAMP_AWAY_APPROACH": 80,
     "_comment_shared": "Shared — integral and timing constants. TI/deadband lowered to null corner standing bias faster at higher speed.",
     "TI": 25,
     "TI_DEADBAND": 20,
     "TI_MAX": 400,
     "DT": 0.01,
     "_comment_sr": "Speed reduction coefficients — split by speed mode",
-    "V_RED_COEF": 2.5,
-    "V_RED_COEF_SLOW": 1.8,
-    "V_RED_COEF_APPROACH": 0,
-    "OUTPUT_CLAMP_RPM": 800,
+    "V_RED_COEF": 2.8,
+    "V_RED_COEF_SLOW": 2.0,
+    "V_RED_COEF_APPROACH": 0.4,
+    "OUTPUT_CLAMP_RPM": 1000  ,
     "SR_ALPHA": 0.15,
     "SR_CAP": 0.45
   },
@@ -124,11 +126,11 @@
   },
 
   "calibration": {
-    "_comment": "Open-loop straight ramp for input-vs-actual wheel speed.",
+    "_comment": "Open-loop straight ramp for input-vs-actual wheel speed. Shortened ramp (0->0.5 m/s, 2s dwell) to fit ~13 m of straight track.",
     "V_START": 0.0,
     "V_STEP": 0.02,
-    "V_MAX": 0.80,
-    "DWELL_S": 4.0
+    "V_MAX": 0.50,
+    "DWELL_S": 2.0
   },
 
   "feedforward": {
@@ -139,7 +141,7 @@
     "CURVE_DIRECTION": "left",
     "CURVE_SPEED_MODES": ["SLOW"],
     "FF_ALPHA": 0.15,
-    "FF_SCALE": 0.8
+    "FF_SCALE": 0.85
   },
 
   "sequences": [

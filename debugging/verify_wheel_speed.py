@@ -88,8 +88,8 @@ EMA_ALPHA = 0.30                           # 0..1, higher = less smoothing
 OVERLAY_COMMAND = True
 CMD_V_START = 0.00                         # m/s
 CMD_V_STEP  = 0.02                         # m/s per step
-CMD_V_MAX   = 0.80                         # m/s
-CMD_DWELL_S = 4.0                          # seconds held per step
+CMD_V_MAX   = 0.50                         # m/s
+CMD_DWELL_S = 2.0                          # seconds held per step
 
 # ── output ──────────────────────────────────────────────────────────────────
 OUT_DIR = os.path.join(

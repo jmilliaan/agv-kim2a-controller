@@ -259,7 +259,7 @@
   </div>
   <div class="setting-row">
     <span class="setting-name">RAMP CONTROL
-      <span class="dep-note">(0→0.8 m/s, +0.02 every 4s — start from ARMED)</span></span>
+      <span class="dep-note">(0→0.5 m/s, +0.02 every 2s, ~13 m straight — start from ARMED)</span></span>
     <div class="wheel-sel">
       <button class="cal-btn start" id="calib-start" disabled>START</button>
       <button class="cal-btn stop"  id="calib-stop"  disabled>STOP</button>
@@ -299,7 +299,7 @@ fetch('/api/params')
   .then(data => {
     const grid = document.getElementById('params-grid');
     // Render Speeds and PID sections first, then everything else
-    const PRIORITY = ['Speeds', 'PID — High Speed', 'PID — Slow Speed', 'PID — Shared'];
+    const PRIORITY = ['Speeds', 'PID Tuning'];
     const ordered = [
       ...PRIORITY.filter(k => k in data),
       ...Object.keys(data).filter(k => !PRIORITY.includes(k)),
@@ -456,9 +456,17 @@ function pollCalib() {
       document.getElementById('calib-rpm').textContent     = _fmt(enc.rpm);
       document.getElementById('calib-elapsed').textContent = _fmt(cal.elapsed, ' s');
       document.getElementById('calib-csv').textContent     = cal.csv_path || '—';
+      // The encoder driver only runs during a calibration run (it shares the one
+      // CANable adapter with the MGS1600 sensor), so it can only report CONNECTED
+      // while RUNNING/REQUESTED. At idle show a neutral note, not a red "NO LINK".
       const link = document.getElementById('calib-link');
-      link.textContent = enc.connected ? 'CONNECTED' : 'NO LINK';
-      link.className = 'param-val ' + (enc.connected ? 'bool-true' : 'bool-false');
+      if (active || d.requested) {
+        link.textContent = enc.connected ? 'CONNECTED' : 'NO LINK';
+        link.className = 'param-val ' + (enc.connected ? 'bool-true' : 'bool-false');
+      } else {
+        link.textContent = d.available ? 'IDLE (reads during calib)' : 'DISABLED';
+        link.className = 'param-val';
+      }
       // Start only from ARMED + encoder available + not already running/requested.
       document.getElementById('calib-start').disabled =
         !(d.available && d.mode === 'armed' && !active && !d.requested);

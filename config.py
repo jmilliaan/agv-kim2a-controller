@@ -128,6 +128,12 @@ V_RED_COEF            = _params["pid_tuning"]["V_RED_COEF"]
 V_RED_COEF_SLOW       = _params["pid_tuning"]["V_RED_COEF_SLOW"]
 V_RED_COEF_APPROACH   = _params["pid_tuning"].get("V_RED_COEF_APPROACH", 0)
 OUTPUT_CLAMP_RPM = _params["pid_tuning"]["OUTPUT_CLAMP_RPM"]
+# Asymmetric APPROACH clamp (magnitudes, rpm). The station approach is guided by a
+# one-sided physical bar on the AGV's right, so steering INTO the bar is held tight
+# (the bar absorbs that correction mechanically) while steering off the bar keeps
+# more authority. Default to the symmetric clamp so older profiles are unchanged.
+OUTPUT_CLAMP_INTO_BAR_APPROACH = _params["pid_tuning"].get("OUTPUT_CLAMP_INTO_BAR_APPROACH", OUTPUT_CLAMP_RPM)
+OUTPUT_CLAMP_AWAY_APPROACH     = _params["pid_tuning"].get("OUTPUT_CLAMP_AWAY_APPROACH",     OUTPUT_CLAMP_RPM)
 SR_ALPHA         = _params["pid_tuning"]["SR_ALPHA"]
 SR_CAP           = _params["pid_tuning"]["SR_CAP"]
 
@@ -253,6 +259,8 @@ def _validate():
     check(RPM_PER_VOLT_LEFT  != 0, f"RPM_PER_VOLT_LEFT must be != 0 (got {RPM_PER_VOLT_LEFT})")
     check(RPM_PER_VOLT_RIGHT != 0, f"RPM_PER_VOLT_RIGHT must be != 0 (got {RPM_PER_VOLT_RIGHT})")
     check(OUTPUT_CLAMP_RPM > 0, f"OUTPUT_CLAMP_RPM must be > 0 (got {OUTPUT_CLAMP_RPM})")
+    check(OUTPUT_CLAMP_INTO_BAR_APPROACH > 0, f"OUTPUT_CLAMP_INTO_BAR_APPROACH must be > 0 (got {OUTPUT_CLAMP_INTO_BAR_APPROACH})")
+    check(OUTPUT_CLAMP_AWAY_APPROACH     > 0, f"OUTPUT_CLAMP_AWAY_APPROACH must be > 0 (got {OUTPUT_CLAMP_AWAY_APPROACH})")
     check(N      > 0, f"N must be > 0 (got {N})")
     check(N_SLOW > 0, f"N_SLOW must be > 0 (got {N_SLOW})")
     check(N_APPROACH > 0, f"N_APPROACH must be > 0 (got {N_APPROACH})")

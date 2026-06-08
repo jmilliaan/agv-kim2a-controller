@@ -104,13 +104,22 @@ async def auto_mode(state, engine=None):
             if state.speed_mode != last_speed_mode:
                 if state.speed_mode == "HIGH":
                     pid.update_gains(config.KP, config.TD, config.N,
-                                     config.V_RED_COEF)
+                                     config.V_RED_COEF,
+                                     clamp_hi=config.OUTPUT_CLAMP_RPM,
+                                     clamp_lo=-config.OUTPUT_CLAMP_RPM)
                 elif state.speed_mode == "APPROACH":
+                    # Asymmetric clamp: barely steer into the one-sided guide bar
+                    # (let it center the AGV mechanically), keep authority to steer
+                    # off the bar. Positive output = yaw right = into the bar.
                     pid.update_gains(config.KP_APPROACH, config.TD_APPROACH,
-                                     config.N_APPROACH, config.V_RED_COEF_APPROACH)
+                                     config.N_APPROACH, config.V_RED_COEF_APPROACH,
+                                     clamp_hi=config.OUTPUT_CLAMP_INTO_BAR_APPROACH,
+                                     clamp_lo=-config.OUTPUT_CLAMP_AWAY_APPROACH)
                 else:
                     pid.update_gains(config.KP_SLOW, config.TD_SLOW,
-                                     config.N_SLOW, config.V_RED_COEF_SLOW)
+                                     config.N_SLOW, config.V_RED_COEF_SLOW,
+                                     clamp_hi=config.OUTPUT_CLAMP_RPM,
+                                     clamp_lo=-config.OUTPUT_CLAMP_RPM)
                 last_speed_mode = state.speed_mode
 
             # ── Drain sensor queue — keep only the latest frame ───────────────
