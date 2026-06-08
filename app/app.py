@@ -138,7 +138,7 @@ def _build_state_snapshot():
 
     # ── Sequence engine status ────────────────────────────────────────────────
     sequences = _engine.status() if _engine is not None else {
-        "active": None, "armed": None, "cooldowns": {}
+        "active": None, "armed": None, "cooldowns": {}, "last_event": None
     }
 
     return {

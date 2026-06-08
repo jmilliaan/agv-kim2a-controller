@@ -62,6 +62,11 @@ class SequenceEngine:
         # asyncio Task for the running sequence — cancelled on mode transitions
         self._active_task: asyncio.Task | None = None
 
+        # Most recent notable sequence event (timeout / completion / PLC fault),
+        # surfaced on the dashboard. None until the first event.
+        # {name, kind, message, ts}
+        self._last_event: dict | None = None
+
         # ── Built-in action registry ──────────────────────────────────────────
         self._actions: dict = {
             "set_speed":         self._act_set_speed,
@@ -140,6 +145,13 @@ class SequenceEngine:
                 self._state.nav_in_corner = False
                 logger.info("[SEQ] Armed '%s' — approach at %s for marker", seq["name"], approach_speed)
 
+                # Watchdog: if the marker never shows up, don't sit armed at
+                # APPROACH crawl indefinitely — fault out and resume HIGH.
+                approach_timeout = trig.get("approach_timeout")
+                if approach_timeout:
+                    asyncio.create_task(
+                        self._approach_timeout_watch(seq["name"], approach_timeout))
+
     async def on_marker(self, side: str):
         """Called by auto_mode whenever a left/right marker is detected in the
         sensor frame.  Fires both armed rfid_then_marker sequences and pure
@@ -179,6 +191,20 @@ class SequenceEngine:
                 pass
         self._active_task = None
 
+    async def _approach_timeout_watch(self, name: str, timeout: float):
+        """If `name` is still armed `timeout` seconds after its RFID arm-trigger
+        (i.e. the marker never arrived), disarm it, log a fault, and resume
+        HIGH so the AGV doesn't sit crawling at APPROACH speed forever."""
+        await asyncio.sleep(timeout)
+        if name in self._armed:
+            del self._armed[name]
+            self._state.pending_sequence = None
+            self._state.speed_mode       = "HIGH"
+            logger.error("[SEQ] '%s' approach timed out after %.0fs — no marker, "
+                         "resuming HIGH", name, timeout)
+            self._record_event(name, "timeout",
+                               f"approach timed out after {timeout:.0f}s — no marker, resumed HIGH")
+
     def cancel_armed(self):
         """Disarm all pending rfid_then_marker sequences.
         Called by mode_manager on any mode transition (emergency, manual switch,
@@ -190,9 +216,25 @@ class SequenceEngine:
 
     # ── Status (for dashboard) ────────────────────────────────────────────────
 
+    def _record_event(self, name: str, kind: str, message: str) -> None:
+        """Stash the most recent notable sequence outcome for the dashboard.
+        kind is one of 'completed' | 'timeout' | 'fault'."""
+        self._last_event = {
+            "name": name, "kind": kind, "message": message, "ts": time.time(),
+        }
+
     def status(self) -> dict:
         """Returns a snapshot for the Flask /api/state response."""
         now = time.time()
+        last_event = None
+        if self._last_event is not None:
+            ev = self._last_event
+            last_event = {
+                "name":    ev["name"],
+                "kind":    ev["kind"],
+                "message": ev["message"],
+                "age_s":   round(now - ev["ts"], 1),
+            }
         return {
             "active":    self._active_sequence,
             "armed":     list(self._armed.keys()) or None,
@@ -201,6 +243,7 @@ class SequenceEngine:
                 for name, exp in self._cooldowns.items()
                 if exp > now
             },
+            "last_event": last_event,
         }
 
     # ── Internal helpers ──────────────────────────────────────────────────────
@@ -254,6 +297,7 @@ class SequenceEngine:
                 await handler(action)
 
             logger.info("[SEQ] Completed '%s'", name)
+            self._record_event(name, "completed", "completed")
 
         except asyncio.CancelledError:
             logger.info("[SEQ] Cancelled '%s'", name)
@@ -265,6 +309,7 @@ class SequenceEngine:
             logger.warning("[SEQ] '%s' timed out (%s) — resuming", name, exc)
             self._state.sequence_stop = False
             self._state.speed_mode    = "HIGH"
+            self._record_event(name, "timeout", f"timed out ({exc}) — resumed HIGH")
 
         except SequencePLCFault as exc:
             # Hold the AGV stopped (fault). Do NOT clear sequence_stop — the
@@ -272,6 +317,7 @@ class SequenceEngine:
             logger.error("[SEQ] '%s' PLC FAULT (%s) — holding, operator RESET required",
                          name, exc)
             self._state.sequence_stop = True
+            self._record_event(name, "fault", f"PLC fault ({exc}) — RESET required")
 
         finally:
             self._active_sequence = None

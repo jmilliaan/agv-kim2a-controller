@@ -406,6 +406,9 @@
     border-bottom: 2px solid #fff;
   }
   .seq-status-value.none { color: #a0a0a0; }
+  .seq-status-value.evt-completed { color: #007000; }
+  .seq-status-value.evt-timeout   { color: #b06000; }
+  .seq-status-value.evt-fault     { color: #c00000; }
 
   /* ── Sensor panel ── */
   #sensor-panel {
@@ -498,8 +501,9 @@
     border-right:  2px solid #fff;
     border-bottom: 2px solid #fff;
   }
-  .drive-value.pid { color: #600060; }
-  .drive-value.vel { color: #006030; }
+  .drive-value.pid  { color: #600060; }
+  .drive-value.vel  { color: #006030; }
+  .drive-value.rfid { color: #000080; letter-spacing: 2px; text-align: center; }
   .drive-unit { font-size: 11px; color: #606060; letter-spacing: 1px; }
   .nav-btn.errors-btn { color: #ff8080; }
   .nav-btn.errors-btn.active { background: #800000; color: #fff; border-top: 2px solid #ff8080; }
@@ -531,11 +535,7 @@
 
 <!-- Magnetic sensor + drive/motion telemetry — top of page -->
 <div id="drive-panel" class="raised">
-  <div class="panel-title" style="display:flex;align-items:center;">
-    <span style="flex:1;">MAGNETIC SENSOR &amp; DRIVE &nbsp;[ MGS1600 &middot; PID &middot; RPM &middot; VELOCITY ]</span>
-    <span style="font-size:14px;font-weight:normal;letter-spacing:1px;color:#a0a0e0;margin-right:6px;">RFID</span>
-    <span id="rfid-tag-display" style="font-size:15px;font-weight:bold;letter-spacing:2px;color:#fff;background:#00006a;padding:2px 10px;min-width:60px;text-align:center;border:1px solid #4040a0;">—</span>
-  </div>
+  <div class="panel-title">MAGNETIC SENSOR &amp; DRIVE &nbsp;[ MGS1600 &middot; PID &middot; RPM &middot; VELOCITY ]</div>
   <div id="sensor-body">
     <div class="sensor-field">
       <span class="sensor-field-label">Position:</span>
@@ -585,6 +585,10 @@
       <span class="drive-label">V-RIGHT</span>
       <span class="drive-value vel" id="v-right-display">—</span>
       <span class="drive-unit">m/s</span>
+    </div>
+    <div class="drive-field">
+      <span class="drive-label">RFID</span>
+      <span class="drive-value rfid" id="rfid-tag-display">—</span>
     </div>
   </div>
 </div>
@@ -668,6 +672,11 @@
     <div class="seq-status-field">
       <span class="seq-status-label">Cooldowns:</span>
       <span id="seq-cooldowns" class="seq-status-value none">—</span>
+    </div>
+    <div style="width:2px;height:28px;background:#a0a0a0;"></div>
+    <div class="seq-status-field">
+      <span class="seq-status-label">Last Event:</span>
+      <span id="seq-event" class="seq-status-value none">—</span>
     </div>
   </div>
 </div>
@@ -808,6 +817,20 @@ function fetchState() {
       } else {
         cdEl.textContent = cdKeys.map(k => `${k}: ${seqCd[k].toFixed(1)}s`).join(' | ');
         cdEl.className = 'seq-status-value';
+      }
+
+      // Last notable sequence event (timeout / completion / PLC fault)
+      const ev   = seqs.last_event || null;
+      const evEl = document.getElementById('seq-event');
+      if (!ev) {
+        evEl.textContent = '—';
+        evEl.className = 'seq-status-value none';
+      } else {
+        const age = ev.age_s < 60
+                  ? `${ev.age_s.toFixed(0)}s ago`
+                  : `${Math.floor(ev.age_s / 60)}m ago`;
+        evEl.textContent = `${ev.name}: ${ev.message} (${age})`;
+        evEl.className = 'seq-status-value evt-' + ev.kind;
       }
 
       // RFID last tag
