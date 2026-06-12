@@ -77,15 +77,6 @@ class TuningState:
         self.auto_extra_slow_speed = float(config.AUTO_TARGET_EXTRA_SLOW_SPEED)
 
 
-class PLCState:
-    """Owned by slmp_handler; read by sequence_engine and dashboard."""
-    def __init__(self):
-        self.plc_inputs                = {}
-        self.plc_sequence_request      = None   # int 0-16 → sets M201x; None → all LOW
-        self.plc_sequence_pulse_expire = 0.0    # epoch after which request bit is cleared
-        self.plc_sequence_complete     = [False] * 17  # M2040–M2056
-
-
 # ── Shared state object ───────────────────────────────────────────────────────
 
 class AMRState:
@@ -109,7 +100,6 @@ class AMRState:
         self.system     = SystemState()
         self.kinematic  = KinematicState()
         self.perception = PerceptionState()
-        self.plc        = PLCState()
         self.tuning     = TuningState()
 
         # asyncio event loop reference — set by main.py after loop starts.
@@ -255,28 +245,6 @@ class AMRState:
     def can_last_rx(self): return self.perception.can_last_rx
     @can_last_rx.setter
     def can_last_rx(self, v): self.perception.can_last_rx = v
-
-    # ── PLCState shims ────────────────────────────────────────────────────────
-
-    @property
-    def plc_inputs(self): return self.plc.plc_inputs
-    @plc_inputs.setter
-    def plc_inputs(self, v): self.plc.plc_inputs = v
-
-    @property
-    def plc_sequence_request(self): return self.plc.plc_sequence_request
-    @plc_sequence_request.setter
-    def plc_sequence_request(self, v): self.plc.plc_sequence_request = v
-
-    @property
-    def plc_sequence_pulse_expire(self): return self.plc.plc_sequence_pulse_expire
-    @plc_sequence_pulse_expire.setter
-    def plc_sequence_pulse_expire(self, v): self.plc.plc_sequence_pulse_expire = v
-
-    @property
-    def plc_sequence_complete(self): return self.plc.plc_sequence_complete
-    @plc_sequence_complete.setter
-    def plc_sequence_complete(self, v): self.plc.plc_sequence_complete = v
 
     # ── TuningState shims ─────────────────────────────────────────────────────
 

@@ -1,0 +1,21 @@
+1. removed;
+2. towing means a pin holds the trolley bar. in TN, its a shaft that goes up and down by a linear actuator. the trolley like KIM varian is irrelevant for TN;
+3. everything in the same point. 
+4. software mediated;
+5. electromagnetic brakes from the BLDC;
+6. not safety certified scanner. model knowledge is not necessary. irrelevant for a demo only unit;
+7. front only, mechanical, two plates separated by a soft body. impact closes the circuit;
+8. no. irrelevant for a simple demo unit;
+9. BLDC, 400W, 0-3000rpm, 1:30 reduction gearbox. motor driver only acceps up to 5vdc. fwd and reverse by the digital signals. reverse is possible only in manual mode; 
+10. not yet. irrelevant for this demo unit;
+11. LFP;
+12. the ubuntu PC basically have like 6 network interfaces. we only use 3;
+13. can be answered by looking at code. 
+14. no feedback. irrelevant for demo unit;
+15. not sure what do you mean. the sound differs;
+16. irrelevant for demo unit;
+17. north, widh 30mm. max gap 10mm. RFID uses UHF.
+18. yes the diagram is in the manual document. it follows a stadium shaped loop.
+19. yes it can. irrelevant for this demo unit; 
+20. nothing, standard factory floor. dont want to bother speccing it;
+21. new info: this is just a demo unit. tape only stadium shaped and small area. 

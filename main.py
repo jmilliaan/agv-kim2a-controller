@@ -13,7 +13,6 @@ from drivers.modbus_do   import DOWriter
 from drivers.modbus_ao   import AOWriter
 from drivers.can_mgs1600 import CANReader
 from drivers.rfid_tcp    import RFIDReader
-from drivers.slmp_plc    import SLMPDriver
 from safety_watchdog import safety_watchdog
 import modes
 from rfid_processor import rfid_processor
@@ -71,13 +70,11 @@ async def run():
     rfid_drv = RFIDReader() if config.RFID_ENABLED else None
     do_drv   = DOWriter()   if config.DIO_ENABLED  else None
     ao_drv   = AOWriter()
-    slmp_drv = SLMPDriver() if config.SLMP_ENABLED else None
 
     for name, enabled in [
         ("DIO (DI+DO)", config.DIO_ENABLED),
         ("CAN sensor",  config.CAN_ENABLED),
         ("RFID",       config.RFID_ENABLED),
-        ("SLMP",       config.SLMP_ENABLED),
     ]:
         logger.info("%-12s %s", name, "ENABLED" if enabled else "DISABLED")
 
@@ -106,8 +103,6 @@ async def run():
     if rfid_drv:
         core_tasks.append(rfid_drv.run(state))
         watched.append((rfid_drv, config.WATCHDOG_RFID_TIMEOUT_S, True))   # auto-only — manual still works
-    if slmp_drv:
-        core_tasks.append(slmp_drv.run(state))
 
     core_tasks.append(safety_watchdog(state, watched=watched))
     core_tasks.append(rfid_processor(state, engine))

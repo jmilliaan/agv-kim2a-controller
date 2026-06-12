@@ -10,7 +10,7 @@ Every actuator driver (output) only needs:
 
 The safety watchdog only monitors sensor/input drivers (DI, CAN, RFID) because
 those are the ones whose staleness could cause the AGV to act on bad data.
-Output drivers (DO, AO, SLMP) fail visibly as "motion not responding" and do
+Output drivers (DO, AO) fail visibly as "motion not responding" and do
 not need watchdog supervision.
 """
 

@@ -9,7 +9,7 @@ Polls a list of (driver, timeout_s, auto_only) tuples every 50 ms.
                                 Manual mode stays operational.
 
 Sets state.system_error (critical) or state.sensor_error (auto-only) accordingly.
-DO/AO writer, SLMP handler are output-only and are not monitored here.
+DO/AO writers are output-only and are not monitored here.
 """
 
 import asyncio

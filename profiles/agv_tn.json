@@ -54,7 +54,7 @@
   },
 
   "horn_channels": {
-    "_comment": "DO channel indices for the horn (shared with pusher extend)",
+    "_comment": "Dedicated DO channel indices for the horns. regular_horn = steady ON in auto (running/reverse); alarm_horn = steady ON instead when an alarm is active.",
     "regular_horn": 12,
     "alarm_horn": 13
   },

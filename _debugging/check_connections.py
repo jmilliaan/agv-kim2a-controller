@@ -72,7 +72,6 @@ async def main():
     results["DIO Modbus"]  = await check_ping("DIO Modbus (DI/DO)", config.DIO_IP)
     results["AO Modbus"]   = await check_ping("AO Modbus",          config.AO_IP)
     results["RFID TCP"]    = await check_ping("RFID TCP",           config.RFID_IP)
-    results["SLMP PLC"]    = await check_ping("SLMP PLC",           config.SLMP_IP)
     results["CAN MGS1600"] = await check_can()
 
     print("\n" + "=" * 40)

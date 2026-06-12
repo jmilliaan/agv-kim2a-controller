@@ -61,8 +61,6 @@ class SequenceEngine:
             "resume":            self._act_resume,
             "sequence_stop":     self._act_sequence_stop,
             "wait_seconds":      self._act_wait_seconds,
-            "plc_request":       self._act_plc_request,
-            "wait_plc_complete": self._act_wait_plc_complete,
             "pusher_extend":     self._act_pusher_extend,
             "pusher_retract":    self._act_pusher_retract,
             "end_cycle":         self._act_end_cycle,
@@ -310,42 +308,6 @@ class SequenceEngine:
 
     async def _act_wait_seconds(self, p: dict):
         await asyncio.sleep(p["duration"])
-
-    async def _act_plc_request(self, p: dict):
-        seq_num      = p["seq_num"]
-        pulse        = p.get("pulse_duration", 1.0)
-        self._state.plc_sequence_request      = seq_num
-        self._state.plc_sequence_pulse_expire = time.time() + pulse
-        logger.info("[SEQ] PLC request seq=%d (pulse %.1fs)", seq_num, pulse)
-
-    async def _act_wait_plc_complete(self, p: dict):
-        seq_num       = p["seq_num"]
-        clear_timeout = p.get("clear_timeout", 5.0)
-        done_timeout  = p.get("done_timeout", 30.0)
-
-        # Phase A: wait for complete flag to go LOW (PLC acknowledged and started)
-        logger.info("[SEQ] Waiting PLC seq=%d clear (flag LOW)", seq_num)
-        deadline = time.time() + clear_timeout
-        while self._state.plc_sequence_complete[seq_num]:
-            if time.time() > deadline:
-                logger.warning("[SEQ] PLC seq=%d clear timeout — proceeding", seq_num)
-                return
-            if self._state.current_mode != "running":
-                raise asyncio.CancelledError()
-            await asyncio.sleep(0.1)
-
-        # Phase B: wait for complete flag to go HIGH (PLC work done)
-        logger.info("[SEQ] Waiting PLC seq=%d done (flag HIGH)", seq_num)
-        deadline = time.time() + done_timeout
-        while not self._state.plc_sequence_complete[seq_num]:
-            if time.time() > deadline:
-                logger.warning("[SEQ] PLC seq=%d done timeout — resuming anyway", seq_num)
-                return
-            if self._state.current_mode != "running":
-                raise asyncio.CancelledError()
-            await asyncio.sleep(0.1)
-
-        logger.info("[SEQ] PLC seq=%d complete", seq_num)
 
     async def _act_pusher_extend(self, p: dict):
         assert config.PUSHER_CHANNELS is not None, \

@@ -47,8 +47,6 @@ MODBUS_PORT = _params["networking"]["MODBUS_PORT"]
 DEVICE_ID   = _params["networking"]["DEVICE_ID"]
 RFID_IP     = _params["networking"]["RFID_IP"]
 RFID_PORT   = _params["networking"]["RFID_PORT"]
-SLMP_IP     = _params["networking"]["SLMP_IP"]
-SLMP_PORT   = _params["networking"]["SLMP_PORT"]
 
 # ── IO Mapping ────────────────────────────────────────────────────────────────
 DI_FLIPPED     = bool(_params["io_mapping"].get("DI_FLIPPED", 0))
@@ -137,7 +135,6 @@ _feat = _params.get("features", {})
 DIO_ENABLED        = bool(_feat.get("DIO_ENABLED",        1))
 CAN_ENABLED        = bool(_feat.get("CAN_ENABLED",        1))
 RFID_ENABLED       = bool(_feat.get("RFID_ENABLED",       1))
-SLMP_ENABLED       = bool(_feat.get("SLMP_ENABLED",       0))
 LIDAR_STOP_ENABLED = bool(_feat.get("LIDAR_STOP_ENABLED", 1))  # 0 = disable inner lidar stop
 
 # ── Watchdog timeouts (Phase 4) ───────────────────────────────────────────────
