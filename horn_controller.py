@@ -2,7 +2,7 @@
 horn_controller.py — Audible horn controller
 =============================================
 Drives two DO channels:
-  - regular_horn : steady ON while AGV is in auto mode (running / reverse)
+  - regular_horn : steady ON while AGV is in the auto (running) mode
   - alarm_horn   : steady ON instead of regular when an alarm is active
                    during auto mode
 
@@ -26,7 +26,7 @@ import config
 
 logger = logging.getLogger(__name__)
 
-_AUTO_MODES = ("running", "reverse")
+_AUTO_MODES = ("running",)   # [EVO] reverse auto mode removed
 _POLL_S     = 0.1   # 100 ms — fast enough for a horn, slow enough to be cheap
 
 

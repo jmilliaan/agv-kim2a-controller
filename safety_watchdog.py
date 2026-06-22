@@ -5,7 +5,7 @@ Polls a list of (driver, timeout_s, auto_only) tuples every 50 ms.
 
   auto_only=False (critical):  DIO/Modbus — loss blocks ALL modes including manual.
                                 Emergency button can't be read without it.
-  auto_only=True  (sensor):    CAN/RFID   — loss only blocks auto/running/reverse.
+  auto_only=True  (sensor):    CAN/RFID   — loss only blocks auto (running).
                                 Manual mode stays operational.
 
 Sets state.system_error (critical) or state.sensor_error (auto-only) accordingly.
@@ -17,6 +17,9 @@ the exception: it reports CiA-402 status over the bus, so a drive FAULT
 import asyncio
 import logging
 import time
+
+import config
+import fleet
 
 logger = logging.getLogger(__name__)
 
@@ -55,12 +58,16 @@ async def safety_watchdog(state, watched: list):
                 state.system_error_detail = critical_fault
                 state.system_error = True
                 await state.motor_queue.put(("brake", True))
+                if config.FLEET_MODE:
+                    fleet.emit_fault_raised(state, "system_error", critical_fault)
         else:
             if state.system_error:
                 logger.info("WATCHDOG: critical driver recovered — clearing system_error")
                 state.log_event("INFO", "WATCHDOG: critical driver recovered")
                 state.system_error_detail = ""
                 state.system_error = False
+                if config.FLEET_MODE:
+                    fleet.emit_fault_cleared(state, "system_error", "recovered")
 
         # ── Sensor fault (CAN/RFID lost) — block auto only, manual stays up ──
         if sensor_fault is not None:

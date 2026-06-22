@@ -62,6 +62,8 @@ DI_MODE_SWITCH      = _params["io_mapping"]["DI_MODE_SWITCH"]
 MODE_SWITCH_INVERT  = bool(_params["io_mapping"].get("MODE_SWITCH_INVERT", 0))
 DI_START            = _params["io_mapping"]["DI_START"]
 DI_RESET            = _params["io_mapping"]["DI_RESET"]
+# Onboard fleet confirm button (rising edge). Optional → None when standalone.
+DI_CONFIRM          = _params["io_mapping"].get("DI_CONFIRM", None)
 
 # ── Motor CAN drive (BLVD-KRD / CiA-402 over CANopen) ────────────────────────
 # Per-side {node_id, invert} + bus-level CHANNEL/BITRATE/EDS/ramps/MOTOR_MAX_RPM.
@@ -133,6 +135,7 @@ CAN_ENABLED        = bool(_feat.get("CAN_ENABLED",        1))  # SICK MLS sensor
 MOTOR_CAN_ENABLED  = bool(_feat.get("MOTOR_CAN_ENABLED",  1))  # BLVD-KRD wheel drives + the CAN bus
 RFID_ENABLED       = bool(_feat.get("RFID_ENABLED",       1))  # RFID TCP reader
 LIDAR_STOP_ENABLED = bool(_feat.get("LIDAR_STOP_ENABLED", 1))  # 0 = disable inner lidar stop
+FLEET_MODE         = bool(_feat.get("FLEET_MODE",         0))  # EVO MQTT edge node; default OFF = standalone
 
 # Every hardware subsystem above can be turned off independently so the
 # controller boots cleanly on a PC with nothing connected (no connect errors):
@@ -145,6 +148,30 @@ _wd = _params.get("watchdog", {})
 WATCHDOG_DI_TIMEOUT_S   = _wd.get("DI_TIMEOUT_S",   1.0)
 WATCHDOG_CAN_TIMEOUT_S  = _wd.get("CAN_TIMEOUT_S",  1.0)
 WATCHDOG_RFID_TIMEOUT_S = _wd.get("RFID_TIMEOUT_S", 5.0)
+
+# ── MQTT / EVO fleet (Phase B) ────────────────────────────────────────────────
+# Only consulted when FLEET_MODE is on. CLIENT_ID is the WIRE id (agv1/agv2),
+# fixed by the store's evo_topics.py — it must never be derived from AGV_ID.
+# Timer defaults are provisional; tune on the deployed network (mqtt_design §5/§7/§11).
+MQTT                = _params.get("mqtt", {})
+MQTT_BROKER_IP      = MQTT.get("BROKER_IP",   "192.168.2.20")
+MQTT_BROKER_PORT    = int(MQTT.get("BROKER_PORT", 1883))
+MQTT_CLIENT_ID      = MQTT.get("CLIENT_ID",   "agv1")
+AGV_INDEX           = int(MQTT.get("AGV_INDEX", 1))
+MQTT_KEEPALIVE      = int(MQTT.get("KEEPALIVE", 3))
+MQTT_ACK_TIMEOUT    = float(MQTT.get("ACK_TIMEOUT", 1.0))
+MQTT_ACK_RETRIES    = int(MQTT.get("ACK_RETRIES", 3))
+MQTT_HEARTBEAT_HZ   = float(MQTT.get("HEARTBEAT_HZ", 1.0))
+MQTT_HEARTBEAT_MISS = int(MQTT.get("HEARTBEAT_MISS", 3))
+
+# Mission-FSM landmark tags (AGV-side: the cmd/mission schema carries only stop
+# tags, so the attach point and home tag are local config, aligned with the
+# shared rfid_mapping.md during commissioning — Phase B Step 11). 4-char hex
+# strings to match the RFID reader, or None to leave that confirm gate inert.
+FLEET_ATTACH_TAG    = MQTT.get("ATTACH_TAG", None)
+FLEET_HOME_TAG      = MQTT.get("HOME_TAG",   None)
+# Seconds a confirm gate may stay open before an advisory (non-blocking) alarm.
+FLEET_CONFIRM_ALARM_S = float(MQTT.get("CONFIRM_ALARM_S", 100.0))
 
 # ── Per-profile options ───────────────────────────────────────────────────────
 SENSOR_ORIENTATION = int(_params.get("sensor_orientation", 1))   # 1=normal, -1=flipped

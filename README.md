@@ -6,10 +6,13 @@ reads a magnetic guide sensor and a station-RFID reader, handles buttons / lidar
 the pusher (towing-pin) actuator over **Modbus TCP**, and serves a **Flask** web dashboard
 from a parallel daemon thread.
 
-> **Status:** this is the post-motor-swap build — wheels run over CANopen (was an analog
-> Modbus AO speed DAC + DO direction/brake coils). The fleet/MQTT ("EVO") integration
-> described in `_migration_plan_and_docs/` is **not yet in the code**; this unit currently
-> runs **standalone**.
+> **Status:** post-motor-swap **and** post-fleet build. Wheels run over CANopen (Phase A) and
+> the **EVO fleet/MQTT edge-node layer (Phase B) is now in the code** — `paho-mqtt` client,
+> mission FSM, traffic-hold, confirm gating, heartbeat/Last-Will. It is gated by the
+> `features.FLEET_MODE` flag: **on** → the store controller (`192.168.2.20`) coordinates this
+> unit over MQTT; **off** → the unit runs **standalone** exactly as before (no MQTT thread, no
+> behaviour change). The physical **reverse auto mode has been removed**; `direction` is now a
+> logical inbound/outbound flag only. See `_migration_plan_and_docs/agv_unit_update_plan.md` §11.
 
 ---
 
@@ -166,25 +169,30 @@ the profile's factory sequences are imported as editable presets (save to make t
 
 ```
                  ┌──────────────────────────┐
-                 │        EMERGENCY          │  (DI_EMERGENCY active → Cat-1 stop)
+                 │        EMERGENCY          │  (DI_EMERGENCY active / cmd estop → Cat-1 stop)
                  └──┬────────────────────────┘
                     │ RESET (target depends on mode switch)
           ┌─────────▼──────────┐
           │       ARMED        │◄─── end_cycle / reset / sensor error
           └─────────┬──────────┘
-              START │ + tape detected            REVERSE ◄── reverse_auto_request (+ tape)
-          ┌─────────▼──────────┐              (auto tape-follow, both wheels reverse)
-          │      RUNNING       │
-          │ (auto tape-follow  │
-          │   + sequences)     │
+              START │ + tape detected     (standalone: DI_START · fleet: accepted cmd/mission)
+          ┌─────────▼──────────┐
+          │      RUNNING       │   overlays: traffic_hold (Cat-2) · confirm gate (Cat-1)
+          │ (auto tape-follow  │   fleet: elaborated into the EVO mission FSM
+          │   + sequences)     │   (DEPART_HOME→AT_ATTACH→…→AT_HOME_UNLOAD→IDLE_HOME)
           └────────────────────┘
 
 MANUAL ◄──► ARMED/RUNNING   (mode switch live; manual jog incl. reverse)
 ```
 
+> The physical **reverse auto mode is removed** [EVO]. Auto is forward-only; `direction`
+> (`outbound`/`inbound`) is a *logical* flag for fleet `pos` reports, flipping at the swap on the
+> last serviced stop. The negative-velocity jog survives only for **manual** mode.
+
 **DI conventions:** `DI_EMERGENCY` NO contact (`True` = triggered); `DI_MODE_SWITCH` HIGH =
-MANUAL by default (`MODE_SWITCH_INVERT=1` flips — set on `agv-evo-01`); `DI_START` / `DI_RESET`
-momentary NO, rising-edge.
+MANUAL by default (`MODE_SWITCH_INVERT=1` flips — set on `agv-evo-01`); `DI_START` / `DI_RESET` /
+`DI_CONFIRM` momentary NO, rising-edge. In fleet mode the **store** dispatches via `cmd/mission`
+and `DI_CONFIRM` gates each human handoff.
 
 **Stops:** Cat-1 (emergency / lidar-inner / bumper) = 0 rpm + CiA-402 Quick stop, drive holds
 with its electromagnetic brake. Cat-2 (tape lost / idle hold) = 0 rpm, drives stay Operation

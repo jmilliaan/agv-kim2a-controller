@@ -14,6 +14,9 @@ core/sequence_engine.py and register it there.
 import logging
 import time
 
+import config
+import fleet
+
 logger = logging.getLogger(__name__)
 
 
@@ -30,6 +33,19 @@ async def rfid_processor(state, engine):
         logger.debug("[RFID] Tag read: %s", tag)
         state.last_rfid_tag    = tag       # expose to dashboard (4-char hex, e.g. "000A")
         state.last_rfid_tag_ts = time.time()
+
+        # ── Fleet `pos` publish [EVO] ─────────────────────────────────────────
+        # Every tag read feeds the store's traffic arbiter (its fast path). Fire
+        # BEFORE local dispatch and independent of the rfid_enabled soft-disable.
+        # (Over-publishing reused speed/corner tags is harmless: the arbiter keys
+        # on specific trigger tags + timing windows.)
+        if config.FLEET_MODE:
+            fleet.publish_pos(state, tag, state.direction)
+            # Advance the mission FSM (opens confirm gates at attach / stops / home).
+            # The local SequenceEngine below still owns the per-stop behaviour.
+            if state.mission_fsm is not None and state.current_mode == "running":
+                state.mission_fsm.on_tag(tag)
+
         if not state.rfid_enabled:
             # Soft-disabled: keep dashboard display alive, but do not trigger
             # any sequence. AGV continues tape-following at the active speed.

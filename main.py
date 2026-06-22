@@ -18,6 +18,7 @@ import modes
 from rfid_processor import rfid_processor
 from horn_controller import horn_controller
 from app.app import run_server, stop_server
+import fleet
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +128,25 @@ async def run():
     core_tasks.append(rfid_processor(state, engine))
     core_tasks.append(horn_controller(state))
     core_tasks.append(modes.mode_manager(state, engine))
+
+    # ── EVO fleet layer (MQTT edge node) ──────────────────────────────────────
+    # Started only under FLEET_MODE; with it off the unit is the standalone build
+    # byte-for-byte (no MQTT thread, no behaviour change). The MQTT client only
+    # reads/writes AMRState + queues — it never touches hardware.
+    if config.FLEET_MODE:
+        from drivers.mqtt_client import MQTTClient
+        from core.mission import MissionFSM
+        state.mission_fsm = MissionFSM(state,
+                                       attach_tag=config.FLEET_ATTACH_TAG,
+                                       home_tag=config.FLEET_HOME_TAG)
+        mqtt_client = MQTTClient(state)
+        core_tasks.append(mqtt_client.run(state))
+        core_tasks.append(fleet.heartbeat_publisher(state))
+        logger.info("FLEET_MODE  ENABLED  — MQTT edge node (broker %s:%d, id '%s')",
+                    config.MQTT_BROKER_IP, config.MQTT_BROKER_PORT, config.MQTT_CLIENT_ID)
+    else:
+        state.store_link_ok = False
+        logger.info("FLEET_MODE  DISABLED — standalone (no store coordination)")
 
     tasks = asyncio.gather(*core_tasks)
 

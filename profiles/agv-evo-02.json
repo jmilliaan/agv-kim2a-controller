@@ -1,10 +1,10 @@
 {
-  "_agv_id": "agv-evo-01",
-  "_description": "AGV EVO unit 01 (ex AGV B / TN) — CAN-BLDC towing AGV, pusher actuator and lidar",
+  "_agv_id": "agv-evo-02",
+  "_description": "AGV EVO unit 02 — CAN-BLDC towing AGV, pusher actuator and lidar. PROVISIONAL: tuning/motor_can copied from agv-evo-01; re-tune once this unit is on the floor.",
 
   "networking": {
-    "_comment": "EVO fleet net: this unit is agv1 at 192.168.2.22 on the shared 192.168.2.x net (store .20, AP .254). The old standalone .100 HMI address is retired. The 192.168.3.x field NIC (DIO + RFID) is unchanged.",
-    "LOCAL_IP":   "192.168.2.22",
+    "_comment": "EVO fleet net: this unit is agv2 at 192.168.2.24 on the shared 192.168.2.x net (store .20, AP .254). The 192.168.3.x field NIC (DIO + RFID) is unchanged.",
+    "LOCAL_IP":   "192.168.2.24",
     "DIO_IP":     "192.168.3.30",
     "MODBUS_PORT": 502,
     "DEVICE_ID":   1,
@@ -38,7 +38,7 @@
   },
 
   "motor_can": {
-    "_comment": "BLVD-KRD CiA-402 wheel drives. CHANNEL is the slcan device on the Ubuntu vehicle (e.g. /dev/ttyACM0); set null to auto-detect the CANable2. EDS resolves under can_bldc/. Provisional ramps/ceiling — tune on vehicle.",
+    "_comment": "PROVISIONAL — copied from agv-evo-01. BLVD-KRD CiA-402 wheel drives. CHANNEL is the slcan device on the Ubuntu vehicle (e.g. /dev/ttyACM0); set null to auto-detect the CANable2. Re-check per-side invert against this unit's wheel mounting on the floor.",
     "CHANNEL":         "/dev/ttyACM0",
     "BITRATE":         500000,
     "TTY_BAUDRATE":    3000000,
@@ -58,7 +58,7 @@
   },
 
   "horn_channels": {
-    "_comment": "Dedicated DO channel indices for the horns. regular_horn = steady ON in auto (running/reverse); alarm_horn = steady ON instead when an alarm is active.",
+    "_comment": "Dedicated DO channel indices for the horns. regular_horn = steady ON in auto (running); alarm_horn = steady ON instead when an alarm is active.",
     "regular_horn": 12,
     "alarm_horn": 13
   },
@@ -80,7 +80,7 @@
   },
 
   "pid_tuning": {
-    "_comment_high": "2026-05-12: DT halved to 50ms (sensor TPDO1 now at 100Hz). KP=2.4, TD=0.13 with N=2 filter (alpha~0.43 at DT=50ms).",
+    "_comment_high": "PROVISIONAL — copied from agv-evo-01. Re-tune on this unit.",
     "KP": 2.4,
     "TD": 0.13,
     "N":  2,
@@ -119,8 +119,8 @@
     "_comment": "EVO fleet coordination. CLIENT_ID is the WIRE id (agv1/agv2, fixed by the store's evo_topics.py) — NOT the agv-evo-0N profile name. Timer defaults are provisional; tune on the deployed network (mqtt_design §5/§7/§11).",
     "BROKER_IP":     "192.168.2.20",
     "BROKER_PORT":   1883,
-    "CLIENT_ID":     "agv1",
-    "AGV_INDEX":     1,
+    "CLIENT_ID":     "agv2",
+    "AGV_INDEX":     2,
     "KEEPALIVE":     3,
     "ACK_TIMEOUT":   1.0,
     "ACK_RETRIES":   3,

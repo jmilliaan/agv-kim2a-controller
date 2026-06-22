@@ -141,8 +141,13 @@ Per-file work. The **target behaviour** of each new/changed symbol is specified 
 
 ### 0.4 Phase B — EVO fleet integration
 
-Once Phase A runs, do Phase B per **[§11](#11-phase-b--evo-fleet-integration-checklist-evo)** (MQTT
-client, mission FSM, traffic-hold, confirm gating, liveness, dashboard role change, reverse removal).
+**Phase A is complete and verified (2026-06-22).** The wheels run over CANopen; the AO/DAC stage,
+`ao_queue`, and the `rpm↔voltage` model are gone; `motor_queue` + `CANMotorDriver` + the SICK MLS
+`CANReader` (shared bus) are in place; `requirements.txt` carries `canopen`; the active profile is
+`profiles/agv-evo-01.json` with a `motor_can` block. The unit is therefore **ready for Phase B**.
+Do Phase B per the **expanded, directly-followable checklist in
+[§11](#11-phase-b--evo-fleet-integration-checklist-evo)** (MQTT client, mission FSM, traffic-hold,
+confirm gating, liveness, dashboard role change, reverse removal).
 
 ---
 
@@ -958,33 +963,298 @@ service-restart** / `/api/restart` path.
 
 ## 11. Phase B — EVO fleet integration checklist **[EVO]**
 
-Ordered work to take the (post-Phase-A) standalone controller to a fleet edge node — see
-[§0.2](#02-migration-overview--two-phases), `evo-system.md`, and `evo-system_mqtt_design.md`.
-**Prerequisite: Phase A ([§0.3](#03-phase-a--motor-drive-swap-analog--can-bldc)) is complete** —
-the wheels already run over CANopen.
+Ordered, directly-followable work to take the (post-Phase-A) standalone controller to a fleet edge
+node. This section is the **work order** — §2b/§3/§5/§8/§9/§10 above are the normative target
+behaviour it implements; `evo-system.md` and `evo-system_mqtt_design.md` are normative for the FSM,
+traffic arbitration, liveness, and topic/QoS contract.
 
-1. **Networking & identity** — move the fleet NIC to `192.168.2.22`/`.24` (retire `.100`); keep the
-   `192.168.3.x` field NIC; rename `agv_tn.json` → `profiles/agv-evo-01.json` and add
-   `profiles/agv-evo-02.json`, each with `agv_index`, fleet IP, `mqtt.CLIENT_ID` (`agv1`/`agv2`), and
-   the `mqtt` block.
-2. **MQTT client** — add `paho-mqtt` and `drivers/mqtt_client.py`; **copy
-   `store-controller/evo_topics.py` verbatim** into the controller (it is the shared store↔AGV
-   contract — do not re-author it). Connect to the store broker with the stable **wire** client id
-   (`agv1`/`agv2`) + Last-Will on `agv/{id}/health`; subscribe `store/cmd/{id}/#`. Add
-   `mqtt_out_queue` + the MQTT-thread drain.
-3. **State & config** — add `FleetState` fields; add the `mqtt` profile block + `FLEET_MODE` flag +
-   `DI_CONFIRM`.
-4. **Publishers** — `pos` (every localizing tag read, with `direction`) folded into
-   `rfid_processor`; `heartbeat_publisher`; retained `state`; `event`/`ack` at the right transitions.
-5. **Command handlers** — `cmd/mission` → mission FSM; `cmd/traffic` → traffic-hold overlay;
-   `cmd/control` → pause/resume/reset/estop; all validated by `seq`, all ACKed.
-6. **Mode FSM** — elaborate `running` into the mission FSM; **remove reverse**; add the logical
-   `direction` flag and its flip at the last-stop swap.
-7. **Confirm gating** — `DI_CONFIRM` gates at attach/each stop/home; `confirm` events; 100 s advisory
-   alarm.
-8. **Liveness & safety** — heartbeat/LWT for store `single_agv`; ensure traffic hold is **not** a
-   fault; boot to safe idle, no mission resume.
-9. **Dashboard** — convert local app to monitor + manual fallback; add fleet panels; delete the
-   reverse page/endpoint.
-10. **Commission tag lead distances** — per junction, per the MQTT design §10 latency budget (or set
-    an approach speed cap); align this unit's mapping-store tag ids with `rfid_mapping.md`.
+> **You (the coding agent) operate inside `agv-kim2a-controller/`.** All paths below are relative to
+> that directory. The companion design docs are vendored locally at
+> `_migration_plan_and_docs/evo-system.md`, `_migration_plan_and_docs/evo-system_mqtt_design.md`,
+> and `_migration_plan_and_docs/rfid_mapping.md` — read them; do not rely on memory. The MQTT
+> contract module lives **outside** this dir at `../store-controller/evo_topics.py`.
+
+### 11.0 Starting state — verified 2026-06-22 (do not re-discover)
+
+**Phase A is complete.** Confirmed present and correct, so build on it without re-checking:
+- `state.py` exposes `motor_queue` (not `ao_queue`) + drive telemetry (`motor_actual_rpm`,
+  `motor_statusword`, `motor_fault`); `drivers/can_bldc.py` (`CANMotorDriver`) and
+  `drivers/can_mls.py` (`CANReader`, shared bus) exist; `drivers/modbus_ao.py` and
+  `drivers/can_mgs1600.py` are gone.
+- `rg -i 'ao_queue|AO_|voltage_to_rpm|rpm_to_voltage'` is clean in live code.
+- `requirements.txt` has `canopen`; `config.py` loads `motor_can`; `profiles/agv-evo-01.json` has a
+  `motor_can` block. `main.py` builds a clean `core_tasks` list (good MQTT insertion point).
+
+**Not yet present (this is the Phase B job).** Do not assume any of it exists:
+- No `paho-mqtt`; no `drivers/mqtt_client.py`; no `evo_topics.py` in this repo; no `core/mission.py`;
+  no `profiles/agv-evo-02.json`.
+- `state.py` has **no** `FleetState` and **no** `mqtt_out_queue`.
+- The profile has **no** `mqtt` block, **no** `DI_CONFIRM`, **no** `FLEET_MODE` flag; `LOCAL_IP` is
+  still the to-be-retired `192.168.2.100`.
+- **Reverse mode still exists** and must be removed in Step 7. Known sites (re-grep before deleting,
+  line numbers drift): `state.py` (`reverse_auto_request` field + shim), `modes.py` (the
+  `armed → reverse` and `reverse → armed` branches; `auto_mode(direction="reverse")`),
+  `app/app.py` (`/api/reverse_auto` + the `reverse_auto_request` field in `/api/state`),
+  `horn_controller.py` (`_AUTO_MODES = ("running", "reverse")` and its docstring).
+
+**Ground rules (carry through every step):**
+- **MQTT never touches hardware** (Key design rule 11). The MQTT thread only does GIL-safe
+  single-field writes to `AMRState` and `*.put()` onto queues. All motion still flows
+  `motion.py → motor_queue/do_queue`.
+- **`mqtt_out_queue` is the only asyncio→MQTT bridge.** Asyncio tasks `put()` `(topic, payload, qos,
+  retain)`; the MQTT thread drains and publishes. Never call `paho` from the event loop.
+- **Commands: validate `seq`, then ACK, then act.** Per-AGV monotonic `seq` de-dups retries
+  (`state.last_applied_seq`); commands are **never retained**; the `traffic_hold`/`state_change`
+  **event** (not the ACK) is the proof of physical effect.
+- **`FLEET_MODE` off ⇒ byte-for-byte the standalone build.** Every Phase-B task/handler is started
+  only when `config.FLEET_MODE` is true; with it off, no MQTT thread, no behaviour change.
+- After each step, keep `AGV_ID=agv-evo-01 python -c "import main"` importable on the dev box.
+
+### The store↔AGV contract (`evo_topics.py`) — use these names, do not invent
+
+Copied verbatim from `../store-controller/evo_topics.py` in Step 1. Authoritative symbols:
+- AGV→store leaves (this unit **publishes**): `health` (retained, LWT), `state` (retained),
+  `heartbeat`, `pos`, `event`, `ack`. Build with `agv_topic(agv_id, leaf)` → `agv/{id}/{leaf}`.
+- Store→AGV leaves (this unit **subscribes**): `mission`, `traffic`, `control`. Build with
+  `cmd_topic(agv_id, leaf)` → `store/cmd/{id}/{leaf}`. Subscribe `store/cmd/{id}/#` then route by
+  `parse`-ing the trailing leaf.
+- Event types: `state_change`, `confirm`, `fault_raised`, `fault_cleared`, `traffic_hold`,
+  `traffic_resumed`. Traffic actions: `stop`/`go`. Control actions: `pause`/`resume`/`reset`/`estop`.
+  ACK statuses: `accepted`/`rejected`/`superseded`. Directions: `inbound`/`outbound`.
+
+### Payload schemas (from `evo-system_mqtt_design.md` §8) — every message carries `ts`
+
+| Topic | Fields to emit / parse |
+|---|---|
+| `pos` (QoS1) | `ts, seq, tag_id, direction` |
+| `heartbeat` (QoS0) | `ts, seq, mission_state, last_tag` |
+| `health` (QoS1, retain, LWT) | `ts, status` (`online`/`offline`) |
+| `state` (QoS1, retain) | `ts, mission_state, trip_id, last_tag, direction, current_stop, fault{code,active}` |
+| `event` (QoS1) | `ts, seq, type, …type-specific` (`state_change{from,to}`·`confirm{stop,location}`·`fault{code,detail}`·`traffic_hold{}`·`traffic_resumed{}`) |
+| `ack` (QoS1) | `ts, cmd_id, status, reason?` |
+| `cmd/mission` (parse) | `ts, cmd_id, seq, trip_id, loop, stops[]{order,tag,trolley_type}, loading{front,rear}` |
+| `cmd/traffic` (parse) | `ts, cmd_id, seq, action` (`stop`/`go`) |
+| `cmd/control` (parse) | `ts, cmd_id, seq, action` (`pause`/`resume`/`reset`/`estop`) |
+
+QoS/retain are fixed by the spec (mqtt_design §4) — they belong in `drivers/mqtt_client.py` /
+`evo_topics`-driven publish helpers, **not** in the profile.
+
+---
+
+### Step 1 — Dependencies & the shared contract
+
+- [ ] Add `paho-mqtt>=2.0` to `requirements.txt` (mirror the existing comment style).
+- [ ] Copy `../store-controller/evo_topics.py` **verbatim** to `./evo_topics.py`. Do **not** edit or
+      re-author it — it is the shared contract. (If it later diverges, the store's copy wins.)
+- **Done-when:** `AGV_ID=agv-evo-01 python -c "import evo_topics, paho.mqtt.client"` succeeds on the
+  dev box.
+
+### Step 2 — Profile & config (`profiles/*.json`, `config.py`)
+
+- [ ] `profiles/agv-evo-01.json`: set `networking.LOCAL_IP` → `192.168.2.22`; drop the dead
+      `SLMP_IP`/`SLMP_PORT` keys; add `io_mapping.DI_CONFIRM` (pick a free DI bit — coordinate with
+      the wiring; the onboard confirm button); add `features.FLEET_MODE` (default `1`); add an `mqtt`
+      block:
+      ```json
+      "mqtt": {
+        "BROKER_IP": "192.168.2.20", "BROKER_PORT": 1883,
+        "CLIENT_ID": "agv1", "AGV_INDEX": 1,
+        "KEEPALIVE": 3, "ACK_TIMEOUT": 1.0, "ACK_RETRIES": 3,
+        "HEARTBEAT_HZ": 1.0, "HEARTBEAT_MISS": 3
+      }
+      ```
+- [ ] Create `profiles/agv-evo-02.json` as a copy with `LOCAL_IP=192.168.2.24`,
+      `mqtt.CLIENT_ID="agv2"`, `mqtt.AGV_INDEX=2`, and the second unit's `motor_can.invert` / tuning
+      (leave tuning identical until that unit is on the floor; flag it as provisional).
+- [ ] `config.py`: load `DI_CONFIRM = _params["io_mapping"].get("DI_CONFIRM", None)` (None-guarded
+      like the other optional DI); add `FLEET_MODE = bool(_feat.get("FLEET_MODE", 0))` (default
+      **off** so a profile without the flag stays standalone); load the `mqtt` block into module
+      constants (`MQTT = _params.get("mqtt", {})`, plus `MQTT_BROKER_IP`, `MQTT_CLIENT_ID`,
+      `AGV_INDEX`, and the timer constants with the provisional defaults above).
+- **Done-when:** both profiles import with no `KeyError`; `config.FLEET_MODE`, `config.MQTT_CLIENT_ID`
+  (`agv1`/`agv2`), and `config.DI_CONFIRM` resolve. The **wire id** comes from `mqtt.CLIENT_ID`, never
+  from `AGV_ID` (the `agv-evo-0N` profile name must not leak onto the wire).
+
+### Step 3 — State (`state.py`)
+
+- [ ] Add `self.mqtt_out_queue = asyncio.Queue()` in `AMRState.__init__` (the asyncio→MQTT bridge,
+      items `(topic, payload, qos, retain)`).
+- [ ] Add a `FleetState` domain (mirror the existing typed-domain + flat-shim pattern) with:
+      `mission` (dict: `loop`, ordered `active_stops[]`, `loading{front,rear}`, `trip_id`),
+      `mission_state` (str, the EVO FSM state; default `"IDLE_HOME"`),
+      `direction` (`"outbound"`/`"inbound"`, logical; default `"outbound"`),
+      `traffic_hold` (bool latch), `confirm_pending` (bool) + `confirm_ts` (float),
+      `last_applied_seq` (int, per-AGV monotonic; default `-1`), `store_link_ok` (bool).
+- [ ] Add flat property shims for each field, consistent with the rest of `AMRState`.
+- [ ] Remove `reverse_auto_request` (field + shim) — see Step 7 (do it there so reverse is removed
+      atomically, or stub now and delete in Step 7; either way it is gone by end of Phase B).
+- **Done-when:** `state = AMRState()` exposes `state.mission_state`, `state.traffic_hold`,
+  `state.last_applied_seq`, `state.mqtt_out_queue`; `import main` still works.
+
+### Step 4 — MQTT client driver (`drivers/mqtt_client.py`)
+
+Create `MQTTClient` — the only MQTT-aware module. It owns the `paho-mqtt` client in **its own
+thread** (paho's network loop is blocking) and bridges to the asyncio side only via `AMRState` +
+queues.
+
+- [ ] `__init__(state)`: build a `paho` client with the stable **wire** id `config.MQTT_CLIENT_ID`,
+      clean session (MQTT5 `cleanStart=True`/`sessionExpiry=0`, or 3.1.1 `clean_session=True`).
+      Register the **Last-Will** on `agv_topic(id,"health")` = `{"ts":…, "status":"offline"}`
+      (retained, QoS1).
+- [ ] `run(state)`: an asyncio task that starts the paho thread (`loop_start`), then awaits-drains
+      `state.mqtt_out_queue` and publishes each `(topic, payload, qos, retain)`. On connect: publish
+      `health=online` (retained), set `state.store_link_ok=True`, and `subscribe(cmd_topic(id,"#"))`.
+      On disconnect: `state.store_link_ok=False` (do **not** fault — see Step 8).
+- [ ] `on_message`: `parse` the leaf (`mission`/`traffic`/`control`), **validate `seq`** against
+      `state.last_applied_seq` (reject/skip `seq <= last_applied_seq`, but a re-sent equal `seq` →
+      `superseded`/idempotent no-op), update `state.last_applied_seq`, route the command into
+      `AMRState` (Step 6), and enqueue an `ack` (`accepted`/`rejected(reason)`/`superseded`).
+- [ ] Mark blocking paho calls so they never run on the event loop; the only asyncio touchpoint is
+      draining `mqtt_out_queue`.
+- [ ] Wire into `main.py`: import `MQTTClient`; when `config.FLEET_MODE`, append `mqtt_client.run(state)`
+      to `core_tasks` (alongside the existing always-on tasks). Leave a clean `else` (no task) so
+      standalone is unchanged. Set `state.store_link_ok=False` initially.
+- **Done-when (offline, no store):** against a local Mosquitto (or paho loopback) the client
+  connects, publishes retained `health=online`, sets the LWT, subscribes `store/cmd/{id}/#`,
+  de-dups by `seq`, emits an `ack`, and drains `mqtt_out_queue`. With `FLEET_MODE=0` none of this
+  starts.
+
+### Step 5 — Publishers (`rfid_processor.py`, new `heartbeat_publisher`, event/ack helpers)
+
+- [ ] **`pos`**: in `rfid_processor`, right after `state.last_rfid_tag = tag` and **before**
+      `engine.on_rfid_tag(tag)`, if `FLEET_MODE`, `put` a `pos` message on `mqtt_out_queue`
+      (`tag_id`=tag, `direction`=`state.direction`, monotonic `seq`). This must fire on **every
+      localizing tag read** (the arbiter's fast path) — independent of `rfid_enabled` soft-disable
+      and independent of whether a local rule matches. Non-localizing reused speed/corner tags need
+      not be published (mark them in the mapping or skip by id).
+- [ ] **`heartbeat_publisher(state)`**: new asyncio task, ~`config.HEARTBEAT_HZ` (QoS0, not retained)
+      → `heartbeat{mission_state,last_tag}`; also refresh the retained `state` snapshot. Append to
+      `core_tasks` only under `FLEET_MODE`.
+- [ ] **`event`/`ack` helpers**: a small helper (e.g. on `AMRState` or a `fleet.py` util) that
+      `put`s typed `event` messages. Call it at the transitions in Steps 6–8 (`state_change`,
+      `confirm`, `fault_raised/cleared`, `traffic_hold/resumed`). `ack` is emitted by the MQTT client
+      (Step 4) on command receipt.
+- **Done-when:** a tag read with `FLEET_MODE` on produces exactly one `pos` publish carrying the
+  current `direction`; heartbeats stream at ~1 Hz; the retained `state` topic reflects
+  `mission_state`.
+
+### Step 6 — Command handlers (routing in `mqtt_client` → `AMRState`, acted on in `modes`)
+
+Routing in `on_message` writes only `AMRState`; the **acting** happens in `mode_manager`/`auto_mode`.
+
+- [ ] `cmd/mission` → set `state.mission` (loop, ordered `active_stops[]`, `loading`, `trip_id`) and
+      wake `mode_manager` (it picks it up as the `armed → running` trigger in fleet mode). Reject if
+      not in a state that can accept a mission (`ack rejected(reason)`).
+- [ ] `cmd/traffic` → set/clear `state.traffic_hold` (Step 7 overlay). `stop` latches; `go` clears.
+- [ ] `cmd/control` → map `estop`→emergency, `reset`→back to armed (clears mission), `pause`/`resume`
+      → commanded Cat-2 hold/resume (analogous to traffic-hold).
+- [ ] Every command path: `seq`-validated (Step 4) and ACKed exactly once.
+- **Done-when:** publishing each command to `store/cmd/{id}/…` flips the right `AMRState` field and
+  yields one ACK; a replayed `seq` is a no-op.
+
+### Step 7 — Mission FSM + reverse removal (`modes.py`, new `core/mission.py`)
+
+- [ ] **Remove reverse first** (clears dead branches before elaborating `running`): delete the
+      `armed → reverse` / `reverse → armed` branches in `mode_manager`, the
+      `auto_mode(direction="reverse")` path (auto is **forward-only**), `state.reverse_auto_request`,
+      the `app/app.py` `/api/reverse_auto` route + its `/api/state` field, and set
+      `horn_controller._AUTO_MODES = ("running",)` (update its docstring). Re-grep `reverse` after —
+      only the **logical** `direction` flag should remain.
+- [ ] **Elaborate `running`** into the EVO mission FSM (`evo-system.md` §10.3 is normative). Put the
+      mission model + FSM helpers in **`core/mission.py`** (or fold into `modes.py`):
+      `IDLE_HOME → DEPART_HOME → AT_ATTACH(load+confirm) → TRAVEL_1 → AT_STOP_1(swap+confirm)
+      → [TRAVEL_2 → AT_STOP_2(swap+confirm)] → RETURN → AT_HOME_UNLOAD(confirm) → IDLE_HOME`
+      (bracketed second stop skipped on single-trolley trips). Publish `mission_state` on every
+      transition (retained `state` + a `state_change` event).
+- [ ] **Keep the local SequenceEngine/mapping store authoritative for per-stop behaviour** (§8 Fleet
+      mapping authority). The mission supplies *which loop / which active stops / loading order*; the
+      **existing RFID rules** still decide where to stop, pusher actuation, slow zones, corner speed.
+      Join is **by RFID tag id**: `cmd/mission.stops[].tag` == the mapping-store tag ids (both from
+      `rfid_mapping.md`). `start_cycle`↔depart; `end_cycle`↔completion at home.
+- [ ] **`direction` flag**: set `outbound` on depart; **flip to `inbound` at the swap on the last
+      serviced stop** (mirrors `evo-system.md` §11.2). It is logical, **not** a drive direction;
+      attach it to every `pos`.
+- [ ] **In fleet mode the trigger for `armed → running` is an accepted `cmd/mission`** (plus tape
+      detected), not `DI_START`. Boot to **safe idle** (`armed`, no mission); **no mission resume**
+      across restart (store re-issues).
+- **Done-when:** `rg -i 'reverse'` shows only the logical `direction` machinery; a simulated
+  `cmd/mission` walks the FSM through to `end_cycle` with `mission_state` published at each step; the
+  `direction` flip lands at the last-stop swap.
+
+### Step 8 — Confirm gating + traffic-hold overlay
+
+- [ ] **Confirm gating** (`DI_CONFIRM`, rising edge — §5 confirm gating): gate departure at
+      `AT_ATTACH`, each `AT_STOP_n`, and `AT_HOME_UNLOAD` — the AGV will not move until pressed. Each
+      press emits a `confirm{stop,location}` event and clears `state.confirm_pending`. If not pressed
+      within **100 s**, raise an **advisory** alarm (web + `event`) but keep waiting. The web manual
+      fallback can also satisfy a confirm when detached.
+- [ ] **Traffic-hold overlay** (`state.traffic_hold` — §5 / {#evo-traffic-hold-overlay}): a non-fault
+      overlay on `running`. `stop` → `auto_mode` does a **Cat-2 hold** (zero velocity, **no** brake);
+      emit the `traffic_hold` event **only once actually stopped** (store treats it as still moving
+      until then). `go` → resume tape-following, emit `traffic_resumed`. Distinct from
+      emergency/`system_error`; no `DI_RESET` needed; idempotent by `seq`.
+- **Done-when:** the FSM blocks at each handoff until `DI_CONFIRM`; a `cmd/traffic=stop` produces a
+  Cat-2 hold and a `traffic_hold` event **after** the wheels reach zero; `go` resumes and emits
+  `traffic_resumed`.
+
+### Step 9 — Liveness & safety (`safety_watchdog.py` boundaries, boot posture)
+
+- [ ] Confirm fleet liveness is **independent** of `safety_watchdog`: the store detects a down AGV
+      via missed `heartbeat` + the `health` LWT (§9 Fleet liveness). This unit does nothing special
+      for the *other* AGV being down.
+- [ ] **Loss of the store link is not a motion fault**: if the broker is unreachable, keep running
+      the current mission/standalone behaviour; only `state.store_link_ok=False`.
+- [ ] **Traffic hold must never enter `system_error`/`emergency`** or engage the brake (re-assert the
+      Step 8 invariant).
+- [ ] **Boot to safe idle, no mission resume** (already the FSM default from Step 7) — re-verify the
+      restart path leaves the unit `armed`/`IDLE_HOME` with no mission.
+- **Done-when:** killing the broker mid-mission does not fault the drive; restart comes up idle with
+  no resumed mission.
+
+### Step 10 — Dashboard (`app/app.py`, `app/templates/`)
+
+- [ ] Convert the local app to **monitor + manual fallback** (§10 role change). Add fleet panels to
+      Home/`/api/state`: `mission`/`mission_state`, logical `direction`, `traffic_hold`,
+      `confirm_pending`, `store_link_ok`; show CiA-402 actual rpm / drive status (already available).
+      Add `DI_CONFIRM` to the IO page labels.
+- [ ] Delete the reverse page/endpoint (done in Step 7) and ensure no template references it.
+- [ ] Manual page stays usable for jog/maintenance when detached/offline (and can satisfy a confirm),
+      but must not issue dispatch that competes with the store while `FLEET_MODE` and `store_link_ok`.
+- **Done-when:** Home shows live fleet state; no `reverse` UI remains; manual fallback still jogs.
+
+### Step 11 — Commissioning (on-vehicle / network, after the code lands)
+
+- [ ] Move the fleet NIC to `192.168.2.22` (`agv1`) / `.24` (`agv2`); keep the `192.168.3.x` field
+      NIC (DIO + RFID) unchanged. Retire `192.168.2.100`.
+- [ ] Align this unit's mapping-store tag ids with `_migration_plan_and_docs/rfid_mapping.md` (the
+      shared inventory the store also uses).
+- [ ] Commission **per-junction pre-junction tag lead distances** against the measured command
+      round-trip latency + stopping distance (mqtt_design §10); where geometry can't provide the lead
+      distance, set an **approach speed cap** via the mission/segment profile (not an MQTT change).
+
+---
+
+### Phase B — overall done-when (acceptance)
+
+**Static / dev-box (Windows, no hardware):**
+- `rg -i 'ao_queue|AO_|voltage_to_rpm|rpm_to_voltage'` clean (Phase A) **and**
+  `rg -i 'reverse_auto|/api/reverse_auto|"reverse"'` shows no reverse *mode* (only the logical
+  `direction` flag).
+- `AGV_ID=agv-evo-01 python -c "import main"` succeeds; `config` loads `mqtt` + `motor_can` +
+  `DI_CONFIRM` + `FLEET_MODE` with no `KeyError`.
+- **MQTT offline check** (local Mosquitto / paho loopback): connect + LWT, `store/cmd/{id}/#`
+  subscribe, `seq` de-dup, ACK emission, `mqtt_out_queue` drain, retained `state`/`health` — all
+  without the real store.
+- `FLEET_MODE=0` reproduces the standalone build (no MQTT thread, no behaviour change).
+
+**On-vehicle / with store:** end-to-end `cmd/mission` dispatch walks the mission FSM; confirm gating
+blocks at each handoff; `cmd/traffic=stop/go` holds/resumes with the event emitted only after the
+wheels stop; heartbeat/LWT drive the store's `single_agv` mode; drive-fault recovery and lidar/bumper
+stops behave as in Phase A.
+
+### Suggested commit sequence (one reviewable commit per step)
+
+`B1` deps+contract → `B2` profile/config → `B3` state → `B4` mqtt client (+main wiring) →
+`B5` publishers → `B6` command handlers → `B7` mission FSM + reverse removal → `B8` confirm +
+traffic-hold → `B9` liveness/safety → `B10` dashboard. (`B11` commissioning is config/on-vehicle, not
+code.) Each commit must keep `import main` green and `FLEET_MODE=0` standalone-equivalent.

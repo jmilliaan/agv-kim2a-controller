@@ -4,6 +4,7 @@ import time
 
 import config
 import motion
+import fleet
 
 from core.mapping_store import load_rules, compile_to_sequences
 from core.pid import PIDController
@@ -11,31 +12,33 @@ from _debugging.plotter import RunRecorder
 
 logger = logging.getLogger(__name__)
 
+# [EVO] Below this |rpm| (CiA-402 actual velocity, both wheels) the AGV is treated
+# as physically stopped — gates the traffic_hold event ("ACK ≠ stopped").
+_STOP_RPM_EPS = 5.0
+
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  AUTO MODE  (forward and reverse unified)
+#  AUTO MODE  (forward only — physical reverse removed [EVO])
 # ══════════════════════════════════════════════════════════════════════════════
 
-async def auto_mode(state, direction="forward", engine=None):
-    """Tape-following PID loop.
+async def auto_mode(state, engine=None):
+    """Tape-following PID loop. Forward only — the AGV never drives backward in
+    auto ([EVO]; the logical inbound/outbound `direction` flag is NOT a drive
+    direction). Sensor at front, full speed-mode logic, RFID sequence stops and
+    marker hooks active.
+
+    In FLEET_MODE this loop also honours the non-fault Cat-2 overlays —
+    `traffic_hold` (cmd/traffic), `commanded_pause` (cmd/control), and
+    `confirm_pending` (mission confirm gate) — holding at zero velocity with no
+    electromagnetic brake so it can resume smoothly.
 
     Args:
-        direction: "forward" — sensor at front, speed modes active, sequence
-                               stops active, RFID marker hooks active.
-                   "reverse" — sensor at rear (error sign inverted), fixed SLOW
-                               speed, no sequence stops, no RFID.
-        engine:    SequenceEngine instance (Phase 3).  Pass None until then;
-                   the marker-hook calls are guarded with `if engine`.
+        engine: SequenceEngine instance.  Pass None to disable marker hooks.
     """
     _orient = float(config.SENSOR_ORIENTATION)
-    if direction == "forward":
-        await motion.idle(state)
-        await motion.set_forward(state, 0.0)
-        error_sign = -1.0 * _orient
-    else:
-        await motion.idle(state)
-        await motion.set_reverse(state, 0.0)
-        error_sign = 1.0 * _orient
+    await motion.idle(state)
+    await motion.set_forward(state, 0.0)
+    error_sign = -1.0 * _orient
 
     # Initialise PID with SLOW gains; forward mode will switch to HIGH on first
     # cycle if speed_mode == "HIGH".
@@ -57,6 +60,7 @@ async def auto_mode(state, direction="forward", engine=None):
     tape_was_lost        = False
     was_sequence_stopped = False
     last_speed_mode      = None   # tracks when gain set must change
+    _traffic_hold_emitted = False  # [EVO] traffic_hold event sent once stopped
 
     recorder = RunRecorder()
     recorder.start()
@@ -86,8 +90,42 @@ async def auto_mode(state, direction="forward", engine=None):
                 await asyncio.sleep(config.DT)
                 continue
 
-            # ── Sequence stop (forward only) ──────────────────────────────────
-            if direction == "forward" and state.sequence_stop:
+            # ── Fleet overlays [EVO] ──────────────────────────────────────────
+            # traffic_hold / commanded_pause = Cat-2 hold (zero velocity, NO
+            # electromagnetic brake — resume smoothly). The confirm gate is a
+            # human handoff, so it holds with the brake (Cat-1). All are distinct
+            # from emergency / system_error. traffic_resumed fires on the falling
+            # edge of traffic_hold even if still held by a confirm/pause.
+            if _traffic_hold_emitted and not state.traffic_hold:
+                fleet.emit_traffic_resumed(state)
+                _traffic_hold_emitted = False
+                state.log_event("INFO", "TRAFFIC RESUMED — tape-following")
+            if state.traffic_hold or state.commanded_pause:
+                await motion.idle(state)
+                current_target_speed = 0.0
+                pid.reset()
+                # ACK ≠ stopped: emit the traffic_hold event only once the wheels
+                # have actually reached zero (per CiA-402 actual rpm telemetry).
+                if state.traffic_hold and not _traffic_hold_emitted:
+                    _al = abs(state.motor_actual_rpm.get("left",  0) or 0)
+                    _ar = abs(state.motor_actual_rpm.get("right", 0) or 0)
+                    if max(_al, _ar) < _STOP_RPM_EPS:
+                        fleet.emit_traffic_hold(state)
+                        _traffic_hold_emitted = True
+                        state.log_event("INFO", "TRAFFIC HOLD — stopped (Cat-2, no brake)")
+                await asyncio.sleep(config.DT)
+                continue
+            if state.confirm_pending:
+                # Human handoff gate — hold firmly with the electromagnetic brake
+                # until the onboard confirm is pressed (mode_manager advances FSM).
+                await motion.set_brake(state)
+                current_target_speed = 0.0
+                pid.reset()
+                await asyncio.sleep(config.DT)
+                continue
+
+            # ── Sequence stop ─────────────────────────────────────────────────
+            if state.sequence_stop:
                 if not was_sequence_stopped:
                     logger.info("[AUTO] Sequence stop — holding.")
                     await motion.set_brake(state)
@@ -103,30 +141,27 @@ async def auto_mode(state, direction="forward", engine=None):
                 was_sequence_stopped = False
 
             # ── Target speed and PID gain selection ───────────────────────────
-            if direction == "forward":
-                if state.speed_mode == "EXTRA_SLOW":
-                    target_speed = state.auto_extra_slow_speed
-                elif state.speed_mode == "SLOW":
-                    target_speed = state.auto_slow_speed
-                else:
-                    target_speed = state.auto_high_speed
-
-                # Only switch gains when speed_mode actually changes — avoids
-                # redundant recomputation of the derivative filter coefficient.
-                if state.speed_mode != last_speed_mode:
-                    if state.speed_mode == "HIGH":
-                        pid.update_gains(config.KP, config.TD, config.N,
-                                         config.V_RED_COEF)
-                    else:
-                        pid.update_gains(config.KP_SLOW, config.TD_SLOW,
-                                         config.N_SLOW, config.V_RED_COEF_SLOW)
-                    last_speed_mode = state.speed_mode
+            if state.speed_mode == "EXTRA_SLOW":
+                target_speed = state.auto_extra_slow_speed
+            elif state.speed_mode == "SLOW":
+                target_speed = state.auto_slow_speed
             else:
-                target_speed = state.auto_slow_speed   # reverse: fixed
+                target_speed = state.auto_high_speed
+
+            # Only switch gains when speed_mode actually changes — avoids
+            # redundant recomputation of the derivative filter coefficient.
+            if state.speed_mode != last_speed_mode:
+                if state.speed_mode == "HIGH":
+                    pid.update_gains(config.KP, config.TD, config.N,
+                                     config.V_RED_COEF)
+                else:
+                    pid.update_gains(config.KP_SLOW, config.TD_SLOW,
+                                     config.N_SLOW, config.V_RED_COEF_SLOW)
+                last_speed_mode = state.speed_mode
 
             # ── DI snapshot ───────────────────────────────────────────────────
             _di = state.latest_di
-            _label = "AUTO" if direction == "forward" else "REVERSE"
+            _label = "AUTO"
 
             # ── Impact bumper ─────────────────────────────────────────────────
             if config.DI_BUMPER is not None and _di is not None and _di[config.DI_BUMPER]:
@@ -151,10 +186,7 @@ async def auto_mode(state, direction="forward", engine=None):
                 logger.info("[%s] BUMPER CLEARED — waiting 2 s before resume", _label)
                 state.log_event("INFO", f"[{_label}] BUMPER CLEARED — resuming in 2 s")
                 await asyncio.sleep(2.0)
-                if direction == "forward":
-                    await motion.set_forward(state, 0.0)
-                else:
-                    await motion.set_reverse(state, 0.0)
+                await motion.set_forward(state, 0.0)
                 tape_was_lost = False
                 continue
 
@@ -185,11 +217,10 @@ async def auto_mode(state, direction="forward", engine=None):
 
             if sensor is not None:
 
-                if direction == "forward":
-                    # SICK MLS reports a numeric marker_code, not left/right markers;
-                    # the left/right marker hooks below stay (always False) for compat
-                    # and are unused by the current RFID-only profile.
-                    logger.debug("[AUTO] marker_code=%s", sensor.get("marker_code", 0))
+                # SICK MLS reports a numeric marker_code, not left/right markers;
+                # the left/right marker hooks below stay (always False) for compat
+                # and are unused by the current RFID-only profile.
+                logger.debug("[AUTO] marker_code=%s", sensor.get("marker_code", 0))
 
                 # ── Tape-loss guard ───────────────────────────────────────────
                 if not sensor["tape_detected"]:
@@ -205,14 +236,11 @@ async def auto_mode(state, direction="forward", engine=None):
                 if tape_was_lost:
                     logger.info("[%s] TAPE REACQUIRED — resuming", _label)
                     state.log_event("INFO", f"[{_label}] TAPE REACQUIRED — resuming")
-                    if direction == "forward":
-                        await motion.set_forward(state, 0.0)
-                    else:
-                        await motion.set_reverse(state, 0.0)
+                    await motion.set_forward(state, 0.0)
                     tape_was_lost = False
 
-                # ── Marker hook (forward only — sequence engine, Phase 3) ──────
-                if direction == "forward" and engine is not None:
+                # ── Marker hook (sequence engine) ──────────────────────────────
+                if engine is not None:
                     if sensor["left_marker"]:
                         await engine.on_marker("left")
                     if sensor["right_marker"]:
@@ -234,12 +262,6 @@ async def auto_mode(state, direction="forward", engine=None):
                 pv = sensor["left_mm"]
                 left_rpm, right_rpm, dbg = pid.compute(pv, base_rpm, error_sign)
 
-                # Reverse auto keeps the same PID magnitudes/steering but drives
-                # both wheels backward (negative CiA-402 Target velocity).
-                if direction == "reverse":
-                    left_rpm  = -left_rpm
-                    right_rpm = -right_rpm
-
                 # Clamp each wheel to the drive ceiling and queue signed rpm.
                 left_rpm  = max(-config.MOTOR_MAX_RPM, min(config.MOTOR_MAX_RPM, left_rpm))
                 right_rpm = max(-config.MOTOR_MAX_RPM, min(config.MOTOR_MAX_RPM, right_rpm))
@@ -260,7 +282,7 @@ async def auto_mode(state, direction="forward", engine=None):
                                 right_rpm=right_rpm, pid_output=dbg["output"],
                                 d_term=dbg["d"])
 
-                label = state.speed_mode if direction == "forward" else "REVERSE"
+                label = state.speed_mode
                 logger.debug(
                     "[%s] Target=%.2fm/s e=%+.1fmm P=%+.1f I=%+.1f D=%+.1f "
                     "out=%+.1f L=%.1f R=%.1frpm Vred=%.1frpm",
@@ -453,18 +475,25 @@ async def manual_mode(state):
 async def mode_manager(state, engine=None):
     """Central state machine.
 
-    States: None | "manual" | "armed" | "running" | "reverse" | "emergency"
+    States: None | "manual" | "armed" | "running" | "emergency"
+    (The physical "reverse" auto mode is removed [EVO]; `state.direction` is a
+    logical inbound/outbound flag only.)
 
     DI conventions (from profile)
     ------------------------------------------------
     DI_MODE_SWITCH : physical HIGH = MANUAL by default.
                      Set MODE_SWITCH_INVERT=1 in profile to flip (HIGH = AUTO).
     DI_EMERGENCY   : True = emergency triggered
-    DI_START       : momentary NO — rising edge = start auto
+    DI_START       : momentary NO — rising edge = start auto (standalone)
     DI_RESET       : momentary NO — rising edge = stop / reset
+    DI_CONFIRM     : momentary NO — rising edge = mission confirm (fleet) [EVO]
 
-    engine: SequenceEngine (Phase 3). Passed through to auto_mode and used for
-            cancel_armed() on mode transitions. None until Phase 3 is wired up.
+    Fleet overlays (FLEET_MODE only): an accepted cmd/mission triggers
+    armed → running (not DI_START); cmd/control estop/reset map onto
+    emergency / armed; confirm gating + traffic-hold are overlays on running.
+
+    engine: SequenceEngine. Passed through to auto_mode and used for
+            cancel_armed() on mode transitions.
     """
 
     current_mode  = None
@@ -472,6 +501,8 @@ async def mode_manager(state, engine=None):
     startup_task  = None   # ARMED→running pusher-up routine (deterministic start-from-home)
     last_start    = False
     last_reset    = False
+    last_confirm  = False  # [EVO] DI_CONFIRM rising-edge tracker
+    confirm_alarm_raised = False  # [EVO] 100 s advisory alarm fired for the open gate
 
     # Hardened start-from-home: when RFID sequences are enabled, every START
     # press deterministically drives the pusher UP and holds the AGV for 5 s,
@@ -538,6 +569,23 @@ async def mode_manager(state, engine=None):
             engine.cancel_active_sequence()
             engine.cancel_cooldowns()
 
+    def _abort_mission():
+        """[EVO] Drop any active mission and reset the mission FSM to safe idle.
+        Called on every halting transition back to armed / emergency, so a restart
+        never resumes a mission (the store re-issues cmd/mission)."""
+        nonlocal confirm_alarm_raised
+        confirm_alarm_raised = False
+        if not config.FLEET_MODE:
+            return
+        state.mission = None
+        state.mission_start_request = False
+        state.commanded_pause = False
+        state.traffic_hold = False
+        state.confirm_pending = False
+        state.web_confirm_request = False
+        if state.mission_fsm is not None:
+            state.mission_fsm.abort()
+
     while True:
         if state.latest_di is None:
             await asyncio.sleep(0.01)
@@ -555,6 +603,20 @@ async def mode_manager(state, engine=None):
         last_start = btn_start
         last_reset = btn_reset
 
+        # ── Confirm button rising edge (fleet mission gating) [EVO] ────────────
+        btn_confirm = (config.DI_CONFIRM is not None
+                       and len(di) > config.DI_CONFIRM and di[config.DI_CONFIRM])
+        confirm_rising = btn_confirm and not last_confirm
+        last_confirm = btn_confirm
+
+        # ── Fold commanded control (cmd/control) into the physical triggers ────
+        # estop → emergency overlay; reset → back to armed (clears mission).
+        emergency_trig = (not emergency_safe) or (config.FLEET_MODE and state.cmd_estop)
+        reset_trig     = reset_rising or (config.FLEET_MODE and state.control_reset_request)
+        # armed → running: a physical START press standalone; an accepted
+        # cmd/mission in fleet mode (the store dispatches, not the panel).
+        start_trig = (state.mission_start_request if config.FLEET_MODE else start_rising)
+
         # ── System error guard (watchdog — Phase 4) ───────────────────────────
         # Critical driver lost (DIO) — stop everything including manual
         if state.system_error and current_mode not in ("emergency", None):
@@ -564,6 +626,7 @@ async def mode_manager(state, engine=None):
             await _cancel_active()
             await _flush_and_brake()
             _reset_sequence_state()
+            _abort_mission()
             await asyncio.sleep(0.01)
             continue
 
@@ -590,18 +653,20 @@ async def mode_manager(state, engine=None):
             await _cancel_active()
             await _flush_and_idle()
             _reset_sequence_state()
+            _abort_mission()
             current_mode       = "armed"
             state.current_mode = current_mode
             await asyncio.sleep(0.01)
             continue
 
         # Sensor driver lost (CAN/RFID) — only stop auto modes; manual stays up
-        if state.sensor_error and current_mode in ("running", "reverse", "armed"):
+        if state.sensor_error and current_mode in ("running", "armed"):
             detail = state.sensor_error_detail or "unknown"
             logger.warning("SENSOR ERROR — sensor driver lost [%s], returning to armed", detail)
             await _cancel_active()
             await _flush_and_idle()
             _reset_sequence_state()
+            _abort_mission()
             current_mode       = "armed"
             state.current_mode = current_mode
 
@@ -609,16 +674,20 @@ async def mode_manager(state, engine=None):
         #  EMERGENCY
         # ══════════════════════════════════════════════════════════════════════
 
-        if not emergency_safe:
+        if emergency_trig:
             if current_mode != "emergency":
                 logger.critical("!! EMERGENCY — all motion stopped")
                 state.log_event("CRITICAL", "EMERGENCY STOP — all motion halted")
                 await _cancel_active()
                 await _flush_and_brake()
                 _reset_sequence_state()
+                _abort_mission()
                 state.emergency_active = True
                 current_mode           = "emergency"
                 state.current_mode     = current_mode
+                if config.FLEET_MODE:
+                    fleet.emit_fault_raised(state, "emergency",
+                                            "estop" if state.cmd_estop else "di_emergency")
             await asyncio.sleep(0.01)
             continue
 
@@ -627,13 +696,18 @@ async def mode_manager(state, engine=None):
         # ══════════════════════════════════════════════════════════════════════
 
         if current_mode == "emergency":
-            if not reset_rising:
+            if not reset_trig:
                 await asyncio.sleep(0.01)
                 continue
 
-            logger.info("Emergency cleared by operator RESET.")
-            state.log_event("INFO", "Emergency cleared by operator RESET")
+            logger.info("Emergency cleared by RESET.")
+            state.log_event("INFO", "Emergency cleared by RESET")
             state.emergency_active = False
+            # Consume the commanded latches so they don't immediately re-trigger.
+            state.cmd_estop = False
+            state.control_reset_request = False
+            if config.FLEET_MODE:
+                fleet.emit_fault_cleared(state, "emergency", "reset")
 
             if switch_manual:
                 logger.info("Entering MANUAL.")
@@ -670,6 +744,7 @@ async def mode_manager(state, engine=None):
             await _cancel_active()
             await _flush_and_idle()
             _reset_sequence_state()
+            _abort_mission()
             active_task        = asyncio.create_task(manual_mode(state))
             current_mode       = "manual"
             state.current_mode = current_mode
@@ -681,19 +756,20 @@ async def mode_manager(state, engine=None):
             current_mode       = "armed"
             state.current_mode = current_mode
 
-        elif current_mode == "armed" and start_rising:
+        elif current_mode == "armed" and start_trig:
             tape_present  = False
             latest_sensor = None
             while not state.sensor_queue.empty():
                 latest_sensor = state.sensor_queue.get_nowait()
 
+            _trig_src = "cmd/mission" if config.FLEET_MODE else "DI_START"
             logger.info(
-                "START pressed — sensor_queue had data: %s | sensor_error: %s "
-                "| can_last_rx: %.2fs ago | di[START]=%s",
+                "START (%s) — sensor_queue had data: %s | sensor_error: %s "
+                "| can_last_rx: %.2fs ago",
+                _trig_src,
                 latest_sensor is not None,
                 state.sensor_error,
                 time.time() - state.can_last_rx,
-                btn_start,
             )
 
             if latest_sensor is not None:
@@ -714,6 +790,10 @@ async def mode_manager(state, engine=None):
 
             if latest_sensor is not None and not tape_present:
                 logger.warning("START ignored — tape not detected. Place AGV on tape first.")
+                # In fleet mode a tapeless mission start is refused; drop the
+                # request so it doesn't spin (the store will re-dispatch).
+                if config.FLEET_MODE:
+                    state.mission_start_request = False
             elif tape_present:
                 logger.info("START — tape confirmed, launching AUTO mode.")
                 # If RFID sequences are enabled, hold the AGV in place from the
@@ -724,47 +804,50 @@ async def mode_manager(state, engine=None):
                 active_task        = asyncio.create_task(auto_mode(state, engine=engine))
                 current_mode       = "running"
                 state.current_mode = current_mode
+                # [EVO] Begin the mission FSM (DEPART_HOME, outbound).
+                if config.FLEET_MODE:
+                    state.mission_start_request = False
+                    confirm_alarm_raised = False
+                    if state.mission_fsm is not None:
+                        state.mission_fsm.start(state.mission)
                 if state.rfid_enabled:
                     logger.info("START from home — pusher UP, holding %.1fs", START_FROM_HOME_HOLD_S)
                     state.log_event("INFO",
                         f"START from home — pusher UP, holding {START_FROM_HOME_HOLD_S:.1f}s")
                     startup_task = asyncio.create_task(_start_from_home_routine())
 
-        elif current_mode == "armed" and state.reverse_auto_request:
-            tape_present  = False
-            latest_sensor = None
-            while not state.sensor_queue.empty():
-                latest_sensor = state.sensor_queue.get_nowait()
-            if latest_sensor is not None:
-                tape_present = latest_sensor.get("tape_detected", False)
-                await state.sensor_queue.put(latest_sensor)
-
-            if not tape_present:
-                logger.warning("REVERSE START ignored — tape not detected.")
-                state.reverse_auto_request = False
-            else:
-                logger.info("REVERSE START — launching reverse auto mode.")
-                active_task        = asyncio.create_task(
-                    auto_mode(state, direction="reverse"))
-                current_mode       = "reverse"
-                state.current_mode = current_mode
-
-        elif current_mode == "running" and reset_rising:
+        elif current_mode == "running" and reset_trig:
             logger.info("RESET — stopping AUTO, returning to ARMED.")
             await _cancel_active()
             await _flush_and_idle()
             _reset_sequence_state()
+            _abort_mission()
+            state.control_reset_request = False
             current_mode       = "armed"
             state.current_mode = current_mode
-            logger.info("ARMED. Press START to run again.")
+            logger.info("ARMED. Awaiting %s.", "cmd/mission" if config.FLEET_MODE else "START")
 
-        elif current_mode == "reverse" and (reset_rising or not state.reverse_auto_request):
-            logger.info("STOP — stopping reverse auto, returning to ARMED.")
-            await _cancel_active()
-            await _flush_and_idle()
-            state.reverse_auto_request = False
-            current_mode               = "armed"
-            state.current_mode         = current_mode
-            logger.info("ARMED.")
+        # ── Confirm gating (fleet running) [EVO] ──────────────────────────────
+        if config.FLEET_MODE and current_mode == "running" and state.mission_fsm is not None:
+            # A press (physical DI_CONFIRM rising edge, or the web fallback) closes
+            # the open handoff gate and advances the mission FSM.
+            if state.web_confirm_request:
+                state.web_confirm_request = False
+                if state.mission_fsm.on_confirm():
+                    confirm_alarm_raised = False
+            elif confirm_rising:
+                if state.mission_fsm.on_confirm():
+                    confirm_alarm_raised = False
+                    logger.info("[MISSION] CONFIRM pressed at %s", state.confirm_location)
+
+            # 100 s advisory alarm — the AGV keeps waiting; this only notifies.
+            if (state.confirm_pending and not confirm_alarm_raised
+                    and (time.time() - state.confirm_ts) > config.FLEET_CONFIRM_ALARM_S):
+                confirm_alarm_raised = True
+                msg = f"CONFIRM not pressed within {config.FLEET_CONFIRM_ALARM_S:.0f}s at {state.confirm_location}"
+                logger.warning("[MISSION] %s — advisory alarm", msg)
+                state.log_event("WARNING", f"MISSION: {msg}")
+                fleet.emit_event(state, "confirm_alarm",
+                                 location=state.confirm_location)
 
         await asyncio.sleep(0.01)

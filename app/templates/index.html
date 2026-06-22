@@ -56,7 +56,6 @@
   .mode-manual    { background: #0000c0; color: #fff; }
   .mode-armed     { background: #c0a000; color: #000; }
   .mode-running   { background: #008000; color: #fff; }
-  .mode-reverse   { background: #8000c0; color: #fff; }
   .mode-emergency { background: #c00000; color: #fff; }
 
   .emrg-lamp {
@@ -508,18 +507,28 @@
   </div>
 </div>
 
-<!-- Reverse auto control panel -->
-<div id="rev-panel" class="raised" style="background:#c0c0c0;padding:0;margin-top:12px;">
-  <div class="panel-title">REVERSE AUTO &nbsp;[ TAPE FOLLOWING — REVERSE ]</div>
+<!-- Fleet (EVO) status + confirm fallback panel -->
+<div id="fleet-panel" class="raised" style="background:#c0c0c0;padding:0;margin-top:12px;">
+  <div class="panel-title">FLEET (EVO) &nbsp;[ STORE COORDINATION ]</div>
   <div style="padding:12px 16px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
-    <button id="btn-rev-start" style="background:#006000;color:#fff;">&#9654; START REVERSE</button>
-    <button id="btn-rev-stop"  style="background:#c00000;color:#fff;">&#9632; STOP REVERSE</button>
+    <div class="sensor-lamp-item">
+      <span class="lamp" id="lamp-store-link" style="width:18px;height:18px;"></span>
+      STORE LINK
+    </div>
+    <div style="width:3px;height:42px;background:#a0a0a0;"></div>
+    <div style="font-size:11px;font-weight:bold;color:#000080;letter-spacing:1px;">
+      MISSION:&nbsp;<span id="fl-mstate">—</span>
+      &nbsp;|&nbsp; DIR:&nbsp;<span id="fl-dir">—</span>
+      &nbsp;|&nbsp; TRIP:&nbsp;<span id="fl-trip">—</span>
+      &nbsp;|&nbsp; STOP:&nbsp;<span id="fl-stop">—</span>
+    </div>
     <div style="width:3px;height:42px;background:#a0a0a0;"></div>
     <div class="sensor-lamp-item">
-      <span class="lamp" id="lamp-rev-active" style="width:18px;height:18px;"></span>
-      REVERSE ACTIVE
+      <span class="lamp" id="lamp-traffic-hold" style="width:18px;height:18px;"></span>
+      TRAFFIC HOLD
     </div>
-    <span id="rev-status" style="font-size:11px;font-weight:bold;color:#000080;letter-spacing:1px;"></span>
+    <button id="btn-confirm" style="background:#006000;color:#fff;">&#10004; CONFIRM</button>
+    <span id="fl-status" style="font-size:11px;font-weight:bold;color:#000080;letter-spacing:1px;"></span>
   </div>
 </div>
 
@@ -628,13 +637,20 @@ function fetchState() {
       setSafety('sl-stop',   'sl-stop-label',   sf.lidar_stop,  'stop',   'active-stop');
       setSafety('sl-bumper', 'sl-bumper-label', sf.bumper,      'bumper', 'active-bumper');
 
-      // Reverse auto
-      const revActive = agv.reverse_auto_request || agv.mode === 'reverse';
-      setLamp(document.getElementById('lamp-rev-active'), revActive, 'on-blue');
-      document.getElementById('btn-rev-start').disabled = revActive || agv.mode !== 'armed';
-      document.getElementById('btn-rev-start').style.opacity = (revActive || agv.mode !== 'armed') ? '0.4' : '1';
-      document.getElementById('btn-rev-stop').disabled  = !revActive;
-      document.getElementById('btn-rev-stop').style.opacity  = !revActive ? '0.4' : '1';
+      // Fleet (EVO) status
+      const fl = d.fleet || {};
+      setLamp(document.getElementById('lamp-store-link'), fl.store_link_ok, 'on-green');
+      setLamp(document.getElementById('lamp-traffic-hold'), fl.traffic_hold, 'on-red');
+      document.getElementById('fl-mstate').textContent = fl.mission_state || '—';
+      document.getElementById('fl-dir').textContent    = fl.direction || '—';
+      document.getElementById('fl-trip').textContent   = fl.trip_id || '—';
+      document.getElementById('fl-stop').textContent   = fl.current_stop || '—';
+      // Confirm button only enabled while a confirm gate is open.
+      const cbtn = document.getElementById('btn-confirm');
+      const gate = !!fl.confirm_pending;
+      cbtn.disabled = !gate;
+      cbtn.style.opacity = gate ? '1' : '0.4';
+      cbtn.textContent = gate ? ('✔ CONFIRM: ' + (fl.confirm_location || '')) : '✔ CONFIRM';
 
       document.getElementById('ts').textContent = new Date().toLocaleTimeString();
     })
@@ -643,23 +659,22 @@ function fetchState() {
     });
 }
 
-function postRevAuto(running) {
-  fetch('/api/reverse_auto', {
+function postConfirm() {
+  fetch('/api/confirm', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ running })
+    body: JSON.stringify({})
   })
   .then(r => r.json())
   .then(d => {
-    const st = document.getElementById('rev-status');
+    const st = document.getElementById('fl-status');
     st.style.color  = d.ok ? '#006000' : '#c00000';
-    st.textContent  = d.ok ? (running ? 'REVERSE STARTED' : 'STOPPED') : (d.error || 'ERROR');
+    st.textContent  = d.ok ? ('CONFIRMED: ' + (d.location || '')) : (d.error || d.reason || 'ERROR');
     setTimeout(() => { st.textContent = ''; }, 4000);
   });
 }
 
-document.getElementById('btn-rev-start').addEventListener('click', () => postRevAuto(true));
-document.getElementById('btn-rev-stop').addEventListener('click',  () => postRevAuto(false));
+document.getElementById('btn-confirm').addEventListener('click', postConfirm);
 
 function fetchWifi() {
   fetch('/api/wifi')

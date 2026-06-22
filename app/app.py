@@ -44,7 +44,6 @@ def _build_state_snapshot():
         "sensor_error_detail":  s.sensor_error_detail,
         "speed_mode":           s.speed_mode,
         "sequence_stop":        s.sequence_stop,
-        "reverse_auto_request": s.reverse_auto_request,
     }
 
     # ── Magnetic sensor (SICK MLS via CANopen TPDO1) ─────────────────────────
@@ -75,7 +74,7 @@ def _build_state_snapshot():
     sequences["unmapped_recent"] = _unmapped_recent
     sequences["mapping_reload_pending"] = s.mapping_reload_pending
 
-    # ── Motion telemetry (RPM + PID — populated during auto/reverse modes) ────
+    # ── Motion telemetry (commanded RPM + PID; plus CiA-402 actuals) ──────────
     tel = s.motion_telemetry or {}
     motion_tel = {
         "left_rpm":   tel.get("left_rpm"),
@@ -85,6 +84,24 @@ def _build_state_snapshot():
         "pid_i":      tel.get("pid_i"),
         "pid_d":      tel.get("pid_d"),
         "pid_output": tel.get("pid_output"),
+        "actual_left_rpm":  s.motor_actual_rpm.get("left"),
+        "actual_right_rpm": s.motor_actual_rpm.get("right"),
+        "motor_fault":      s.motor_fault,
+    }
+
+    # ── Fleet (EVO) state — only meaningful when FLEET_MODE is on ──────────────
+    fleet_blk = {
+        "fleet_mode":      bool(_config.FLEET_MODE),
+        "store_link_ok":   s.store_link_ok,
+        "mission_state":   s.mission_state,
+        "direction":       s.direction,
+        "traffic_hold":    s.traffic_hold,
+        "commanded_pause": s.commanded_pause,
+        "confirm_pending": s.confirm_pending,
+        "confirm_location": s.confirm_location,
+        "trip_id":         (s.mission or {}).get("trip_id") if s.mission else None,
+        "loop":            (s.mission or {}).get("loop") if s.mission else None,
+        "current_stop":    s.current_stop,
     }
 
     # ── Safety indicators ─────────────────────────────────────────────────────
@@ -105,6 +122,7 @@ def _build_state_snapshot():
         "sequences":  sequences,
         "motion":     motion_tel,
         "safety":     safety,
+        "fleet":      fleet_blk,
     }
 
 
@@ -146,6 +164,8 @@ def _build_io_names():
         di_map[cfg.DI_LIDAR_STOP]  = "LIDAR INNER"
     if cfg.DI_BUMPER      is not None:
         di_map[cfg.DI_BUMPER]      = "IMPACT BUMPER"
+    if getattr(cfg, "DI_CONFIRM", None) is not None:
+        di_map[cfg.DI_CONFIRM]     = "PB CONFIRM"
 
     di_names = [di_map.get(i, "[SPARE]") for i in range(cfg.NUM_DI)]
 
@@ -245,26 +265,19 @@ def api_state():
     return jsonify(_build_state_snapshot())
 
 
-@app.route("/api/reverse_auto", methods=["POST"])
-def api_reverse_auto():
+@app.route("/api/confirm", methods=["POST"])
+def api_confirm():
+    """[EVO] Web fallback for the onboard confirm button — satisfies the mission
+    confirm gate when operating detached. No-op outside fleet mode / when no gate
+    is open."""
     if _state is None:
         return jsonify({"error": "state not initialised"}), 503
-
-    data    = request.get_json(silent=True) or {}
-    running = data.get("running")
-
-    if running is True:
-        mode = _state.current_mode
-        if mode != "armed":
-            return jsonify({"error": f"Cannot start reverse auto in mode: {mode}"}), 403
-        _state.reverse_auto_request = True
-        return jsonify({"ok": True, "running": True})
-
-    elif running is False:
-        _state.reverse_auto_request = False
-        return jsonify({"ok": True, "running": False})
-
-    return jsonify({"error": "running must be true or false"}), 400
+    if not _config.FLEET_MODE:
+        return jsonify({"error": "not in fleet mode"}), 400
+    if not _state.confirm_pending:
+        return jsonify({"ok": False, "reason": "no confirm gate open"}), 409
+    _state.web_confirm_request = True
+    return jsonify({"ok": True, "location": _state.confirm_location})
 
 
 @app.route("/api/io")

@@ -17,7 +17,7 @@ AUTO_SPEED_MAX = 1.50
 class SystemState:
     """Owned by mode_manager and safety_watchdog."""
     def __init__(self):
-        self.current_mode     = None   # None | "manual" | "armed" | "running" | "reverse" | "emergency"
+        self.current_mode     = None   # None | "manual" | "armed" | "running" | "emergency"
         self.emergency_active    = False
         self.system_error        = False   # critical driver lost (DIO) — blocks all modes
         self.system_error_detail = ""
@@ -33,7 +33,6 @@ class KinematicState:
         self.speed_mode           = "SLOW"  # "HIGH" | "SLOW" | "EXTRA_SLOW"
         self.sequence_stop        = False   # True = AGV should brake and wait
         self.pending_sequence     = None    # name of armed rfid_then_marker sequence
-        self.reverse_auto_request = False   # set by Flask to start reverse tape-follow
         self.web_manual_command    = None    # set by Flask remote; "forward"|"reverse"|"left"|"right"|"fwd_left"|"fwd_right"|"rvs_left"|"rvs_right"|None
         self.web_manual_command_ts = 0.0    # epoch of last web command update
         self.motion_telemetry     = None    # dict: left_rpm, right_rpm, pid_error, pid_p/i/d, pid_output
@@ -82,6 +81,41 @@ class TuningState:
         self.auto_extra_slow_speed = float(config.AUTO_TARGET_EXTRA_SLOW_SPEED)
 
 
+class FleetState:
+    """EVO fleet (MQTT) domain — only meaningful when config.FLEET_MODE is on.
+
+    Written by the MQTT client thread (single-field, GIL-safe) and the
+    mode_manager / mission FSM. The MQTT layer never touches hardware; it only
+    reads/writes these fields and puts onto mqtt_out_queue.
+    """
+    def __init__(self):
+        # Mission assignment from the store (cmd/mission). None = no active mission.
+        #   {loop, active_stops:[{order,tag,trolley_type}], loading:{front,rear}, trip_id}
+        self.mission        = None
+        self.mission_state  = "IDLE_HOME"   # EVO mission FSM state (core/mission.py)
+        self.direction      = "outbound"     # logical inbound/outbound flag (NOT a drive direction)
+        self.current_stop   = None           # tag id of the stop being serviced (retained state snapshot)
+
+        # Traffic / pause overlays (commanded Cat-2 holds — non-fault, no brake).
+        self.traffic_hold   = False          # set by cmd/traffic=stop, cleared by =go
+        self.commanded_pause = False         # set by cmd/control=pause, cleared by =resume
+
+        # Commanded control requests, consumed by mode_manager (rising-edge style).
+        self.cmd_estop      = False          # cmd/control=estop → emergency overlay
+        self.control_reset_request = False   # cmd/control=reset → back to armed (clears mission)
+        self.mission_start_request = False   # an accepted cmd/mission asks armed→running
+
+        # Human confirm gating at each handoff (AT_ATTACH / AT_STOP_n / AT_HOME_UNLOAD).
+        self.confirm_pending = False
+        self.confirm_ts      = 0.0           # epoch the current confirm gate opened (100 s alarm)
+        self.confirm_location = None         # str describing the gated location (for events)
+        self.web_confirm_request = False     # web manual fallback can satisfy a confirm
+
+        # Command de-dup + broker link.
+        self.last_applied_seq = -1           # per-AGV monotonic; rejects stale/replayed commands
+        self.store_link_ok    = False        # broker connected (NOT a motion fault when False)
+
+
 # ── Shared state object ───────────────────────────────────────────────────────
 
 class AMRState:
@@ -100,16 +134,25 @@ class AMRState:
         self.sensor_queue = asyncio.Queue()  # CAN magnetic sensor readings
         self.do_queue     = asyncio.Queue()  # commands: (channel_no, state)
         self.motor_queue  = asyncio.Queue()  # commands: (side, target_rpm) | ("brake", bool)
+        # The single asyncio→MQTT bridge. Items: (topic, payload_dict, qos, retain).
+        # Drained by the MQTT client thread; nothing else publishes. [EVO]
+        self.mqtt_out_queue = asyncio.Queue()
 
         # ── Typed domains ──────────────────────────────────────────────────────
         self.system     = SystemState()
         self.kinematic  = KinematicState()
         self.perception = PerceptionState()
         self.tuning     = TuningState()
+        self.fleet      = FleetState()
 
         # asyncio event loop reference — set by main.py after loop starts.
         # Used by Flask thread to dispatch reload_sequences via call_soon_threadsafe.
         self.loop = None
+
+        # EVO mission FSM instance — set by main.py when FLEET_MODE is on; shared
+        # by mode_manager (confirm/advance) and rfid_processor (on_tag). None when
+        # standalone. [EVO]
+        self.mission_fsm = None
 
     # ── SystemState shims ─────────────────────────────────────────────────────
 
@@ -173,11 +216,6 @@ class AMRState:
     def pending_sequence(self): return self.kinematic.pending_sequence
     @pending_sequence.setter
     def pending_sequence(self, v): self.kinematic.pending_sequence = v
-
-    @property
-    def reverse_auto_request(self): return self.kinematic.reverse_auto_request
-    @reverse_auto_request.setter
-    def reverse_auto_request(self, v): self.kinematic.reverse_auto_request = v
 
     @property
     def web_manual_command(self): return self.kinematic.web_manual_command
@@ -297,3 +335,80 @@ class AMRState:
     def auto_extra_slow_speed(self): return self.tuning.auto_extra_slow_speed
     @auto_extra_slow_speed.setter
     def auto_extra_slow_speed(self, v): self.tuning.auto_extra_slow_speed = float(v)
+
+    # ── FleetState shims [EVO] ────────────────────────────────────────────────
+
+    @property
+    def mission(self): return self.fleet.mission
+    @mission.setter
+    def mission(self, v): self.fleet.mission = v
+
+    @property
+    def mission_state(self): return self.fleet.mission_state
+    @mission_state.setter
+    def mission_state(self, v): self.fleet.mission_state = v
+
+    @property
+    def direction(self): return self.fleet.direction
+    @direction.setter
+    def direction(self, v): self.fleet.direction = v
+
+    @property
+    def current_stop(self): return self.fleet.current_stop
+    @current_stop.setter
+    def current_stop(self, v): self.fleet.current_stop = v
+
+    @property
+    def traffic_hold(self): return self.fleet.traffic_hold
+    @traffic_hold.setter
+    def traffic_hold(self, v): self.fleet.traffic_hold = bool(v)
+
+    @property
+    def commanded_pause(self): return self.fleet.commanded_pause
+    @commanded_pause.setter
+    def commanded_pause(self, v): self.fleet.commanded_pause = bool(v)
+
+    @property
+    def cmd_estop(self): return self.fleet.cmd_estop
+    @cmd_estop.setter
+    def cmd_estop(self, v): self.fleet.cmd_estop = bool(v)
+
+    @property
+    def control_reset_request(self): return self.fleet.control_reset_request
+    @control_reset_request.setter
+    def control_reset_request(self, v): self.fleet.control_reset_request = bool(v)
+
+    @property
+    def mission_start_request(self): return self.fleet.mission_start_request
+    @mission_start_request.setter
+    def mission_start_request(self, v): self.fleet.mission_start_request = bool(v)
+
+    @property
+    def confirm_pending(self): return self.fleet.confirm_pending
+    @confirm_pending.setter
+    def confirm_pending(self, v): self.fleet.confirm_pending = bool(v)
+
+    @property
+    def confirm_ts(self): return self.fleet.confirm_ts
+    @confirm_ts.setter
+    def confirm_ts(self, v): self.fleet.confirm_ts = float(v)
+
+    @property
+    def confirm_location(self): return self.fleet.confirm_location
+    @confirm_location.setter
+    def confirm_location(self, v): self.fleet.confirm_location = v
+
+    @property
+    def web_confirm_request(self): return self.fleet.web_confirm_request
+    @web_confirm_request.setter
+    def web_confirm_request(self, v): self.fleet.web_confirm_request = bool(v)
+
+    @property
+    def last_applied_seq(self): return self.fleet.last_applied_seq
+    @last_applied_seq.setter
+    def last_applied_seq(self, v): self.fleet.last_applied_seq = int(v)
+
+    @property
+    def store_link_ok(self): return self.fleet.store_link_ok
+    @store_link_ok.setter
+    def store_link_ok(self, v): self.fleet.store_link_ok = bool(v)
