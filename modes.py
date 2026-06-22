@@ -64,7 +64,7 @@ async def auto_mode(state, direction="forward", engine=None):
     # ── Loop-rate / queue-depth diagnostics ───────────────────────────────────
     # Tracks actual cycle time and queue backlog so we can decide whether
     # lowering DT (e.g. 0.1 → 0.05) is bottlenecked by the controller or by
-    # the AO writer / sensor publish rate. Logs a summary every ~2 s.
+    # the motor driver / sensor publish rate. Logs a summary every ~2 s.
     _diag_loop      = asyncio.get_event_loop()
     _diag_last_t    = _diag_loop.time()
     _diag_max_dt    = 0.0
@@ -73,7 +73,7 @@ async def auto_mode(state, direction="forward", engine=None):
     _diag_max_sf    = 0   # max sensor frames drained per cycle (= sensor rate / PID rate)
     _diag_sum_sf    = 0   # avg sensor frames per cycle
     _diag_zero_sf   = 0   # cycles with 0 frames (sensor starvation — bad)
-    _diag_max_aq    = 0   # ao_queue post-enqueue depth
+    _diag_max_aq    = 0   # motor_queue post-enqueue depth
     _diag_max_dq    = 0   # do_queue post-enqueue depth
     _diag_log_every = 20   # cycles between summary lines (~2 s at DT=0.1)
 
@@ -186,7 +186,10 @@ async def auto_mode(state, direction="forward", engine=None):
             if sensor is not None:
 
                 if direction == "forward":
-                    logger.debug("[AUTO] left_marker=%s", sensor["left_marker"])
+                    # SICK MLS reports a numeric marker_code, not left/right markers;
+                    # the left/right marker hooks below stay (always False) for compat
+                    # and are unused by the current RFID-only profile.
+                    logger.debug("[AUTO] marker_code=%s", sensor.get("marker_code", 0))
 
                 # ── Tape-loss guard ───────────────────────────────────────────
                 if not sensor["tape_detected"]:
@@ -231,11 +234,17 @@ async def auto_mode(state, direction="forward", engine=None):
                 pv = sensor["left_mm"]
                 left_rpm, right_rpm, dbg = pid.compute(pv, base_rpm, error_sign)
 
-                left_v  = max(0.0, min(config.AO_MAX_VOLTAGE, motion.rpm_to_voltage(left_rpm)))
-                right_v = max(0.0, min(config.AO_MAX_VOLTAGE, motion.rpm_to_voltage(right_rpm)))
+                # Reverse auto keeps the same PID magnitudes/steering but drives
+                # both wheels backward (negative CiA-402 Target velocity).
+                if direction == "reverse":
+                    left_rpm  = -left_rpm
+                    right_rpm = -right_rpm
 
-                await state.ao_queue.put((0, left_v))
-                await state.ao_queue.put((1, right_v))
+                # Clamp each wheel to the drive ceiling and queue signed rpm.
+                left_rpm  = max(-config.MOTOR_MAX_RPM, min(config.MOTOR_MAX_RPM, left_rpm))
+                right_rpm = max(-config.MOTOR_MAX_RPM, min(config.MOTOR_MAX_RPM, right_rpm))
+
+                await motion.update_velocities(state, left_rpm, right_rpm)
 
                 state.motion_telemetry = {
                     "left_rpm":   left_rpm,
@@ -283,7 +292,7 @@ async def auto_mode(state, direction="forward", engine=None):
             _diag_sum_sf += _sf
             if _sf > _diag_max_sf: _diag_max_sf = _sf
             if _sf == 0: _diag_zero_sf += 1
-            _aq = state.ao_queue.qsize()
+            _aq = state.motor_queue.qsize()
             _dq = state.do_queue.qsize()
             if _aq > _diag_max_aq: _diag_max_aq = _aq
             if _dq > _diag_max_dq: _diag_max_dq = _dq
@@ -295,7 +304,7 @@ async def auto_mode(state, direction="forward", engine=None):
                 logger.info(
                     "[DIAG] cycle avg=%.1fms max=%.1fms (target=%.0fms) | "
                     "sensor frames/cycle avg=%.1f max=%d zero=%d/%d | "
-                    "qmax ao=%d do=%d",
+                    "qmax motor=%d do=%d",
                     _avg_ms, _max_ms, config.DT * 1000.0,
                     _avg_sf, _diag_max_sf, _diag_zero_sf, _diag_n,
                     _diag_max_aq, _diag_max_dq,
@@ -324,17 +333,17 @@ async def manual_mode(state):
         - Button held: ramp current speed from 0 toward target at MANUAL_ACCEL_RATE.
         - Button released (state → idle): instant stop, no deceleration ramp.
     The ramp is implemented as a 0..1 fraction multiplied into the target
-    voltages, so diagonal moves preserve their inner/outer wheel speed ratio.
+    rpm, so diagonal moves preserve their inner/outer wheel speed ratio.
     """
-    v_high_max = motion.rpm_to_voltage(motion.mps_to_rpm(config.MANUAL_TARGET_HIGH_SPEED))
-    v_slow_max = motion.rpm_to_voltage(motion.mps_to_rpm(config.MANUAL_TARGET_SLOW_SPEED))
+    rpm_high_max = motion.mps_to_rpm(config.MANUAL_TARGET_HIGH_SPEED)
+    rpm_slow_max = motion.mps_to_rpm(config.MANUAL_TARGET_SLOW_SPEED)
 
     # Cycle period of this task (matches the asyncio.sleep at the bottom).
     _CYCLE_S = 0.01
     # Fraction increment per cycle: how much of "0 to MANUAL_TARGET_HIGH_SPEED"
     # we cover each tick. Reaching full speed takes ~HIGH/ACCEL seconds.
     _ramp_step = (config.MANUAL_ACCEL_RATE / config.MANUAL_TARGET_HIGH_SPEED) * _CYCLE_S
-    fraction = 0.0     # 0..1, scales target voltages during ramp-up
+    fraction = 0.0     # 0..1, scales target rpm during ramp-up
 
     current_motion = None
     _pusher_task   = None   # track active pusher task to prevent concurrent relay firing
@@ -376,11 +385,10 @@ async def manual_mode(state):
             await asyncio.sleep(0.01)
             continue
 
-        # ── Map motion_state to (left_target_v, right_target_v) and direction setup.
-        # On state change: issue the full set_* helper (which sets DO direction
-        # AND AO=0) so the ramp always starts from zero voltage.
-        # While the same state is held: re-issue AO-only updates each cycle until
-        # fraction reaches 1.0, then stop emitting writes.
+        # ── Map motion_state to signed per-wheel rpm with a smooth ramp.
+        # On state change the ramp restarts from 0; while a state is held we
+        # re-queue the two motor velocities each cycle until fraction reaches
+        # 1.0, then stop emitting writes (the drive holds the last target).
         if motion_state == "idle":
             if current_motion != "idle":
                 logger.debug("Manual: IDLE (instant stop, no decel)")
@@ -392,35 +400,25 @@ async def manual_mode(state):
                 logger.debug("Manual: %s (ramp-up at %.2f m/s^2)",
                              motion_state.upper(), config.MANUAL_ACCEL_RATE)
                 fraction = 0.0
-                # Issue full set_* at zero voltage to lock in the DO direction
-                # without imparting motion. Subsequent cycles just bump AO.
-                if   motion_state == "fwd_left":  await motion.set_forward_left(state, 0.0, 0.0)
-                elif motion_state == "fwd_right": await motion.set_forward_right(state, 0.0, 0.0)
-                elif motion_state == "rvs_left":  await motion.set_reverse_left(state, 0.0, 0.0)
-                elif motion_state == "rvs_right": await motion.set_reverse_right(state, 0.0, 0.0)
-                elif motion_state == "forward":   await motion.set_forward(state, 0.0)
-                elif motion_state == "reverse":   await motion.set_reverse(state, 0.0)
-                elif motion_state == "left":      await motion.set_left(state, 0.0)
-                elif motion_state == "right":     await motion.set_right(state, 0.0)
                 current_motion = motion_state
 
-            # Advance the ramp; only emit AO writes while still climbing.
+            # Advance the ramp; only emit motor writes while still climbing.
             if fraction < 1.0:
                 fraction = min(1.0, fraction + _ramp_step)
-                v_h = v_high_max * fraction
-                v_s = v_slow_max * fraction
-                # Wheel voltage mapping per motion_state.
+                r_h = rpm_high_max * fraction
+                r_s = rpm_slow_max * fraction
+                # Signed per-wheel Target velocity (+ = forward).
                 # See motion.py set_* helpers for the (left, right) convention.
-                if   motion_state == "fwd_left":  left_v, right_v = v_s, v_h
-                elif motion_state == "fwd_right": left_v, right_v = v_h, v_s
-                elif motion_state == "rvs_left":  left_v, right_v = v_s, v_h
-                elif motion_state == "rvs_right": left_v, right_v = v_h, v_s
-                elif motion_state == "forward":   left_v, right_v = v_h, v_h
-                elif motion_state == "reverse":   left_v, right_v = v_h, v_h
-                elif motion_state == "left":      left_v, right_v = v_s, v_s
-                elif motion_state == "right":     left_v, right_v = v_s, v_s
-                else:                              left_v, right_v = 0.0, 0.0
-                await motion.update_voltages(state, left_v, right_v)
+                if   motion_state == "fwd_left":  left_rpm, right_rpm =  r_s,  r_h
+                elif motion_state == "fwd_right": left_rpm, right_rpm =  r_h,  r_s
+                elif motion_state == "rvs_left":  left_rpm, right_rpm = -r_s, -r_h
+                elif motion_state == "rvs_right": left_rpm, right_rpm = -r_h, -r_s
+                elif motion_state == "forward":   left_rpm, right_rpm =  r_h,  r_h
+                elif motion_state == "reverse":   left_rpm, right_rpm = -r_h, -r_h
+                elif motion_state == "left":      left_rpm, right_rpm = -r_s,  r_s
+                elif motion_state == "right":     left_rpm, right_rpm =  r_s, -r_s
+                else:                             left_rpm, right_rpm =  0.0,  0.0
+                await motion.update_velocities(state, left_rpm, right_rpm)
 
         # ── Web pusher request (hold: up/down energises, clear de-energises) ───
         pusher_req = state.web_pusher_request
@@ -520,16 +518,16 @@ async def mode_manager(state, engine=None):
     async def _flush_and_idle():
         while not state.do_queue.empty():
             state.do_queue.get_nowait()
-        while not state.ao_queue.empty():
-            state.ao_queue.get_nowait()
+        while not state.motor_queue.empty():
+            state.motor_queue.get_nowait()
         await motion.idle(state)
 
     async def _flush_and_brake():
         while not state.do_queue.empty():
             state.do_queue.get_nowait()
-        while not state.ao_queue.empty():
-            state.ao_queue.get_nowait()
-        await motion.set_cat1_stop(state)  # Cat 1: speed ref→0, then brake after decel
+        while not state.motor_queue.empty():
+            state.motor_queue.get_nowait()
+        await motion.set_cat1_stop(state)  # Cat 1: Target velocity→0 + CiA-402 Quick stop
 
     def _reset_sequence_state():
         state.speed_mode       = "SLOW"

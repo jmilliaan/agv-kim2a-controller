@@ -9,6 +9,7 @@ import can
 import serial.tools.list_ports as list_ports
 
 import config
+from drivers.can_mls import parse_tpdo1   # SICK MLS TPDO1 decoder
 
 DT = config.DT  # same loop rate as main program (0.01s)
 
@@ -54,22 +55,17 @@ async def main():
             async for msg in reader:
                 if msg.arbitration_id != config.SENSOR_COB_ID:
                     continue
-                if len(msg.data) < 5:
+
+                # SICK MLS TPDO1 (8 bytes) — decoded via the shared driver parser.
+                frame = parse_tpdo1(msg.data, config.STEERING_LCP, config.LCP_INVALID)
+                if frame is None:
                     continue
 
-                left, right = struct.unpack_from("<hh", msg.data, 0)
-                flags = msg.data[4]
-                tape    = bool(flags & config.FLAG_TAPE_DETECT)
-                l_mark  = bool(flags & config.FLAG_LEFT_MARKER)
-                r_mark  = bool(flags & config.FLAG_RIGHT_MARKER)
-                fail    = bool(flags & config.FLAG_SENSOR_FAIL)
-
+                marker_str = f"Marker={frame['marker_code']}" if frame["marker_present"] else "Marker=-"
                 print(
-                    f"Left={left:+5d}mm  Right={right:+5d}mm  "
-                    f"Tape={'YES' if tape else 'NO ':3}  "
-                    f"L_Mark={'YES' if l_mark else 'NO ':3}  "
-                    f"R_Mark={'YES' if r_mark else 'NO ':3}  "
-                    f"{'[SENSOR FAIL]' if fail else ''}"
+                    f"LCP(steer)={str(frame['left_mm']):>5}mm  2nd={str(frame['right_mm']):>5}mm  "
+                    f"Tape={'YES' if frame['tape_detected'] else 'NO '}  "
+                    f"tracks={frame['track_count']}  lvl={frame['level']}  {marker_str}"
                 )
 
                 await asyncio.sleep(DT)

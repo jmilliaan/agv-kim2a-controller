@@ -60,7 +60,7 @@ async def check_can():
             bitrate=500_000, ttyBaudrate=3_000_000)
         bus.shutdown()
         return True, f"CANable2 on {channel}"
-    return await _try("CAN MGS1600", attempt)
+    return await _try("CAN MLS", attempt)
 
 
 async def main():
@@ -70,9 +70,8 @@ async def main():
 
     results = {}
     results["DIO Modbus"]  = await check_ping("DIO Modbus (DI/DO)", config.DIO_IP)
-    results["AO Modbus"]   = await check_ping("AO Modbus",          config.AO_IP)
     results["RFID TCP"]    = await check_ping("RFID TCP",           config.RFID_IP)
-    results["CAN MGS1600"] = await check_can()
+    results["CAN MLS"] = await check_can()
 
     print("\n" + "=" * 40)
     print(" Summary")

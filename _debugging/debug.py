@@ -23,6 +23,7 @@ import serial.tools.list_ports as list_ports
 from pymodbus.client import AsyncModbusTcpClient
 
 import config
+from drivers.can_mls import parse_tpdo1   # SICK MLS TPDO1 decoder
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  CONFIGURATION — edit these to control what gets printed
@@ -36,18 +37,15 @@ import config
 #   WATCH_DO = [0, 1, 2, 3, 4, 5] → print only DO0–DO5 (motor direction channels)
 WATCH_DI = None
 WATCH_DO = None
-WATCH_AO = None   # AO channel indices (typically only 0 and 1 exist)
 
 # ── Subsystem enable flags ────────────────────────────────────────────────────
 SHOW_DI   = 1   # Digital Inputs  (read from DIO module)
 SHOW_DO   = 0   # Digital Outputs (readback from DIO module)
-SHOW_AO   = 0   # Analog Outputs  (readback from AO module, converted to volts)
-SHOW_CAN  = 0   # CAN magnetic sensor (left_mm, right_mm, tape_detected, sensor_failure)
+SHOW_CAN  = 0   # SICK MLS magnetic sensor (LCP steering mm, tape_detected, tracks, marker)
 SHOW_RFID = 0   # RFID reader (raw tag hex, decimal value)
 
 INTERVAL_DI = 0.1    # 10 Hz
 INTERVAL_DO = 0.2    # 5 Hz  (outputs change slowly; no need to hammer the module)
-INTERVAL_AO = 0.2    # 5 Hz
 
 COMPACT_DI = False
 COMPACT_DO = False
@@ -86,18 +84,14 @@ DI_NAMES = {
     config.DI_RIGHT:     "RIGHT",
 }
 
+# Wheel drive is on CANopen now — DO coils carry only pusher + horn.
 DO_NAMES = {
-    0: "L_FWD",
-    1: "L_REV",
-    2: "L_BRK",
-    3: "R_FWD",
-    4: "R_REV",
-    5: "R_BRK",
-}
-
-AO_NAMES = {
-    0: "LEFT_SPEED",
-    1: "RIGHT_SPEED",
+    8:  "PUSHER_EXT_1",
+    9:  "PUSHER_RET_1",
+    10: "PUSHER_RET_2",
+    11: "PUSHER_EXT_2",
+    12: "REGULAR_HORN",
+    13: "ALARM_HORN",
 }
 
 
@@ -204,50 +198,6 @@ async def monitor_do():
         await asyncio.sleep(INTERVAL_DO)
 
 
-async def monitor_ao():
-    """
-    Readback analog output register values from the AO Modbus module
-    and convert back to volts using the same V_RANGE/DAC_RES from config.
-    """
-    client = AsyncModbusTcpClient(config.AO_IP, port=config.MODBUS_PORT)
-    print(f"{ts()}[AO ] Connecting to AO module at {config.AO_IP}:{config.MODBUS_PORT}...")
-
-    while True:
-        try:
-            if not client.connected:
-                await client.connect()
-                if not client.connected:
-                    print(f"{ts()}[AO ] Not connected. Retrying...")
-                    await asyncio.sleep(2)
-                    continue
-
-            result = await client.read_holding_registers(
-                address=config.AO_BASE,
-                count=config.NUM_AO,
-                device_id=config.DEVICE_ID
-            )
-
-            if result.isError():
-                print(f"{ts()}[AO ] Modbus read error.")
-                await asyncio.sleep(INTERVAL_AO)
-                continue
-
-            channels = _filter(range(config.NUM_AO), WATCH_AO)
-            parts = []
-            for i in channels:
-                raw = result.registers[i]
-                volts = raw / config.DAC_RES * config.V_RANGE
-                label = _channel_label("AO", i, AO_NAMES)
-                parts.append(f"{label}={volts:.3f}V (raw={raw})")
-            print(f"{ts()}[AO ] " + "  ".join(parts))
-
-        except Exception as e:
-            print(f"{ts()}[AO ] Exception: {e}")
-            client.close()
-
-        await asyncio.sleep(INTERVAL_AO)
-
-
 def _find_canable_port(vid=0x16D0, pid=0x117E):
     """Scan serial ports for the CANable2 adapter by USB VID/PID."""
     for port in list_ports.comports():
@@ -306,20 +256,19 @@ async def monitor_can():
                 msg = item
                 if msg.arbitration_id != config.SENSOR_COB_ID:
                     continue
-                if len(msg.data) < 5:
+
+                # SICK MLS TPDO1 (8 bytes) — decoded via the shared driver parser.
+                frame = parse_tpdo1(msg.data, config.STEERING_LCP, config.LCP_INVALID)
+                if frame is None:
                     continue
 
-                left, right = struct.unpack_from("<hh", msg.data, 0)
-                flags     = msg.data[4]
-                tape      = bool(flags & config.FLAG_TAPE_DETECT)
-                fail      = bool(flags & config.FLAG_SENSOR_FAIL)
-                tape_str  = "DETECTED  " if tape else "NOT DETECT"
-                fail_str  = " [SENSOR FAIL]" if fail else ""
+                tape_str  = "DETECTED  " if frame["tape_detected"] else "NOT DETECT"
+                marker_str = f" marker={frame['marker_code']}" if frame["marker_present"] else ""
 
                 print(
                     f"{ts()}[CAN] "
-                    f"Left={left:+5d}mm  Right={right:+5d}mm  "
-                    f"Tape={tape_str}  Flags=0x{flags:02X}{fail_str}"
+                    f"LCP(steer)={str(frame['left_mm']):>5}mm  2nd={str(frame['right_mm']):>5}mm  "
+                    f"Tape={tape_str}  tracks={frame['track_count']} lvl={frame['level']}{marker_str}"
                 )
 
         except Exception as e:
@@ -392,13 +341,12 @@ async def main():
     print(" AGV Hardware Debug Monitor")
     print("=" * 60)
     print(f" DIO module  : {config.DIO_IP}:{config.MODBUS_PORT}")
-    print(f" AO module   : {config.AO_IP}:{config.MODBUS_PORT}")
     print(f" RFID reader : {config.RFID_IP}:{config.RFID_PORT}")
     print(f" CAN COB-ID  : {config.SENSOR_COB_ID} (0x{config.SENSOR_COB_ID:03X})")
     print("-" * 60)
-    print(f" SHOW_DI={SHOW_DI}  SHOW_DO={SHOW_DO}  SHOW_AO={SHOW_AO}  "
+    print(f" SHOW_DI={SHOW_DI}  SHOW_DO={SHOW_DO}  "
           f"SHOW_CAN={SHOW_CAN}  SHOW_RFID={SHOW_RFID}")
-    print(f" WATCH_DI={WATCH_DI}  WATCH_DO={WATCH_DO}  WATCH_AO={WATCH_AO}")
+    print(f" WATCH_DI={WATCH_DI}  WATCH_DO={WATCH_DO}")
     print("=" * 60)
     print(" Press Ctrl+C to stop.")
     print()
@@ -408,8 +356,6 @@ async def main():
         tasks.append(asyncio.create_task(monitor_di()))
     if SHOW_DO:
         tasks.append(asyncio.create_task(monitor_do()))
-    if SHOW_AO:
-        tasks.append(asyncio.create_task(monitor_ao()))
     if SHOW_CAN:
         tasks.append(asyncio.create_task(monitor_can()))
     if SHOW_RFID:

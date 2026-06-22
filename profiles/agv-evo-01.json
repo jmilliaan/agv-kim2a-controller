@@ -1,12 +1,11 @@
 {
-  "_agv_id": "agv_tn",
-  "_description": "AGV B (TN) — base towing AGV, no SLMP/PLC, with pusher actuator and lidar",
+  "_agv_id": "agv-evo-01",
+  "_description": "AGV EVO unit 01 (ex AGV B / TN) — CAN-BLDC towing AGV, pusher actuator and lidar",
 
   "networking": {
-    "_comment": "LOCAL_IP is a placeholder — verify AGV B PC address before deploy",
+    "_comment": "LOCAL_IP is a placeholder — verify the PC address before deploy. The 192.168.1.x AO subnet is gone (wheels are on CANopen now).",
     "LOCAL_IP":   "192.168.2.100",
     "DIO_IP":     "192.168.3.30",
-    "AO_IP":      "192.168.1.30",
     "MODBUS_PORT": 502,
     "DEVICE_ID":   1,
     "RFID_IP":    "192.168.3.200",
@@ -15,7 +14,6 @@
     "SLMP_PORT":   null
   },
 
-  "ao_max_voltage": 5.0,
   "sensor_orientation": -1,
 
   "io_mapping": {
@@ -24,8 +22,6 @@
     "DO_BASE":            0,
     "NUM_DI":             16,
     "NUM_DO":             16,
-    "AO_BASE":            4096,
-    "NUM_AO":             2,
     "DI_EMERGENCY":       11,
     "DI_FWD":             4,
     "DI_REV":             5,
@@ -41,10 +37,18 @@
     "DI_BUMPER":          13
   },
 
-  "motor_channels": {
-    "_comment": "DO and AO channel indices for each motor drive — same as AGV A",
-    "left":  { "do_fwd": 0, "do_rev": 1, "do_brake": 2, "do_alarm": 888, "ao_speed": 0 },
-    "right": { "do_fwd": 3, "do_rev": 4, "do_brake": 5, "do_alarm": 888, "ao_speed": 1 }
+  "motor_can": {
+    "_comment": "BLVD-KRD CiA-402 wheel drives. CHANNEL is the slcan device on the Ubuntu vehicle (e.g. /dev/ttyACM0); set null to auto-detect the CANable2. EDS resolves under can_bldc/. Provisional ramps/ceiling — tune on vehicle.",
+    "CHANNEL":         "/dev/ttyACM0",
+    "BITRATE":         500000,
+    "TTY_BAUDRATE":    3000000,
+    "EDS":             "BLVD-KRD_CANopen_V400.eds",
+    "PROFILE_ACCEL":   2000,
+    "PROFILE_DECEL":   2000,
+    "QUICKSTOP_DECEL": 2000,
+    "MOTOR_MAX_RPM":   3000,
+    "left":  { "node_id": 1, "invert": false },
+    "right": { "node_id": 2, "invert": true }
   },
 
   "pusher_channels": {
@@ -57,11 +61,6 @@
     "_comment": "Dedicated DO channel indices for the horns. regular_horn = steady ON in auto (running/reverse); alarm_horn = steady ON instead when an alarm is active.",
     "regular_horn": 12,
     "alarm_horn": 13
-  },
-
-  "hardware": {
-    "V_RANGE": 10.0,
-    "DAC_RES": 4095
   },
 
   "kinematics": {
@@ -103,13 +102,12 @@
   },
 
   "can_sensor": {
-    "SENSOR_COB_ID":    390,
-    "FLAG_TAPE_DETECT": 2,
-    "FLAG_LEFT_MARKER": 4,
-    "FLAG_RIGHT_MARKER": 8,
-    "FLAG_SENSOR_FAIL": 128,
-    "CAN_TIMEOUT":      0.5,
-    "CAN_NODE_ID":      6
+    "_comment": "SICK MLS magnetic line sensor (CANopen). TPDO1 COB-ID = 0x180 + CAN_NODE_ID (0x18A for node 0x0A). The sensor must be pre-configured (SICK MLS config tool / LSS) to this NODE_ID and 500 kbit/s to share the BLDC bus — bitrate is NOT set from here. Steering follows LCP2 (the centre line for a single track).",
+    "SENSOR_COB_ID":    394,
+    "CAN_NODE_ID":      10,
+    "STEERING_LCP":     2,
+    "LCP_INVALID":      32767,
+    "CAN_TIMEOUT":      0.5
   },
 
   "rfid": {
@@ -194,11 +192,11 @@
   ],
 
   "features": {
-    "_comment": "SLMP disabled — no PLC on AGV B. LIDAR_STOP_ENABLED is now driven by the runtime UI toggle (defaults ON at boot regardless of this value); kept here only as a deployment hint.",
+    "_comment": "Set any hardware flag to 0 to run without that device connected (no connect errors). The SICK MLS (CAN_ENABLED) shares the wheel-drive bus, so it needs MOTOR_CAN_ENABLED on too. LIDAR_STOP_ENABLED is driven by the runtime UI toggle (defaults ON at boot regardless of this value); kept here only as a deployment hint.",
     "DIO_ENABLED":        1,
+    "MOTOR_CAN_ENABLED":  1,
     "CAN_ENABLED":        1,
     "RFID_ENABLED":       1,
-    "SLMP_ENABLED":       0,
     "LIDAR_STOP_ENABLED": 1
   },
 

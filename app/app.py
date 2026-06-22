@@ -47,7 +47,7 @@ def _build_state_snapshot():
         "reverse_auto_request": s.reverse_auto_request,
     }
 
-    # ── Magnetic sensor (MGS1600 via CAN) ────────────────────────────────────
+    # ── Magnetic sensor (SICK MLS via CANopen TPDO1) ─────────────────────────
     raw = s.latest_sensor
     sensor = {
         "left_mm":        raw["left_mm"]        if raw else None,
@@ -150,13 +150,8 @@ def _build_io_names():
     di_names = [di_map.get(i, "[SPARE]") for i in range(cfg.NUM_DI)]
 
     # ── DO labels ────────────────────────────────────────────────────────────
+    # Wheel drive is on CANopen now — DO coils carry only pusher + horn.
     do_map = {}
-    for side, ch in cfg.MOTOR_CHANNELS.items():
-        side_u = side.upper()
-        if "do_fwd"   in ch: do_map[ch["do_fwd"]]   = f"{side_u} FWD"
-        if "do_rev"   in ch: do_map[ch["do_rev"]]   = f"{side_u} REV"
-        if "do_brake" in ch: do_map[ch["do_brake"]] = f"{side_u} BRAKE"
-
     if cfg.PUSHER_CHANNELS:
         for i, ch in enumerate(cfg.PUSHER_CHANNELS.get("extend",  []) or []):
             do_map[ch] = "PUSHER EXTEND"  + (f" {i+1}" if i else "")

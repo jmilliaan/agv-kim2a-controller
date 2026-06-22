@@ -50,8 +50,13 @@ class PerceptionState:
     def __init__(self):
         self.latest_di     = None   # latest DI bits from Modbus (list of bool)
         self.latest_do     = None   # latest commanded DO state  (list of bool)
-        self.latest_sensor = None   # last CAN frame dict from MGS1600
+        self.latest_sensor = None   # last CAN frame dict from the SICK MLS
         self.can_last_rx   = 0.0    # epoch of last CAN message received
+
+        # ── BLVD-KRD drive telemetry (written by CANMotorDriver) ──────────────
+        self.motor_actual_rpm = {"left": 0.0, "right": 0.0}  # CiA-402 0x606C readback
+        self.motor_statusword = {"left": 0,   "right": 0}    # CiA-402 0x6041 readback
+        self.motor_fault      = None  # None | "left" | "right" — drive in CiA-402 FAULT
 
 
 class TuningState:
@@ -94,7 +99,7 @@ class AMRState:
         self.rfid_queue   = asyncio.Queue()  # RFID tag reads
         self.sensor_queue = asyncio.Queue()  # CAN magnetic sensor readings
         self.do_queue     = asyncio.Queue()  # commands: (channel_no, state)
-        self.ao_queue     = asyncio.Queue()  # commands: (channel_no, voltage)
+        self.motor_queue  = asyncio.Queue()  # commands: (side, target_rpm) | ("brake", bool)
 
         # ── Typed domains ──────────────────────────────────────────────────────
         self.system     = SystemState()
@@ -245,6 +250,21 @@ class AMRState:
     def can_last_rx(self): return self.perception.can_last_rx
     @can_last_rx.setter
     def can_last_rx(self, v): self.perception.can_last_rx = v
+
+    @property
+    def motor_actual_rpm(self): return self.perception.motor_actual_rpm
+    @motor_actual_rpm.setter
+    def motor_actual_rpm(self, v): self.perception.motor_actual_rpm = v
+
+    @property
+    def motor_statusword(self): return self.perception.motor_statusword
+    @motor_statusword.setter
+    def motor_statusword(self, v): self.perception.motor_statusword = v
+
+    @property
+    def motor_fault(self): return self.perception.motor_fault
+    @motor_fault.setter
+    def motor_fault(self, v): self.perception.motor_fault = v
 
     # ── TuningState shims ─────────────────────────────────────────────────────
 

@@ -9,7 +9,9 @@ Polls a list of (driver, timeout_s, auto_only) tuples every 50 ms.
                                 Manual mode stays operational.
 
 Sets state.system_error (critical) or state.sensor_error (auto-only) accordingly.
-DO/AO writers are output-only and are not monitored here.
+DO writer is output-only and is not monitored here. The BLVD-KRD motor drive is
+the exception: it reports CiA-402 status over the bus, so a drive FAULT
+(state.motor_fault) is folded into the critical tier below.
 """
 
 import asyncio
@@ -39,15 +41,20 @@ async def safety_watchdog(state, watched: list):
                 else:
                     critical_fault = h["detail"]
 
-        # ── Critical fault (DIO lost) — zero outputs, block all modes ────────
+        # ── Drive fault (BLVD-KRD in CiA-402 FAULT) — critical tier ──────────
+        # The CANMotorDriver reports a tripped drive via state.motor_fault and
+        # handles its own fault_reset/re-enable; we surface it as system_error.
+        if state.motor_fault and critical_fault is None:
+            critical_fault = f"BLVD-KRD drive FAULT ({state.motor_fault})"
+
+        # ── Critical fault — Cat-1 stop both drives, block all modes ─────────
         if critical_fault is not None:
             if not state.system_error:
-                logger.error("WATCHDOG: critical driver '%s' lost — forcing idle", critical_fault)
-                state.log_event("ERROR", f"WATCHDOG: critical driver lost: {critical_fault} — AGV stopped")
+                logger.error("WATCHDOG: critical fault '%s' — forcing Cat-1 stop", critical_fault)
+                state.log_event("ERROR", f"WATCHDOG: critical fault: {critical_fault} — AGV stopped")
                 state.system_error_detail = critical_fault
                 state.system_error = True
-                await state.ao_queue.put((0, 0.0))
-                await state.ao_queue.put((1, 0.0))
+                await state.motor_queue.put(("brake", True))
         else:
             if state.system_error:
                 logger.info("WATCHDOG: critical driver recovered — clearing system_error")

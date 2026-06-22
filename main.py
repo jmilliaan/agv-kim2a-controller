@@ -10,8 +10,8 @@ from state import AMRState
 from core.sequence_engine import SequenceEngine
 from drivers.modbus_di   import DIReader
 from drivers.modbus_do   import DOWriter
-from drivers.modbus_ao   import AOWriter
-from drivers.can_mgs1600 import CANReader
+from drivers.can_bldc    import CANMotorDriver
+from drivers.can_mls     import CANReader
 from drivers.rfid_tcp    import RFIDReader
 from safety_watchdog import safety_watchdog
 import modes
@@ -22,16 +22,22 @@ from app.app import run_server, stop_server
 logger = logging.getLogger(__name__)
 
 
-async def shutdown():
-    """Release the web server port, then zero all DO and AO outputs."""
+async def _drain_queue(q):
+    """No-op consumer for a disabled output queue — keeps it from growing
+    unbounded when its writer driver is turned off (bench / no-hardware runs)."""
+    while True:
+        await q.get()
+
+
+async def shutdown(motor_drv):
+    """Release the web server port, leave the drives safe (0 rpm + Quick stop,
+    CiA-402 down to SWITCHED ON), then zero all DO coils."""
     stop_server()   # unblock serve_forever() so the daemon thread exits cleanly
-    logger.info("Shutting down — zeroing all outputs...")
+    logger.info("Shutting down — stopping drives and zeroing outputs...")
     try:
-        ao_client = AsyncModbusTcpClient(config.AO_IP, port=config.MODBUS_PORT)
-        await ao_client.connect()
-        for i in range(config.NUM_AO):
-            await ao_client.write_register(address=config.AO_BASE + i, value=0, device_id=config.DEVICE_ID)
-        ao_client.close()
+        loop = asyncio.get_running_loop()
+        if motor_drv is not None:
+            await loop.run_in_executor(None, motor_drv.safe_stop)
 
         if config.DIO_ENABLED:
             dio_client = AsyncModbusTcpClient(config.DIO_IP, port=config.MODBUS_PORT)
@@ -39,7 +45,7 @@ async def shutdown():
             for i in range(config.NUM_DO):
                 await dio_client.write_coil(address=config.DO_BASE + i, value=False, device_id=config.DEVICE_ID)
             dio_client.close()
-        logger.info("All outputs zeroed. Shutdown complete.")
+        logger.info("Drives stopped, outputs zeroed. Shutdown complete.")
     except Exception as e:
         logger.error("Shutdown error: %s", e)
 
@@ -65,16 +71,24 @@ async def run():
     engine = SequenceEngine(state, _initial_seqs)
 
     # ── Instantiate drivers (feature-flag gated) ──────────────────────────────
-    di_drv   = DIReader()   if config.DIO_ENABLED  else None
-    can_drv  = CANReader()  if config.CAN_ENABLED  else None
-    rfid_drv = RFIDReader() if config.RFID_ENABLED else None
-    do_drv   = DOWriter()   if config.DIO_ENABLED  else None
-    ao_drv   = AOWriter()
+    # The motor CAN driver owns the shared CAN bus; the SICK MLS CANReader attaches
+    # to that same bus rather than opening its own. When the motor bus is disabled
+    # the sensor has no bus, so CAN_ENABLED is forced off too.
+    motor_drv = CANMotorDriver() if config.MOTOR_CAN_ENABLED else None
+    can_sensor_on = config.CAN_ENABLED and config.MOTOR_CAN_ENABLED
+    if config.CAN_ENABLED and not config.MOTOR_CAN_ENABLED:
+        logger.warning("CAN sensor needs the motor CAN bus — disabling it (MOTOR_CAN_ENABLED=0)")
+
+    di_drv   = DIReader()            if config.DIO_ENABLED  else None
+    can_drv  = CANReader(motor_drv)  if can_sensor_on       else None
+    rfid_drv = RFIDReader()          if config.RFID_ENABLED else None
+    do_drv   = DOWriter()            if config.DIO_ENABLED  else None
 
     for name, enabled in [
         ("DIO (DI+DO)", config.DIO_ENABLED),
-        ("CAN sensor",  config.CAN_ENABLED),
-        ("RFID",       config.RFID_ENABLED),
+        ("MOTOR CAN",   config.MOTOR_CAN_ENABLED),
+        ("CAN sensor",  can_sensor_on),
+        ("RFID",        config.RFID_ENABLED),
     ]:
         logger.info("%-12s %s", name, "ENABLED" if enabled else "DISABLED")
 
@@ -90,7 +104,12 @@ async def run():
 
     # ── Build task list ───────────────────────────────────────────────────────
     watched = []
-    core_tasks = [ao_drv.run(state)]
+    if motor_drv is not None:
+        core_tasks = [motor_drv.run(state)]
+    else:
+        # No wheel drive: drain motor_queue so motion helpers don't back it up.
+        logger.info("MOTOR CAN disabled — wheels offline, draining motor_queue")
+        core_tasks = [_drain_queue(state.motor_queue)]
 
     if do_drv:
         core_tasks.append(do_drv.run(state))
@@ -117,8 +136,8 @@ async def run():
         if not isinstance(exc, asyncio.CancelledError):
             logger.error("Unhandled task exception — forcing shutdown: %s", exc)
         else:
-            logger.info("Main loops cancelled. Executing Modbus hardware shutdown...")
-        await shutdown()
+            logger.info("Main loops cancelled. Executing hardware shutdown...")
+        await shutdown(motor_drv)
 
 if __name__ == "__main__":
     try:

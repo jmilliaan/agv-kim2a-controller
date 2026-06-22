@@ -269,7 +269,7 @@ def build_document():
     add_info_box(
         doc,
         "Deskripsi Singkat Sistem",
-        "AGV merupakan differential-drive automated vehicle dengan mode manual dan auto tape following. Sistem menggunakan sensor magnetic guide, pembacaan RFID, discrete I/O, analog speed output, serta safety watchdog untuk memastikan unit berhenti aman saat terjadi fault, tape loss, atau emergency stop. Dokumen ini tidak mencakup feature SLMP, PLC handshake, maupun fungsi apa pun yang terkait trolley.",
+        "AGV merupakan differential-drive automated vehicle dengan mode manual dan auto tape following. Sistem menggunakan sensor magnetic guide, pembacaan RFID, discrete I/O, penggerak roda BLDC via CANopen (CiA-402), serta safety watchdog untuk memastikan unit berhenti aman saat terjadi fault, tape loss, atau emergency stop. Dokumen ini tidak mencakup feature SLMP, PLC handshake, maupun fungsi apa pun yang terkait trolley.",
     )
 
     add_paragraph(doc, "3. Operating Description", style="Heading 1", bold=True, size=16, color=ACCENT, space_after=6)
@@ -337,7 +337,7 @@ def build_document():
     performance_items = [
         ("Arah putaran motor", "Arah motor kiri dan kanan sesuai command dan tidak tertukar."),
         ("Respons acceleration / deceleration", "Percepatan dan perlambatan terasa halus serta tidak menimbulkan hentakan abnormal."),
-        ("Stabilitas output analog speed", "Output kecepatan analog berubah konsisten terhadap command operasi."),
+        ("Stabilitas perintah kecepatan CANopen", "Target velocity CiA-402 ke kedua drive berubah konsisten terhadap command operasi."),
         ("Keseimbangan gerak", "Tidak ada tarikan berlebih ke satu sisi saat lintasan lurus dan kondisi tape normal."),
         ("Kebisingan / getaran", "Tidak ada bunyi atau getaran abnormal selama pengujian commissioning."),
     ]

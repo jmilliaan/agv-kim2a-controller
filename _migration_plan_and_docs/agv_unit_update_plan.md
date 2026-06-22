@@ -53,6 +53,21 @@
 > **retained as a fallback** (feature-flagged — see [§4](#4-configuration--configpy--profile-json-bldc)).
 > **Flag legend:** `[BLDC]` = changed by the CAN-BLDC motor swap; `[EVO]` = changed/added by the
 > fleet integration.
+>
+> **⚠ SENSOR CHANGE — magnetic guide sensor: Roboteq MGS1600 → SICK MLS (MLSE) [SENSOR]:** the
+> magnetic line sensor has been replaced. Wherever this document says "MGS1600" / "Roboteq" /
+> "custom CAN frame", the deployed sensor is now a **SICK MLS**, a true **CANopen** device that
+> publishes its line position on **TPDO1** (COB-ID `0x180 + node id`; factory node `0x0A` → 0x18A).
+> It still **shares the one CANable2 bus** with the two BLVD-KRD drives and is still read by
+> subscribing to its COB-ID on the shared `canopen.Network` (no second adapter). Key deltas:
+> the driver is **`drivers/can_mls.py`** (replaces `drivers/can_mgs1600.py`); the steering process
+> variable is the MLS **LCP2** line center point (a single detected line is always output as LCP2),
+> carried in the unchanged `latest_sensor["left_mm"]` so the PID / dashboard / FSM are untouched;
+> markers are now **numeric codes** (`marker_code`), not left/right (the active profile uses only
+> RFID triggers, so this is inert today); and the MLS **must be pre-set to 500 kbit/s** (factory is
+> 125 kbit/s) + a free node id via the SICK config tool / LSS **before** joining the shared bus —
+> bitrate is not set from code. The vendored EDS + reference reader live in `can_magnetic_sensor/`.
+> The MGS1600 wording in §0.1 / §1 / §2a / §6 below is **superseded by this note**.
 
 ---
 
@@ -166,7 +181,7 @@ zones and an impact bumper.
 | Digital inputs (buttons, selectors, lidar, bumper) | Remote DIO module | **Modbus TCP** (discrete inputs) | `pymodbus` (async) |
 | Digital outputs (pusher relays, horns) | Remote DIO module | **Modbus TCP** (coils) | `pymodbus` (async) |
 | **Wheel motors (×2)** | Oriental Motor **BLV type-R** BLDC + **BLVD-KRD** drivers | **CANopen / CiA-402** (Profile Velocity) over **slcan** / CANable2 USB | `canopen` |
-| Magnetic guide sensor | Roboteq **MGS1600** | **CAN** (custom frame) over **slcan** / CANable2 USB | `python-can` |
+| Magnetic guide sensor **[SENSOR]** | ~~Roboteq MGS1600~~ → SICK **MLS (MLSE)** | **CANopen** TPDO1 (COB-ID 0x18A) over **slcan** / CANable2 USB | `canopen` / `python-can` |
 | RFID floor-tag reader | TCP RFID reader | **raw TCP socket** (hex stream) | `socket` |
 | Web dashboard | operator phone/laptop over WiFi | HTTP | `Flask` |
 | **Fleet coordination [EVO]** | Store controller (MQTT broker) | **MQTT** (pub/sub, JSON) over WiFi | `paho-mqtt` |
@@ -277,12 +292,13 @@ open the same slcan serial device twice**, so there is exactly **one** bus objec
   `/dev/ttyACM0` (or a `slcanX` netdev) — **not** `COM16`; that value in the bring-up reference
   ([can_bldc/canopen_blv_r1.py](can_bldc/canopen_blv_r1.py)) is only the Windows dev port. It comes
   from `motor_can.CHANNEL` in the profile.
-- The **MGS1600** is *not* a CANopen device — it emits a fixed custom frame at COB-ID
-  `SENSOR_COB_ID` (0x186). **`CANReader` must not construct its own `can.interface.Bus`.** It
-  consumes the **same** bus owned by `CANMotorDriver`: register a raw-frame hook with
-  `network.subscribe(SENSOR_COB_ID, callback)` (canopen forwards unrecognised COB-IDs to
-  subscribers), or read `network.bus` through a `can.Notifier`. Refactor `drivers/can_mgs1600.py` so
-  `CANReader.run` **accepts the shared network/bus** rather than opening slcan a second time.
+- **[SENSOR] (updated):** the magnetic sensor is now a **SICK MLS** CANopen device emitting
+  **TPDO1** at COB-ID `SENSOR_COB_ID` (`0x180 + node id` = **0x18A** for node 0x0A). *(The old
+  MGS1600 used a custom frame at 0x186 — superseded.)* The pattern is otherwise unchanged:
+  **`CANReader` must not construct its own `can.interface.Bus`** — it consumes the **same** bus
+  owned by `CANMotorDriver` via `network.subscribe(SENSOR_COB_ID, callback)` (canopen forwards the
+  COB-ID to subscribers). The implemented driver is **`drivers/can_mls.py`** and `CANReader.run`
+  **accepts the shared network** rather than opening slcan a second time.
 - Because the bus is needed for *motion*, it is always brought up. `CAN_ENABLED` gates only the
   **sensor reader / auto-follow path**, not the bus itself.
 
@@ -867,7 +883,7 @@ drivers/base.py         SensorDriver / ActuatorDriver ABCs
 drivers/modbus_di.py    DIReader   (Modbus discrete inputs; applies DI_FLIPPED)
 drivers/modbus_do.py    DOWriter   (Modbus coils; consumes do_queue — pusher/horn only)
 drivers/can_bldc.py     CANMotorDriver (BLVD-KRD CiA-402 over CANopen; consumes motor_queue)
-drivers/can_mgs1600.py  CANReader  (MGS1600 magnetic guide sensor; shares the slcan bus)
+drivers/can_mls.py      CANReader  (SICK MLS magnetic line sensor, CANopen TPDO1; shares the slcan bus) [SENSOR]
 drivers/rfid_tcp.py     RFIDReader (raw TCP hex stream; parses 4-char hex tags)
 drivers/mqtt_client.py  [EVO] NEW — paho-mqtt client: LWT, sub cmd/*, drain mqtt_out_queue, ACK/seq
 evo_topics.py           [EVO] COPY of store-controller/evo_topics.py (shared contract — do not re-author)

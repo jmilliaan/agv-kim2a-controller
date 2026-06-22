@@ -3,14 +3,6 @@ import config
 
 # ── Kinematic Math ────────────────────────────────────────────────────────────
 
-def voltage_to_rpm(voltage):
-    rpm = 646.59 * voltage - 101.2
-    return rpm
-
-def rpm_to_voltage(rpm):
-    voltage = (rpm + 101.2) / 646.59
-    return voltage
-
 def mps_to_rpm(v_meter_per_second):
     v_meter_per_minute = v_meter_per_second * 60
     wheel_rpm = v_meter_per_minute / config.WHEEL_CIRCUMFERENCE
@@ -18,112 +10,75 @@ def mps_to_rpm(v_meter_per_second):
     return motor_rpm
 
 # ── Motion Commands ───────────────────────────────────────────────────────────
+# Wheels are driven over CANopen / CiA-402 Profile Velocity. Each helper emits a
+# *signed* logical Target velocity (r/min; + = forward) per side onto
+# motor_queue. Per-wheel mirror inversion (motor_can.invert) is applied in the
+# CANMotorDriver, never here — see drivers/can_bldc.py.
 
-async def _drive(state, left_fwd: bool, left_v: float, right_fwd: bool, right_v: float):
-    """
-    Core drive primitive. Sets direction DO and speed AO for both wheels.
-    Channel mapping is read from config.MOTOR_CHANNELS (set in profile JSON).
-    """
-    lch = config.MOTOR_CHANNELS["left"]
-    rch = config.MOTOR_CHANNELS["right"]
+async def _drive(state, left_rpm: float, right_rpm: float):
+    """Core drive primitive — queue signed per-wheel Target velocity."""
+    await state.motor_queue.put(("left",  left_rpm))
+    await state.motor_queue.put(("right", right_rpm))
 
-    await state.do_queue.put((lch["do_fwd"],   left_fwd))
-    await state.do_queue.put((lch["do_rev"],   not left_fwd))
-    await state.do_queue.put((lch["do_brake"], False))
+async def set_forward(state, rpm):
+    await _drive(state, rpm, rpm)
 
-    await state.do_queue.put((rch["do_fwd"],   right_fwd))
-    await state.do_queue.put((rch["do_rev"],   not right_fwd))
-    await state.do_queue.put((rch["do_brake"], False))
+async def set_reverse(state, rpm):
+    # Negative-velocity reverse survives only for the manual jog (no auto reverse).
+    await _drive(state, -rpm, -rpm)
 
-    await state.ao_queue.put((lch["ao_speed"], left_v))
-    await state.ao_queue.put((rch["ao_speed"], right_v))
-
-async def set_forward(state, v):
-    await _drive(state, True, v, True, v)
-
-async def set_reverse(state, v):
-    await _drive(state, False, v, False, v)
-
-async def set_left(state, v):
+async def set_left(state, rpm):
     # spin left: left wheel reverse, right wheel forward
-    await _drive(state, False, v, True, v)
+    await _drive(state, -rpm, rpm)
 
-async def set_right(state, v):
+async def set_right(state, rpm):
     # spin right: left wheel forward, right wheel reverse
-    await _drive(state, True, v, False, v)
+    await _drive(state, rpm, -rpm)
 
-async def set_forward_left(state, v_fast, v_slow):
+async def set_forward_left(state, rpm_fast, rpm_slow):
     # both wheels forward, right (outer) faster than left (inner)
-    await _drive(state, True, v_slow, True, v_fast)
+    await _drive(state, rpm_slow, rpm_fast)
 
-async def set_forward_right(state, v_fast, v_slow):
+async def set_forward_right(state, rpm_fast, rpm_slow):
     # both wheels forward, left (outer) faster than right (inner)
-    await _drive(state, True, v_fast, True, v_slow)
+    await _drive(state, rpm_fast, rpm_slow)
 
-async def set_reverse_left(state, v_fast, v_slow):
+async def set_reverse_left(state, rpm_fast, rpm_slow):
     # both wheels reverse, right (outer) faster than left (inner)
-    await _drive(state, False, v_slow, False, v_fast)
+    await _drive(state, -rpm_slow, -rpm_fast)
 
-async def set_reverse_right(state, v_fast, v_slow):
+async def set_reverse_right(state, rpm_fast, rpm_slow):
     # both wheels reverse, left (outer) faster than right (inner)
-    await _drive(state, False, v_fast, False, v_slow)
+    await _drive(state, -rpm_fast, -rpm_slow)
 
-async def update_voltages(state, left_v: float, right_v: float):
-    """AO-only speed update. Direction relays unchanged.
+async def update_velocities(state, left_rpm: float, right_rpm: float):
+    """Fast path: re-queue only the two signed motor Target velocities.
 
-    Use during smooth acceleration: the direction was set by a prior set_* call,
-    so re-issuing DO writes every cycle would flood the DO queue (each Modbus
-    coil write is ~10 ms). This helper queues only the two AO writes.
+    Used by the auto PID loop and the manual ramp. A velocity command also
+    implicitly releases a prior brake (handled in CANMotorDriver).
     """
-    lch = config.MOTOR_CHANNELS["left"]
-    rch = config.MOTOR_CHANNELS["right"]
-    await state.ao_queue.put((lch["ao_speed"], left_v))
-    await state.ao_queue.put((rch["ao_speed"], right_v))
+    await state.motor_queue.put(("left",  left_rpm))
+    await state.motor_queue.put(("right", right_rpm))
 
-async def set_cat1_stop(state, decel_wait: float = 0.3):
-    """Category 1 stop (IEC 60204-1): zero the speed reference so the drive
-    decelerates on its own ramp, then apply the mechanical brake after
-    decel_wait seconds once the AGV has slowed to a standstill.
+async def set_cat1_stop(state, decel_wait: float = 0.0):
+    """Category 1 stop (IEC 60204-1): zero Target velocity and request a
+    CiA-402 Quick stop — the drive decelerates on QUICKSTOP_DECEL (0x6085)
+    then holds with its electromagnetic brake.
     Use for: emergency transitions, LiDAR inner zone, impact bumper.
     """
-    lch = config.MOTOR_CHANNELS["left"]
-    rch = config.MOTOR_CHANNELS["right"]
-    # Phase 1 — command zero speed; drive decelerates on its internal ramp
-    await state.ao_queue.put((lch["ao_speed"], 0.0))
-    await state.ao_queue.put((rch["ao_speed"], 0.0))
-    # Phase 2 — wait for the AGV to reach standstill
-    await asyncio.sleep(decel_wait)
-    # Phase 3 — apply mechanical brake and clear direction commands
-    await state.do_queue.put((lch["do_fwd"],   False))
-    await state.do_queue.put((lch["do_rev"],   False))
-    await state.do_queue.put((lch["do_brake"], True))
-    await state.do_queue.put((rch["do_fwd"],   False))
-    await state.do_queue.put((rch["do_rev"],   False))
-    await state.do_queue.put((rch["do_brake"], True))
+    await state.motor_queue.put(("brake", True))
+    if decel_wait:
+        await asyncio.sleep(decel_wait)
 
 async def set_brake(state):
-    lch = config.MOTOR_CHANNELS["left"]
-    rch = config.MOTOR_CHANNELS["right"]
-    await state.ao_queue.put((lch["ao_speed"], 0.0))
-    await state.ao_queue.put((rch["ao_speed"], 0.0))
-    await state.do_queue.put((lch["do_fwd"],   False))
-    await state.do_queue.put((lch["do_rev"],   False))
-    await state.do_queue.put((lch["do_brake"], True))
-    await state.do_queue.put((rch["do_fwd"],   False))
-    await state.do_queue.put((rch["do_rev"],   False))
-    await state.do_queue.put((rch["do_brake"], True))
+    """Zero Target velocity + CiA-402 Quick stop (electromagnetic brake holds)."""
+    await state.motor_queue.put(("brake", True))
 
 async def idle(state):
-    lch = config.MOTOR_CHANNELS["left"]
-    rch = config.MOTOR_CHANNELS["right"]
-    await state.ao_queue.put((lch["ao_speed"], 0.0))
-    await state.ao_queue.put((rch["ao_speed"], 0.0))
-    await state.do_queue.put((lch["do_fwd"],   False))
-    await state.do_queue.put((lch["do_rev"],   False))
-    await state.do_queue.put((lch["do_brake"], False))
-    await state.do_queue.put((rch["do_fwd"],   False))
-    await state.do_queue.put((rch["do_rev"],   False))
-    await state.do_queue.put((rch["do_brake"], False))
+    """Cat-2 hold: command 0 r/min, drives stay OPERATION ENABLED (no brake —
+    the AGV can be pushed by hand)."""
+    await state.motor_queue.put(("left",  0))
+    await state.motor_queue.put(("right", 0))
 
 
 # ── Pusher (linear actuator) ──────────────────────────────────────────────────
