@@ -72,7 +72,6 @@ def _build_state_snapshot():
         if (time.time() - ts) < 60.0
     ]
     sequences["unmapped_recent"] = _unmapped_recent
-    sequences["mapping_reload_pending"] = s.mapping_reload_pending
 
     # ── Motion telemetry (commanded RPM + PID; plus CiA-402 actuals) ──────────
     tel = s.motion_telemetry or {}
@@ -204,10 +203,6 @@ def params_page():
 @app.route("/errors")
 def errors_page():
     return render_template("errors.html")
-
-@app.route("/mappings")
-def mappings_page():
-    return render_template("mappings.html", agv_id=_config.AGV_ID)
 
 @app.route("/api/errors")
 def api_errors():
@@ -370,173 +365,52 @@ def api_tuning_speeds():
     })
 
 
-@app.route("/api/mappings", methods=["GET"])
-def api_mappings_get():
-    if _state is None or _config is None:
-        return jsonify({"error": "not initialised"}), 503
-    from core.mapping_store import load_rules, decompile_profile_sequences
-    rules = load_rules(_config.AGV_ID)
-    first_open = rules is None
-    if first_open:
-        # Import profile sequences on first open — mandatory, no skip path
-        profile_seqs = _config._params.get("sequences", [])
-        rules, raw = decompile_profile_sequences(profile_seqs)
-    else:
-        raw = []
-    return jsonify({
-        "rules":                rules or [],
-        "raw_sequences":        raw,
-        "first_open":           first_open,
-        "reload_pending":       _state.mapping_reload_pending,
-        "rfid_enabled":         _state.rfid_enabled,
-    })
+_MODULE_FLAGS = {"DIO_ENABLED", "MOTOR_CAN_ENABLED", "SAFETY_ENABLED", "HORN_ENABLED"}
 
-
-@app.route("/api/mappings", methods=["POST"])
-def api_mappings_save():
-    if _state is None or _config is None:
-        return jsonify({"error": "not initialised"}), 503
-    from core.mapping_store import validate, save_rules, compile_to_sequences
-    data  = request.get_json(silent=True) or {}
-    rules = data.get("rules")
-    if not isinstance(rules, list):
-        return jsonify({"error": "rules must be a list"}), 400
-
-    # Assign IDs to any new rule that doesn't have one
-    import uuid
-    for r in rules:
-        if not r.get("id"):
-            r["id"] = str(uuid.uuid4())
-
-    errors = validate(rules)
-    if errors:
-        return jsonify({"ok": False, "errors": errors}), 400
-
-    save_rules(_config.AGV_ID, rules, source="ui")
-    _state.mapping_reload_pending = True
-    _state.log_event("INFO", f"MAPPING: {len(rules)} rule(s) saved — reload pending")
-    logger.info("[MAPPING] %d rules saved via UI", len(rules))
-    return jsonify({"ok": True, "rule_count": len(rules), "reload_pending": True})
-
-
-@app.route("/api/mappings/apply_now", methods=["POST"])
-def api_mappings_apply_now():
-    if _state is None or _engine is None or _config is None:
-        return jsonify({"error": "not initialised"}), 503
-    mode = _state.current_mode
-    if mode == "running":
-        return jsonify({"error": "Cannot apply while AGV is RUNNING — wait for ARMED entry"}), 409
-
-    from core.mapping_store import load_rules, compile_to_sequences
-    rules = load_rules(_config.AGV_ID)
-    if rules is None:
-        return jsonify({"error": "No override file saved yet"}), 400
-
-    new_seqs = compile_to_sequences(rules)
-
-    # Dispatch onto the asyncio loop from this Flask (daemon) thread
-    loop = getattr(_state, "loop", None)
-    if loop is None or not loop.is_running():
-        return jsonify({"error": "asyncio loop not available"}), 503
-
-    result = {"ok": None}
-    ev = threading.Event()
-
-    def _do_reload():
-        ok = _engine.reload_sequences(new_seqs)
-        result["ok"] = ok
-        ev.set()
-
-    loop.call_soon_threadsafe(_do_reload)
-    ev.wait(timeout=2.0)
-
-    if result["ok"] is None:
-        return jsonify({"error": "Reload timed out"}), 503
-    if not result["ok"]:
-        return jsonify({"error": "Engine refused — a sequence is still running"}), 503
-
-    _state.mapping_reload_pending = False
-    _state.log_event("INFO", f"MAPPING: apply_now — {len(rules)} rules loaded immediately")
-    logger.info("[MAPPING] apply_now: %d rules reloaded", len(rules))
-    return jsonify({"ok": True, "seq_count": len(new_seqs)})
-
-
-@app.route("/api/mappings/history", methods=["GET"])
-def api_mappings_history():
+@app.route("/api/modules", methods=["GET"])
+def api_modules_get():
     if _config is None:
         return jsonify({"error": "not initialised"}), 503
-    from core.mapping_store import read_audit_log
-    limit = min(int(request.args.get("limit", 50)), 200)
-    return jsonify({"entries": read_audit_log(_config.AGV_ID, limit=limit)})
+    return jsonify({flag: getattr(_config, flag) for flag in _MODULE_FLAGS})
 
 
-@app.route("/api/mappings/backups", methods=["GET"])
-def api_mappings_backups():
-    if _config is None:
-        return jsonify({"error": "not initialised"}), 503
-    from core.mapping_store import list_backups
-    return jsonify({"backups": list_backups(_config.AGV_ID)})
-
-
-@app.route("/api/mappings/restore", methods=["POST"])
-def api_mappings_restore():
+@app.route("/api/modules", methods=["POST"])
+def api_modules_set():
     if _state is None or _config is None:
         return jsonify({"error": "not initialised"}), 503
-    data = request.get_json(silent=True) or {}
-    slot = data.get("slot")
-    if not isinstance(slot, int) or not (1 <= slot <= 5):
-        return jsonify({"error": "slot must be integer 1–5"}), 400
-    from core.mapping_store import restore_backup
-    rules, errors = restore_backup(_config.AGV_ID, slot)
-    if errors:
-        return jsonify({"ok": False, "errors": errors}), 400
-    _state.mapping_reload_pending = True
-    _state.log_event("INFO", f"MAPPING: restored from backup slot {slot} — reload pending")
-    return jsonify({"ok": True, "rule_count": len(rules), "reload_pending": True})
+    data    = request.get_json(silent=True) or {}
+    feature = data.get("feature")
+    enabled = data.get("enabled")
+    if feature not in _MODULE_FLAGS:
+        return jsonify({"error": f"unknown module: {feature}"}), 400
+    if not isinstance(enabled, bool):
+        return jsonify({"error": "enabled must be true or false"}), 400
 
-
-@app.route("/api/mappings/export", methods=["GET"])
-def api_mappings_export():
-    if _config is None:
-        return jsonify({"error": "not initialised"}), 503
-    from core.mapping_store import export_bundle
     import json as _json
-    bundle = export_bundle(_config.AGV_ID)
-    from flask import Response
-    return Response(
-        _json.dumps(bundle, indent=2),
-        mimetype="application/json",
-        headers={"Content-Disposition":
-                 f"attachment; filename={_config.AGV_ID}_sequences.json"},
-    )
+    with open(_config._param_path, "r") as f:
+        profile = _json.load(f)
+    profile.setdefault("features", {})[feature] = int(enabled)
+    with open(_config._param_path, "w") as f:
+        _json.dump(profile, f, indent=2)
+
+    _state.log_event("INFO",
+        f"MODULES: {feature} -> {'ENABLED' if enabled else 'DISABLED'} (restart required)")
+    logger.info("[MODULES] %s = %s (restart required)", feature, enabled)
+    return jsonify({"ok": True, "feature": feature, "enabled": enabled, "restart_required": True})
 
 
-@app.route("/api/mappings/import", methods=["POST"])
-def api_mappings_import():
-    if _state is None or _config is None:
-        return jsonify({"error": "not initialised"}), 503
-    data = request.get_json(silent=True)
-    if data is None:
-        return jsonify({"error": "Expected JSON body"}), 400
-    from core.mapping_store import import_bundle
-    errors = import_bundle(_config.AGV_ID, data)
-    if errors:
-        return jsonify({"ok": False, "errors": errors}), 400
-    _state.mapping_reload_pending = True
-    rule_count = len(data.get("rules", []))
-    _state.log_event("INFO", f"MAPPING: imported {rule_count} rules — reload pending")
-    return jsonify({"ok": True, "rule_count": rule_count, "reload_pending": True})
-
-
-@app.route("/api/mappings/unmapped", methods=["GET"])
-def api_mappings_unmapped():
+@app.route("/api/service/restart", methods=["POST"])
+def api_service_restart():
     if _state is None:
         return jsonify({"error": "not initialised"}), 503
-    entries = [
-        {"ts": ts, "tag": tag, "tag_dec": int(tag, 16)}
-        for ts, tag in list(_state.unmapped_rfid_log)
-    ]
-    return jsonify({"entries": list(reversed(entries))})
+    _state.log_event("INFO", "SERVICE: restart requested from dashboard")
+    logger.info("[SERVICE] Restart requested from dashboard")
+    try:
+        subprocess.Popen(["sudo", "systemctl", "restart", "agv-controller.service"])
+    except Exception as e:
+        logger.error("[SERVICE] Restart failed to launch: %s", e)
+        return jsonify({"ok": False, "error": str(e)}), 500
+    return jsonify({"ok": True})
 
 
 @app.route("/api/wifi")

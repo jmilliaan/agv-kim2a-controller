@@ -13,7 +13,7 @@ Design split (agv_unit_update_plan §8 "Fleet mapping authority"):
     next and WHEN the AGV may depart a handoff point.
   - The local SequenceEngine / RFID rules remain authoritative for the BEHAVIOUR
     at each tag (where to stop, pusher actuation, slow zones, corner speed). The
-    join is by RFID tag id: mission `stops[].tag` == the AGV's mapping-store tags.
+    join is by RFID tag id: mission `stops[].tag` == the AGV's profile sequence tags.
 
 It is event-driven and side-effect-light so it is unit-testable without hardware:
   - `start(mission)`         — a fresh cmd/mission was accepted; begin the trip.

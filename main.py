@@ -58,16 +58,9 @@ async def run():
     state      = AMRState()
     state.loop = loop   # expose for Flask thread → call_soon_threadsafe
 
-    from core.mapping_store import load_rules, compile_to_sequences
-    _override_rules = load_rules(config.AGV_ID)
-    if _override_rules is not None:
-        _initial_seqs = compile_to_sequences(_override_rules)
-        logger.info("Loaded mapping override: %s  (%d rule(s) → %d sequence(s))",
-                    config.AGV_ID, len(_override_rules), len(_initial_seqs))
-    else:
-        _initial_seqs = config.SEQUENCES
-        logger.info("No mapping override found — using profile sequences: %s  (%d sequence(s))",
-                    config.AGV_ID, len(_initial_seqs))
+    _initial_seqs = config.SEQUENCES
+    logger.info("Using profile sequences: %s  (%d sequence(s))",
+                config.AGV_ID, len(_initial_seqs))
 
     engine = SequenceEngine(state, _initial_seqs)
 
@@ -90,6 +83,8 @@ async def run():
         ("MOTOR CAN",   config.MOTOR_CAN_ENABLED),
         ("CAN sensor",  can_sensor_on),
         ("RFID",        config.RFID_ENABLED),
+        ("SAFETY",      config.SAFETY_ENABLED),
+        ("HORN",        config.HORN_ENABLED),
     ]:
         logger.info("%-12s %s", name, "ENABLED" if enabled else "DISABLED")
 
@@ -124,9 +119,11 @@ async def run():
         core_tasks.append(rfid_drv.run(state))
         watched.append((rfid_drv, config.WATCHDOG_RFID_TIMEOUT_S, True))   # auto-only — manual still works
 
-    core_tasks.append(safety_watchdog(state, watched=watched))
+    if config.SAFETY_ENABLED:
+        core_tasks.append(safety_watchdog(state, watched=watched))
     core_tasks.append(rfid_processor(state, engine))
-    core_tasks.append(horn_controller(state))
+    if config.HORN_ENABLED:
+        core_tasks.append(horn_controller(state))
     core_tasks.append(modes.mode_manager(state, engine))
 
     # ── EVO fleet layer (MQTT edge node) ──────────────────────────────────────

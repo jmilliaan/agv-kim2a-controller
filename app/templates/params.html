@@ -271,6 +271,9 @@
   #tune-status.dirty { color: #806000; font-weight: bold; }
 
   .section.tuning .section-title { background: #006000; }
+  .section.modules .section-title { background: #804000; }
+  .tune-hint.warn { color: #800000; font-weight: bold; }
+  .btn-restart { background: #800000; color: #fff; }
 
   /* ── Kiosk / flip mode (?flip=1) ── */
   html.flipped {
@@ -363,6 +366,71 @@
       <button class="btn-revert" id="btn-revert-speeds"
               onclick="loadTuning()" disabled>REVERT</button>
       <span id="tune-status">loading…</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODULES — persisted to the profile JSON's "features" block.
+     Boot-time flags: drivers/tasks are only created at startup, so a
+     toggle here takes effect after a service restart.
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="section modules raised">
+  <div class="section-title">MODULES (REQUIRES RESTART)</div>
+  <div class="section-body">
+
+    <div class="tune-row">
+      <span class="tune-label">
+        DIGITAL I/O (DIO)
+        <span class="tune-hint">Modbus DI/DO module</span>
+      </span>
+      <label class="tgl">
+        <input type="checkbox" id="tgl-mod-dio"
+               onchange="toggleModule('DIO_ENABLED', this)">
+        <span class="tgl-slider"></span>
+      </label>
+    </div>
+
+    <div class="tune-row">
+      <span class="tune-label">
+        CAN (WHEEL DRIVES)
+        <span class="tune-hint">motor CAN bus — wheels offline if disabled</span>
+      </span>
+      <label class="tgl">
+        <input type="checkbox" id="tgl-mod-can"
+               onchange="toggleModule('MOTOR_CAN_ENABLED', this)">
+        <span class="tgl-slider"></span>
+      </label>
+    </div>
+
+    <div class="tune-row">
+      <span class="tune-label">
+        SAFETY WATCHDOG
+        <span class="tune-hint warn">disables protective-stop monitoring</span>
+      </span>
+      <label class="tgl">
+        <input type="checkbox" id="tgl-mod-safety"
+               onchange="toggleModule('SAFETY_ENABLED', this)">
+        <span class="tgl-slider"></span>
+      </label>
+    </div>
+
+    <div class="tune-row">
+      <span class="tune-label">
+        HORN
+        <span class="tune-hint">audible horn controller</span>
+      </span>
+      <label class="tgl">
+        <input type="checkbox" id="tgl-mod-horn"
+               onchange="toggleModule('HORN_ENABLED', this)">
+        <span class="tgl-slider"></span>
+      </label>
+    </div>
+
+    <div class="speed-actions">
+      <button class="btn-confirm btn-restart" onclick="restartService()">RESTART SERVICE</button>
+      <span id="modules-status">loading…</span>
     </div>
 
   </div>
@@ -526,13 +594,80 @@
 })();
 </script>
 
+<script>
+(function() {
+  const $ = id => document.getElementById(id);
+  const status = $('modules-status');
+
+  function setStatus(msg, cls) {
+    status.textContent = msg;
+    status.className = cls || '';
+  }
+
+  const MODULE_MAP = {
+    DIO_ENABLED:       'tgl-mod-dio',
+    MOTOR_CAN_ENABLED: 'tgl-mod-can',
+    SAFETY_ENABLED:    'tgl-mod-safety',
+    HORN_ENABLED:      'tgl-mod-horn',
+  };
+
+  window.loadModules = async function() {
+    try {
+      const r = await fetch('/api/modules');
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      for (const [feature, id] of Object.entries(MODULE_MAP)) {
+        $(id).checked = !!d[feature];
+      }
+      setStatus('loaded', 'ok');
+    } catch (e) {
+      setStatus('failed to load: ' + e.message, 'err');
+    }
+  };
+
+  window.toggleModule = async function(feature, checkbox) {
+    checkbox.disabled = true;
+    const enabled = checkbox.checked;
+    try {
+      const r = await fetch('/api/modules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feature: feature, enabled: enabled })
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'HTTP ' + r.status);
+      setStatus(feature + ' → ' + (enabled ? 'ENABLED' : 'DISABLED') + ' — restart required to apply', 'dirty');
+    } catch (e) {
+      checkbox.checked = !enabled;
+      setStatus(feature + ' failed: ' + e.message, 'err');
+    } finally {
+      checkbox.disabled = false;
+    }
+  };
+
+  window.restartService = async function() {
+    if (!confirm('Restart the AGV controller service now? The AGV will briefly go offline.')) return;
+    setStatus('restarting service…', 'dirty');
+    try {
+      const r = await fetch('/api/service/restart', { method: 'POST' });
+      const d = await r.json();
+      if (!r.ok || !d.ok) throw new Error(d.error || 'HTTP ' + r.status);
+      setStatus('restart issued — reconnecting…', 'ok');
+    } catch (e) {
+      setStatus('restart failed: ' + e.message, 'err');
+    }
+  };
+
+  loadModules();
+})();
+</script>
+
 <!-- Bottom nav bar -->
 <div id="nav-bar">
   <button class="nav-btn" onclick="location.href='/'">HOME</button>
   <button class="nav-btn" onclick="location.href='/manual'">MANUAL</button>
   <button class="nav-btn" onclick="location.href='/io'">IO MONITOR</button>
   <button class="nav-btn active">PARAMETERS</button>
-  <button class="nav-btn" onclick="location.href='/mappings'">MAPPINGS</button>
   <button class="nav-btn" onclick="location.href='/errors'">ERRORS</button>
 </div>
 

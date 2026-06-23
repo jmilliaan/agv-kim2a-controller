@@ -6,7 +6,6 @@ import config
 import motion
 import fleet
 
-from core.mapping_store import load_rules, compile_to_sequences
 from core.pid import PIDController
 from _debugging.plotter import RunRecorder
 
@@ -629,21 +628,6 @@ async def mode_manager(state, engine=None):
             _abort_mission()
             await asyncio.sleep(0.01)
             continue
-
-        # ── Mapping reload on ARMED entry ─────────────────────────────────────
-        if state.mapping_reload_pending and current_mode == "armed" and engine is not None:
-            rules = load_rules(config.AGV_ID)
-            if rules is not None:
-                new_seqs = compile_to_sequences(rules)
-                ok = engine.reload_sequences(new_seqs)
-                if ok:
-                    logger.info("[MAPPING] Sequences reloaded on ARMED entry (%d rules → %d seqs)",
-                                len(rules), len(new_seqs))
-                    state.log_event("INFO",
-                        f"MAPPING: sequences reloaded — {len(rules)} rules active")
-                else:
-                    logger.warning("[MAPPING] reload deferred — sequence still running")
-            state.mapping_reload_pending = False
 
         # ── End-cycle request (sequence-triggered return to ARMED) ───────────
         if state.end_cycle_request and current_mode == "running":

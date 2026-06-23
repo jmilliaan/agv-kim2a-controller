@@ -66,8 +66,6 @@ class TuningState:
     from the active profile JSON at startup.
     """
     def __init__(self):
-        self.mapping_reload_pending = False  # set by save endpoint; cleared on ARMED reload
-
         # Feature toggles — default ENABLED at boot regardless of profile flags.
         # The profile's LIDAR_STOP_ENABLED / RFID_ENABLED are no longer consulted
         # for the runtime gate; they remain only as deployment-time hints.
@@ -259,13 +257,6 @@ class AMRState:
 
     @property
     def unmapped_rfid_log(self): return self.kinematic.unmapped_rfid_log
-
-    # ── TuningState shims (mapping) ───────────────────────────────────────────
-
-    @property
-    def mapping_reload_pending(self): return self.tuning.mapping_reload_pending
-    @mapping_reload_pending.setter
-    def mapping_reload_pending(self, v): self.tuning.mapping_reload_pending = bool(v)
 
     # ── PerceptionState shims ─────────────────────────────────────────────────
 

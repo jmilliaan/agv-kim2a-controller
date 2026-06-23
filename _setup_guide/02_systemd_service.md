@@ -101,9 +101,37 @@ The app also keeps its own rotating logs in
 
 ---
 
+## Dashboard restart button + module toggles
+
+The Parameters page (`/params`) has a MODULES panel (DIGITAL I/O, CAN, SAFETY WATCHDOG,
+HORN) that writes straight to the active profile's `features` block, and a RESTART
+SERVICE button. These are boot-time flags — drivers/tasks are only created at startup —
+so a toggle only takes effect after the next restart, which the button gives you in one
+click.
+
+Since the dashboard runs as `gvipc-06` (not root), that one `systemctl` command needs
+passwordless sudo:
+
+```bash
+sudo visudo -f /etc/sudoers.d/agv-controller
+```
+
+Paste exactly:
+
+```
+gvipc-06 ALL=(root) NOPASSWD: /usr/bin/systemctl restart agv-controller.service
+```
+
+Without this entry, the RESTART SERVICE button fails (check `journalctl -u
+agv-controller`) and you'll need to restart manually via "Everyday commands" above.
+
+---
+
 ## Bench / no-hardware runs
 
 If you're running on a PC with nothing wired up and don't want connect retries in the log,
 disable the hardware subsystems in `profiles/agv-evo-01.json` → `features`
 (`DIO_ENABLED`, `MOTOR_CAN_ENABLED`, `CAN_ENABLED`, `RFID_ENABLED` → `0`). The service still
 starts cleanly and the dashboard still comes up — see [config.py](../config.py).
+`SAFETY_ENABLED` / `HORN_ENABLED` work the same way if you want to bench-test without
+the safety watchdog or horn outputs.

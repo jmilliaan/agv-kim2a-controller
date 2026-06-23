@@ -205,13 +205,15 @@
   ],
 
   "features": {
-    "_comment": "Set any hardware flag to 0 to run without that device connected (no connect errors). The SICK MLS (CAN_ENABLED) shares the wheel-drive bus, so it needs MOTOR_CAN_ENABLED on too. LIDAR_STOP_ENABLED is driven by the runtime UI toggle (defaults ON at boot regardless of this value); kept here only as a deployment hint. FLEET_MODE=1 starts the MQTT edge-node layer (store coordination); 0 = byte-for-byte standalone fallback.",
+    "_comment": "Set any hardware flag to 0 to run without that device connected (no connect errors). The SICK MLS (CAN_ENABLED) shares the wheel-drive bus, so it needs MOTOR_CAN_ENABLED on too. LIDAR_STOP_ENABLED is driven by the runtime UI toggle (defaults ON at boot regardless of this value); kept here only as a deployment hint. FLEET_MODE=1 starts the MQTT edge-node layer (store coordination); 0 = byte-for-byte standalone fallback. SAFETY_ENABLED / HORN_ENABLED gate the watchdog and horn controller tasks; changes need a service restart to take effect.",
     "DIO_ENABLED":        1,
     "MOTOR_CAN_ENABLED":  1,
     "CAN_ENABLED":        1,
     "RFID_ENABLED":       1,
     "LIDAR_STOP_ENABLED": 1,
-    "FLEET_MODE":         1
+    "FLEET_MODE":         1,
+    "SAFETY_ENABLED":     1,
+    "HORN_ENABLED":       1
   },
 
   "watchdog": {

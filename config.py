@@ -136,6 +136,8 @@ MOTOR_CAN_ENABLED  = bool(_feat.get("MOTOR_CAN_ENABLED",  1))  # BLVD-KRD wheel 
 RFID_ENABLED       = bool(_feat.get("RFID_ENABLED",       1))  # RFID TCP reader
 LIDAR_STOP_ENABLED = bool(_feat.get("LIDAR_STOP_ENABLED", 1))  # 0 = disable inner lidar stop
 FLEET_MODE         = bool(_feat.get("FLEET_MODE",         0))  # EVO MQTT edge node; default OFF = standalone
+SAFETY_ENABLED     = bool(_feat.get("SAFETY_ENABLED",     1))  # safety watchdog (protective stop)
+HORN_ENABLED       = bool(_feat.get("HORN_ENABLED",       1))  # audible horn controller
 
 # Every hardware subsystem above can be turned off independently so the
 # controller boots cleanly on a PC with nothing connected (no connect errors):
