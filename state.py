@@ -25,6 +25,8 @@ class SystemState:
         self.sensor_error_detail = ""
         self.bumper_active       = False   # True while impact bumper is triggered
         self.event_log           = []      # list of {ts, level, msg} — max _EVENT_LOG_MAX entries
+        self.driver_write_fault  = False   # True while AO or DO writer is failing to commit commands
+        self.driver_write_fault_detail = ""
 
 
 class KinematicState:
@@ -43,6 +45,8 @@ class KinematicState:
         self.at_home              = False   # False = treat next tag-10 as arrival; True = treat as departure
         self.end_cycle_request    = False   # set by end_cycle sequence action; mode_manager transitions to ARMED
         self.unmapped_rfid_log    = collections.deque(maxlen=50)  # (timestamp, tag_hex) for unmapped tags
+        self.rfid_last_data_ts    = 0.0    # epoch of last real RFID byte traffic (not connect, not idle)
+        self.rfid_silent_warning  = False  # True when reader connected but no traffic for >60 s
 
 
 class PerceptionState:
@@ -70,6 +74,22 @@ class TuningState:
         self.lidar_stop_enabled = True
         self.lidar_slow_enabled = True
         self.rfid_enabled       = True
+
+        # Demo mode: AGV runs continuously using the profile's *default*
+        # sequences (ignoring any user-saved override) and the end_cycle action
+        # is suppressed so the home tag doesn't return to ARMED. Stops via
+        # RESET button / mode switch / emergency continue to work.
+        self.demo_mode_enabled  = False
+
+        # Audible horn master gate. When False, both regular and alarm horn
+        # outputs are forced LOW regardless of mode, demo, or alarm state —
+        # used during commissioning / quiet-hours operation. Defaults to True.
+        self.horn_enabled       = True
+
+        # Input debug mode: bypasses the physical START / RESET / MODE_SWITCH
+        # DI bits and substitutes the virtual state set from the manual page.
+        # Emergency input is NEVER bypassed. Default OFF.
+        self.input_debug_mode_enabled = False
 
         # Auto target speeds (m/s) — bounded by AUTO_SPEED_MIN/MAX.
         self.auto_high_speed       = float(config.AUTO_TARGET_HIGH_SPEED)
@@ -116,6 +136,15 @@ class AMRState:
         # Used by Flask thread to dispatch reload_sequences via call_soon_threadsafe.
         self.loop = None
 
+        # Virtual operator inputs — substituted for the physical DI bits when
+        # input_debug_mode_enabled is True. virtual_start / virtual_reset are
+        # momentary (set True by HTTP, auto-cleared after a short window so
+        # the mode_manager rising-edge detector fires once per press).
+        # virtual_switch_manual is a level: True = MANUAL, False = AUTO.
+        self.virtual_start         = False
+        self.virtual_reset         = False
+        self.virtual_switch_manual = False
+
     # ── SystemState shims ─────────────────────────────────────────────────────
 
     @property
@@ -155,6 +184,16 @@ class AMRState:
 
     @property
     def event_log(self): return self.system.event_log
+
+    @property
+    def driver_write_fault(self): return self.system.driver_write_fault
+    @driver_write_fault.setter
+    def driver_write_fault(self, v): self.system.driver_write_fault = bool(v)
+
+    @property
+    def driver_write_fault_detail(self): return self.system.driver_write_fault_detail
+    @driver_write_fault_detail.setter
+    def driver_write_fault_detail(self, v): self.system.driver_write_fault_detail = v
 
     def log_event(self, level: str, msg: str):
         """Append a timestamped event to the in-memory log (thread-safe under GIL)."""
@@ -227,6 +266,16 @@ class AMRState:
     @property
     def unmapped_rfid_log(self): return self.kinematic.unmapped_rfid_log
 
+    @property
+    def rfid_last_data_ts(self): return self.kinematic.rfid_last_data_ts
+    @rfid_last_data_ts.setter
+    def rfid_last_data_ts(self, v): self.kinematic.rfid_last_data_ts = v
+
+    @property
+    def rfid_silent_warning(self): return self.kinematic.rfid_silent_warning
+    @rfid_silent_warning.setter
+    def rfid_silent_warning(self, v): self.kinematic.rfid_silent_warning = bool(v)
+
     # ── TuningState shims (mapping) ───────────────────────────────────────────
 
     @property
@@ -294,6 +343,21 @@ class AMRState:
     def rfid_enabled(self): return self.tuning.rfid_enabled
     @rfid_enabled.setter
     def rfid_enabled(self, v): self.tuning.rfid_enabled = bool(v)
+
+    @property
+    def demo_mode_enabled(self): return self.tuning.demo_mode_enabled
+    @demo_mode_enabled.setter
+    def demo_mode_enabled(self, v): self.tuning.demo_mode_enabled = bool(v)
+
+    @property
+    def horn_enabled(self): return self.tuning.horn_enabled
+    @horn_enabled.setter
+    def horn_enabled(self, v): self.tuning.horn_enabled = bool(v)
+
+    @property
+    def input_debug_mode_enabled(self): return self.tuning.input_debug_mode_enabled
+    @input_debug_mode_enabled.setter
+    def input_debug_mode_enabled(self, v): self.tuning.input_debug_mode_enabled = bool(v)
 
     @property
     def auto_high_speed(self): return self.tuning.auto_high_speed

@@ -13,21 +13,30 @@ Falls back to: parameters.json  (backwards-compatibility)
 
 import json
 import os
+import time
 
 _dir = os.path.dirname(os.path.abspath(__file__))
 
 # ── Profile selection ─────────────────────────────────────────────────────────
 
 AGV_ID = os.environ.get("AGV_ID", "agv1_kim")
-print(AGV_ID)
 _profile_path   = os.path.join(_dir, "profiles", f"{AGV_ID}.json")
 _fallback_path  = os.path.join(_dir, "parameters.json")
 
-if os.path.exists(_profile_path):
-    _param_path = _profile_path
-elif os.path.exists(_fallback_path):
-    _param_path = _fallback_path
-else:
+# Retry the lookup a few times — a transient FS hiccup at boot (slow SD card,
+# NFS mount still settling) should not kill the controller before it starts.
+_param_path = None
+for _attempt in range(3):
+    if os.path.exists(_profile_path):
+        _param_path = _profile_path
+        break
+    if os.path.exists(_fallback_path):
+        _param_path = _fallback_path
+        break
+    if _attempt < 2:
+        time.sleep(1.0)
+
+if _param_path is None:
     raise FileNotFoundError(
         f"No profile found for AGV_ID='{AGV_ID}'. "
         f"Expected: {_profile_path} or {_fallback_path}"
@@ -84,6 +93,14 @@ DAC_RES = _params["hardware"]["DAC_RES"]
 WHEEL_DIAMETER      = _params["kinematics"]["WHEEL_DIAMETER"]
 GEAR_RATIO          = _params["kinematics"]["GEAR_RATIO"]
 WHEEL_CIRCUMFERENCE = 3.14159 * WHEEL_DIAMETER
+
+# ── Motor voltage↔rpm calibration (per-profile) ───────────────────────────────
+# motor_rpm = RPM_PER_VOLT * V + RPM_VOLT_OFFSET  (motion.voltage_to_rpm / rpm_to_voltage).
+# Defaults reproduce the historical shared constants, so profiles without a
+# "motor_cal" block (agv1_kim, agv2_kim, parameters.json) are unchanged.
+_motor_cal      = _params.get("motor_cal", {})
+RPM_PER_VOLT    = float(_motor_cal.get("RPM_PER_VOLT",    646.59))
+RPM_VOLT_OFFSET = float(_motor_cal.get("RPM_VOLT_OFFSET", -101.2))
 
 # ── Speeds ────────────────────────────────────────────────────────────────────
 MANUAL_TARGET_HIGH_SPEED     = _params["speeds"]["MANUAL_TARGET_HIGH_SPEED"]

@@ -204,6 +204,59 @@
     height: 40px;
   }
 
+  /* ── Input debug panel ── */
+  #dbg-panel {
+    margin-top: 14px;
+    background: #c0c0c0;
+    border-top:    3px solid #fff;
+    border-left:   3px solid #fff;
+    border-right:  3px solid #808080;
+    border-bottom: 3px solid #808080;
+    padding: 10px 12px;
+  }
+  #dbg-panel.off { opacity: 0.5; }
+  #dbg-header {
+    display: flex; align-items: center; gap: 12px;
+    font-weight: bold; font-size: 14px; letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+  #dbg-led {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #404040;
+    border-top: 2px solid #000; border-left: 2px solid #000;
+    border-right: 2px solid #808080; border-bottom: 2px solid #808080;
+  }
+  #dbg-led.on { background: #40ff40; box-shadow: 0 0 8px #40ff40; }
+  #dbg-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .dbg-btn {
+    padding: 10px 18px;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 15px; font-weight: bold; letter-spacing: 1px;
+    cursor: pointer; background: #c0c0c0; color: #000;
+    border-top:    3px solid #fff;
+    border-left:   3px solid #fff;
+    border-right:  3px solid #808080;
+    border-bottom: 3px solid #808080;
+  }
+  .dbg-btn:active {
+    border-top:    3px solid #808080;
+    border-left:   3px solid #808080;
+    border-right:  3px solid #fff;
+    border-bottom: 3px solid #fff;
+  }
+  .dbg-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  #btn-dbg-start { color: #006000; }
+  #btn-dbg-reset { color: #800000; }
+  #dbg-switch {
+    display: flex; align-items: center; gap: 8px;
+    margin-left: auto;
+    font-size: 13px; font-weight: bold; letter-spacing: 1px;
+  }
+  #dbg-switch .sw-label.act { color: #000080; }
+  #dbg-switch .sw-label     { color: #808080; }
+
   /* ── Pusher panel ── */
   #pusher-panel {
     display: flex;
@@ -360,6 +413,26 @@
   <button id="btn-pusher-up"   class="pusher-btn">&#9650; PUSHER UP</button>
   <button id="btn-pusher-down" class="pusher-btn">&#9660; PUSHER DOWN</button>
   <span id="pusher-status"></span>
+</div>
+
+<!-- Input debug panel (virtual START / RESET / MODE switch) -->
+<div id="dbg-panel" class="off">
+  <div id="dbg-header">
+    <span id="dbg-led"></span>
+    <span>INPUT DEBUG MODE: <span id="dbg-state">OFF</span></span>
+    <span style="font-weight:normal;font-size:12px;color:#404040;letter-spacing:0;">
+      (enable on PARAMETERS page)
+    </span>
+  </div>
+  <div id="dbg-row">
+    <button id="btn-dbg-start" class="dbg-btn" disabled>&#9658; START</button>
+    <button id="btn-dbg-reset" class="dbg-btn" disabled>&#11036; RESET</button>
+    <div id="dbg-switch">
+      <span id="sw-lbl-auto"   class="sw-label">AUTO</span>
+      <button id="btn-dbg-switch" class="dbg-btn" disabled style="min-width:80px;">--</button>
+      <span id="sw-lbl-manual" class="sw-label">MANUAL</span>
+    </div>
+  </div>
 </div>
 
 <!-- Bottom nav bar -->
@@ -519,11 +592,50 @@
         tapeEl.textContent = 'NO TAPE';
         tapeEl.className = '';
       }
+
+      // Input debug panel — LED + button enable state + switch label.
+      const dbgOn = !!d.agv.input_debug_mode_enabled;
+      const swMan = !!d.agv.virtual_switch_manual;
+      document.getElementById('dbg-led').className   = dbgOn ? 'on' : '';
+      document.getElementById('dbg-state').textContent = dbgOn ? 'ON' : 'OFF';
+      document.getElementById('dbg-panel').className   = dbgOn ? '' : 'off';
+      ['btn-dbg-start','btn-dbg-reset','btn-dbg-switch'].forEach(id => {
+        document.getElementById(id).disabled = !dbgOn;
+      });
+      const swBtn = document.getElementById('btn-dbg-switch');
+      swBtn.textContent = swMan ? 'MANUAL' : 'AUTO';
+      swBtn.style.background = swMan ? '#0000c0' : '#c0c0c0';
+      swBtn.style.color      = swMan ? '#fff'    : '#000';
+      document.getElementById('sw-lbl-manual').className = swMan ? 'sw-label act' : 'sw-label';
+      document.getElementById('sw-lbl-auto').className   = swMan ? 'sw-label' : 'sw-label act';
     } catch(e) {
       statusBar.className = 'warn';
       statusBar.textContent = 'Connection lost -- retrying...';
     }
   }
+
+  // ── Input debug virtual buttons ─────────────────────────────────────────
+  function dbgPress(name) {
+    fetch('/api/debug/button', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+      keepalive: true
+    }).catch(() => {});
+  }
+  function dbgToggleSwitch() {
+    const cur = document.getElementById('btn-dbg-switch').textContent.trim();
+    const nextManual = (cur !== 'MANUAL');   // toggle
+    fetch('/api/debug/switch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ manual: nextManual }),
+      keepalive: true
+    }).catch(() => {});
+  }
+  document.getElementById('btn-dbg-start').addEventListener('click', () => dbgPress('start'));
+  document.getElementById('btn-dbg-reset').addEventListener('click', () => dbgPress('reset'));
+  document.getElementById('btn-dbg-switch').addEventListener('click', dbgToggleSwitch);
 
   poll();
   setInterval(poll, 500);

@@ -16,11 +16,17 @@ class DIReader(SensorDriver):
 
     async def run(self, state):
         client = AsyncModbusTcpClient(config.DIO_IP, port=config.MODBUS_PORT)
+        _CONNECT_TIMEOUT_S = 2.0
 
         while True:
             try:
                 if not client.connected:
-                    await client.connect()
+                    try:
+                        await asyncio.wait_for(client.connect(), timeout=_CONNECT_TIMEOUT_S)
+                    except asyncio.TimeoutError:
+                        logger.warning("DIO connect timeout at %s. Retrying...", config.DIO_IP)
+                        await asyncio.sleep(2)
+                        continue
                     if not client.connected:
                         logger.warning("DIO not ready at %s. Retrying...", config.DIO_IP)
                         await asyncio.sleep(2)

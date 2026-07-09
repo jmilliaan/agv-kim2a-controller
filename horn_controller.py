@@ -65,12 +65,18 @@ async def horn_controller(state):
                 reg_ch, alarm_ch)
 
     while True:
-        in_auto = state.current_mode in _AUTO_MODES
-        if in_auto:
-            alarm = _alarm_active(state)
-            want_reg, want_alarm = (False, True) if alarm else (True, False)
-        else:
+        # Master gate: operator can silence both horns from the params page,
+        # independently of mode / alarm / demo. Forces outputs LOW; the change
+        # is propagated through the same enqueue-on-change path below.
+        if not state.horn_enabled:
             want_reg, want_alarm = False, False
+        else:
+            in_auto = state.current_mode in _AUTO_MODES
+            if in_auto:
+                alarm = _alarm_active(state)
+                want_reg, want_alarm = (False, True) if alarm else (True, False)
+            else:
+                want_reg, want_alarm = False, False
 
         if reg_ch is not None and want_reg != last_reg:
             await state.do_queue.put((reg_ch, want_reg))

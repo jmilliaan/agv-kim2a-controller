@@ -8,6 +8,7 @@ write for plc_sequence_request).
 Access from any device on 192.168.2.x: http://192.168.2.100:5000
 """
 
+import asyncio
 import os
 import re
 import socket
@@ -24,10 +25,11 @@ logger = logging.getLogger(__name__)
 _here = os.path.dirname(os.path.abspath(__file__))
 app   = Flask(__name__, template_folder=os.path.join(_here, "templates"))
 
-_state  = None   # set once by run_server()
-_engine = None   # set once by run_server()
-_config = None   # set once by run_server()
-_server = None   # werkzeug BaseWSGIServer instance
+_state       = None   # set once by run_server()
+_engine      = None   # set once by run_server()
+_config      = None   # set once by run_server()
+_server      = None   # werkzeug BaseWSGIServer instance
+_restart_cb  = None   # async callable(state, reason) — bounces the systemd service
 
 _NUM_SEQ_BITS = 17
 
@@ -49,6 +51,9 @@ def _build_state_snapshot():
         "sequence_request":     s.plc_sequence_request,
         "seq_pulse_active":     s.plc_sequence_request is not None,
         "reverse_auto_request": s.reverse_auto_request,
+        "demo_mode_enabled":    s.demo_mode_enabled,
+        "input_debug_mode_enabled": s.input_debug_mode_enabled,
+        "virtual_switch_manual":    s.virtual_switch_manual,
     }
 
     # ── What the AGV is writing to the PLC right now ──────────────────────────
@@ -120,6 +125,9 @@ def _build_state_snapshot():
         "lidar_outer": _di_flag(_config.DI_LIDAR_OUTER),
         "lidar_slow":  _di_flag(_config.DI_LIDAR_SLOW),
         "lidar_stop":  _di_flag(_config.DI_LIDAR_STOP),
+        "driver_write_fault":        s.driver_write_fault,
+        "driver_write_fault_detail": s.driver_write_fault_detail,
+        "rfid_silent_warning":       s.rfid_silent_warning,
     }
 
     return {
@@ -232,6 +240,21 @@ def api_errors_clear():
     _state.event_log.clear()
     return jsonify({"ok": True})
 
+
+@app.route("/api/system/restart", methods=["POST"])
+def api_system_restart():
+    """Bounce the controller via systemd. Returns 202 immediately; the actual
+    exit happens ~0.5 s later so the HTTP response can flush. systemd
+    Restart=always brings the service back up within ~2 s."""
+    if _state is None or _restart_cb is None:
+        return jsonify({"error": "restart not available"}), 503
+    loop = getattr(_state, "loop", None)
+    if loop is None:
+        return jsonify({"error": "asyncio loop not available"}), 503
+    asyncio.run_coroutine_threadsafe(
+        _restart_cb(_state, "HMI restart button"), loop)
+    return jsonify({"ok": True, "msg": "restarting"}), 202
+
 @app.route("/api/manual/command", methods=["POST"])
 def api_manual_command():
     if _state is None:
@@ -279,6 +302,12 @@ def api_state():
 def api_sequence():
     if _state is None:
         return jsonify({"error": "state not initialised"}), 503
+
+    # No PLC in this profile (e.g. AGV B). Return a clear message rather than
+    # the misleading "MASTER ON required" that the rest of the handler would
+    # produce when plc_inputs is permanently {}.
+    if not _config.SLMP_ENABLED:
+        return jsonify({"error": "PLC sequences disabled in this profile (SLMP_ENABLED=0)"}), 503
 
     inputs      = _state.plc_inputs
     master_on   = inputs.get("M4_MASTER_ON",  False)
@@ -349,9 +378,12 @@ def api_tuning_get():
         return jsonify({"error": "state not initialised"}), 503
     import state as _state_mod
     return jsonify({
-        "lidar_stop_enabled":   _state.lidar_stop_enabled,
-        "lidar_slow_enabled":   _state.lidar_slow_enabled,
-        "rfid_enabled":         _state.rfid_enabled,
+        "lidar_stop_enabled":       _state.lidar_stop_enabled,
+        "lidar_slow_enabled":       _state.lidar_slow_enabled,
+        "rfid_enabled":             _state.rfid_enabled,
+        "demo_mode_enabled":        _state.demo_mode_enabled,
+        "horn_enabled":             _state.horn_enabled,
+        "input_debug_mode_enabled": _state.input_debug_mode_enabled,
         "auto_high_speed":      _state.auto_high_speed,
         "auto_slow_speed":      _state.auto_slow_speed,
         "auto_extra_slow_speed":_state.auto_extra_slow_speed,
@@ -360,7 +392,9 @@ def api_tuning_get():
     })
 
 
-_TOGGLE_FIELDS = {"lidar_stop_enabled", "lidar_slow_enabled", "rfid_enabled"}
+_TOGGLE_FIELDS = {"lidar_stop_enabled", "lidar_slow_enabled", "rfid_enabled",
+                  "demo_mode_enabled", "horn_enabled",
+                  "input_debug_mode_enabled"}
 
 @app.route("/api/tuning/toggle", methods=["POST"])
 def api_tuning_toggle():
@@ -376,7 +410,66 @@ def api_tuning_toggle():
     setattr(_state, feature, enabled)
     _state.log_event("INFO", f"TUNING: {feature} -> {'ENABLED' if enabled else 'DISABLED'}")
     logger.info("[TUNING] %s = %s", feature, enabled)
+    # Demo mode toggle swaps the active sequence source (profile defaults vs.
+    # user override file). Request a reload — mode_manager applies it on the
+    # next ARMED entry, matching the existing mapping-edit flow.
+    if feature == "demo_mode_enabled":
+        _state.mapping_reload_pending = True
+    # Disabling input debug mode releases any stuck virtual buttons so the
+    # next enable starts from a clean slate.
+    if feature == "input_debug_mode_enabled" and not enabled:
+        _state.virtual_start = False
+        _state.virtual_reset = False
     return jsonify({"ok": True, "feature": feature, "enabled": enabled})
+
+
+# ── Input debug mode: virtual operator inputs ────────────────────────────────
+
+_DEBUG_BUTTONS = {"start", "reset"}
+_DEBUG_PULSE_S = 0.3   # how long a virtual press stays "held" (> one mode_manager
+                       # cycle, < operator-click cadence) — rising-edge detector
+                       # in mode_manager only fires once per press.
+
+
+@app.route("/api/debug/button", methods=["POST"])
+def api_debug_button():
+    """Virtual momentary press for START or RESET. Requires input debug mode
+    to be ON. Sets the flag True, then auto-clears after _DEBUG_PULSE_S so
+    the mode_manager rising-edge detector fires exactly once."""
+    if _state is None or _state.loop is None:
+        return jsonify({"error": "not initialised"}), 503
+    if not _state.input_debug_mode_enabled:
+        return jsonify({"error": "input debug mode is OFF"}), 403
+    data = request.get_json(silent=True) or {}
+    name = data.get("name")
+    if name not in _DEBUG_BUTTONS:
+        return jsonify({"error": f"unknown button: {name}"}), 400
+    attr = "virtual_" + name
+    setattr(_state, attr, True)
+    logger.info("[DEBUG-INPUT] virtual %s pressed", name.upper())
+    # Schedule auto-clear on the asyncio loop (not the Flask thread).
+    _state.loop.call_soon_threadsafe(
+        _state.loop.call_later, _DEBUG_PULSE_S,
+        lambda a=attr: setattr(_state, a, False))
+    return jsonify({"ok": True, "button": name})
+
+
+@app.route("/api/debug/switch", methods=["POST"])
+def api_debug_switch():
+    """Virtual MODE_SWITCH level. True = MANUAL, False = AUTO. Requires input
+    debug mode to be ON."""
+    if _state is None:
+        return jsonify({"error": "not initialised"}), 503
+    if not _state.input_debug_mode_enabled:
+        return jsonify({"error": "input debug mode is OFF"}), 403
+    data    = request.get_json(silent=True) or {}
+    manual  = data.get("manual")
+    if not isinstance(manual, bool):
+        return jsonify({"error": "manual must be true or false"}), 400
+    _state.virtual_switch_manual = manual
+    logger.info("[DEBUG-INPUT] virtual MODE_SWITCH -> %s",
+                "MANUAL" if manual else "AUTO")
+    return jsonify({"ok": True, "manual": manual})
 
 
 @app.route("/api/tuning/speeds", methods=["POST"])
@@ -423,8 +516,20 @@ def api_tuning_speeds():
 def api_mappings_get():
     if _state is None or _config is None:
         return jsonify({"error": "not initialised"}), 503
-    from core.mapping_store import load_rules, decompile_profile_sequences
-    rules = load_rules(_config.AGV_ID)
+    from core.mapping_store import load_rules, decompile_profile_sequences, OverrideFileCorrupt
+    corruption_note = None
+    try:
+        rules = load_rules(_config.AGV_ID)
+    except OverrideFileCorrupt as exc:
+        rules = None
+        corruption_note = (
+            f"Previous override file was corrupt and has been moved to "
+            f"{exc.renamed_to or '(could not rename)'}. Showing profile defaults — "
+            "review and save to take ownership again."
+        )
+        _state.log_event("ERROR",
+            "Mapping page: override file corrupt; profile defaults imported. "
+            f"Bad file: {exc.renamed_to or '(rename failed)'}")
     first_open = rules is None
     if first_open:
         # Import profile sequences on first open — mandatory, no skip path
@@ -438,6 +543,7 @@ def api_mappings_get():
         "first_open":           first_open,
         "reload_pending":       _state.mapping_reload_pending,
         "rfid_enabled":         _state.rfid_enabled,
+        "corruption_note":      corruption_note,
     })
 
 
@@ -581,10 +687,15 @@ def api_mappings_import():
 def api_mappings_unmapped():
     if _state is None:
         return jsonify({"error": "not initialised"}), 503
-    entries = [
-        {"ts": ts, "tag": tag, "tag_dec": int(tag, 16)}
-        for ts, tag in list(_state.unmapped_rfid_log)
-    ]
+    entries = []
+    for ts, tag in list(_state.unmapped_rfid_log):
+        # Defend against malformed hex from a corrupted RFID packet — a single
+        # bad entry must not take down the whole endpoint.
+        try:
+            tag_dec = int(tag, 16)
+        except (TypeError, ValueError):
+            tag_dec = None
+        entries.append({"ts": ts, "tag": tag, "tag_dec": tag_dec})
     return jsonify({"entries": list(reversed(entries))})
 
 
@@ -612,12 +723,13 @@ def stop_server():
         _server.shutdown()
 
 
-def run_server(state, engine=None):
-    global _state, _engine, _config, _server
+def run_server(state, engine=None, restart_cb=None):
+    global _state, _engine, _config, _server, _restart_cb
     import config
-    _state  = state
-    _engine = engine
-    _config = config
+    _state      = state
+    _engine     = engine
+    _config     = config
+    _restart_cb = restart_cb
 
     _server = make_server("0.0.0.0", 5000, app)
     # SO_REUSEADDR: allows immediate rebind after the process dies (TIME_WAIT)

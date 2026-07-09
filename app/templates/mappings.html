@@ -310,6 +310,9 @@
 <!--  TAG INVENTORY TAB                                                        -->
 <!-- ══════════════════════════════════════════════════════════════════════════ -->
 <div id="tab-inventory" style="display:none">
+  <div id="inv-dirty-banner" style="display:none; background:#c07000; color:#fff; padding:8px 14px; margin-bottom:10px; font-weight:bold; font-size:14px;">
+    ⚠ Showing PENDING edits, not the live AGV mappings. Save (Confirm &amp; Save) to commit.
+  </div>
   <div class="toolbar">
     <button class="btn" onclick="loadInventory()">REFRESH</button>
   </div>
@@ -414,6 +417,10 @@ async function loadMappings() {
     if (d.first_open) {
       document.getElementById('import-notice').style.display = 'block';
       markDirty();  // require explicit save on first open
+    }
+
+    if (d.corruption_note) {
+      setBanner(d.corruption_note, 'err', true);
     }
 
     if (d.raw_sequences && d.raw_sequences.length > 0) {
@@ -820,7 +827,9 @@ async function restoreBackup() {
 
 // ── Tag inventory tab ──────────────────────────────────────────────────────
 async function loadInventory() {
-  // Build inventory from current rules
+  // Build inventory from current rules. If the user has unsaved edits, show
+  // a banner so they don't mistake the dirty view for the AGV's live mapping.
+  document.getElementById('inv-dirty-banner').style.display = dirty ? 'block' : 'none';
   const h = n => ('000' + n.toString(16).toUpperCase()).slice(-4);
   const tbody = document.getElementById('inv-tbody');
   tbody.innerHTML = '';

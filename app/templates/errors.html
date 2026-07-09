@@ -49,7 +49,7 @@
   #event-count {
     font-size: 14px; color: #404040; flex: 1;
   }
-  #btn-clear {
+  #btn-clear, #btn-restart {
     padding: 5px 20px;
     font-family: 'Inter', system-ui, sans-serif;
     font-size: 15px; font-weight: bold; letter-spacing: 1px;
@@ -57,9 +57,32 @@
     border-top: 3px solid #fff; border-left: 3px solid #fff;
     border-right: 3px solid #808080; border-bottom: 3px solid #808080;
   }
-  #btn-clear:active {
+  #btn-clear:active, #btn-restart:active {
     border-top: 3px solid #808080; border-left: 3px solid #808080;
     border-right: 3px solid #fff; border-bottom: 3px solid #fff;
+  }
+  #btn-restart { color: #fff; background: #800000; }
+
+  /* Restart overlay — covers screen while service bounces */
+  #restart-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 200;
+    align-items: center; justify-content: center;
+  }
+  #restart-overlay.show { display: flex; }
+  #restart-box {
+    background: #000080; color: #fff;
+    padding: 28px 40px;
+    font-size: 22px; font-weight: bold;
+    letter-spacing: 2px; text-align: center;
+    border-top: 4px solid #4040c0; border-left: 4px solid #4040c0;
+    border-right: 4px solid #000040; border-bottom: 4px solid #000040;
+  }
+  #restart-box .sub {
+    font-size: 15px; font-weight: normal;
+    letter-spacing: 1px; margin-top: 10px; opacity: 0.85;
   }
 
   #log-panel { background: #c0c0c0; }
@@ -192,7 +215,15 @@
 
 <div id="toolbar">
   <span id="event-count">Loading...</span>
+  <button id="btn-restart" onclick="restartController()">RESTART CONTROLLER</button>
   <button id="btn-clear" onclick="clearLog()">CLEAR LOG</button>
+</div>
+
+<div id="restart-overlay">
+  <div id="restart-box" class="raised">
+    RESTARTING CONTROLLER...
+    <div class="sub">Service will be back in ~5 seconds.<br>The page will reload automatically.</div>
+  </div>
 </div>
 
 <div id="log-panel" class="raised">
@@ -254,6 +285,21 @@ function fetchLog() {
 function clearLog() {
   fetch('/api/errors/clear', { method: 'POST' })
     .then(function() { fetchLog(); });
+}
+
+function restartController() {
+  if (!confirm('Restart the controller?\n\nIn-flight cycle state will be lost.\nMake sure the AGV is in a safe position.')) {
+    return;
+  }
+  document.getElementById('restart-overlay').classList.add('show');
+  fetch('/api/system/restart', { method: 'POST' })
+    .catch(function() { /* expected — process is exiting */ });
+  // Poll the API every 1 s; reload as soon as it answers again.
+  setTimeout(function pollUp() {
+    fetch('/api/errors')
+      .then(function(r) { if (r.ok) { location.reload(); } else { setTimeout(pollUp, 1000); } })
+      .catch(function() { setTimeout(pollUp, 1000); });
+  }, 3000);
 }
 
 fetchLog();

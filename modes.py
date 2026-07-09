@@ -5,8 +5,22 @@ import time
 import config
 import motion
 
-from core.mapping_store import load_rules, compile_to_sequences
+from core.mapping_store import load_rules, compile_to_sequences, OverrideFileCorrupt
 from core.pid import PIDController
+
+
+def _di_bit(di, idx, default=False):
+    """Safe DI access. Returns `default` if di is None, idx is None, or out of range.
+
+    Modbus reads normally pad to NUM_DI, but a partial read or a misconfigured
+    profile could otherwise raise IndexError and crash the mode_manager loop,
+    leaving auto_mode/manual_mode running without a state machine.
+    """
+    if di is None or idx is None:
+        return default
+    if 0 <= idx < len(di):
+        return bool(di[idx])
+    return default
 from _debugging.plotter import RunRecorder
 
 logger = logging.getLogger(__name__)
@@ -57,6 +71,31 @@ async def auto_mode(state, direction="forward", engine=None):
     tape_was_lost        = False
     was_sequence_stopped = False
     last_speed_mode      = None   # tracks when gain set must change
+    can_timed_out        = False  # edge-tracked separately from tape_was_lost so a
+                                  # flaky CAN link doesn't flood the event log every cycle
+
+    _label = "AUTO" if direction == "forward" else "REVERSE"
+
+    def _reset_control_state(reason: str):
+        # Centralised safety-stop reset. Zeroes integrator/derivative state,
+        # the ramp setpoint, the published telemetry, and forces a PID gain
+        # recompute on the next cycle. Per-site flags (tape_was_lost,
+        # was_sequence_stopped, can_timed_out) are NOT touched here — the
+        # caller owns those because their lifecycle depends on the trigger.
+        nonlocal current_target_speed, last_speed_mode
+        pid.reset()
+        current_target_speed = 0.0
+        last_speed_mode      = None
+        state.motion_telemetry = {
+            "left_rpm":   0.0,
+            "right_rpm":  0.0,
+            "pid_error":  0.0,
+            "pid_p":      0.0,
+            "pid_i":      0.0,
+            "pid_d":      0.0,
+            "pid_output": 0.0,
+        }
+        logger.debug("[%s] control state reset (%s)", _label, reason)
 
     recorder = RunRecorder()
     recorder.start()
@@ -91,14 +130,18 @@ async def auto_mode(state, direction="forward", engine=None):
                 if not was_sequence_stopped:
                     logger.info("[AUTO] Sequence stop — holding.")
                     await motion.set_brake(state)
-                    current_target_speed = 0.0
-                    pid.reset()
+                    _reset_control_state("sequence_stop")
                     was_sequence_stopped = True
                 await asyncio.sleep(config.DT)
                 continue
 
             if was_sequence_stopped:
                 logger.info("[AUTO] Sequence stop ended — resuming.")
+                # Reset PID/ramp before re-issuing direction — a long hold (e.g.
+                # 5 s start-from-home pusher routine) can let the integrator
+                # accumulate against a steady lateral offset; without this
+                # reset, the first PID compute lurches the AGV sideways.
+                _reset_control_state("sequence_stop_resume")
                 await motion.set_forward(state, 0.0)
                 was_sequence_stopped = False
 
@@ -126,22 +169,20 @@ async def auto_mode(state, direction="forward", engine=None):
 
             # ── DI snapshot ───────────────────────────────────────────────────
             _di = state.latest_di
-            _label = "AUTO" if direction == "forward" else "REVERSE"
 
             # ── Impact bumper ─────────────────────────────────────────────────
-            if config.DI_BUMPER is not None and _di is not None and _di[config.DI_BUMPER]:
+            if _di_bit(_di, config.DI_BUMPER):
                 logger.warning("[%s] BUMPER HIT — Cat 1 stop", _label)
                 state.log_event("WARNING", f"[{_label}] BUMPER HIT — Cat 1 protective stop")
                 state.bumper_active = True
                 await motion.set_cat1_stop(state)  # Cat 1: decel then brake
-                current_target_speed = 0.0
-                pid.reset()
+                _reset_control_state("bumper")
                 # Hold until bumper signal clears (or emergency overrides)
                 while True:
                     if state.emergency_active:
                         break
                     _di_now = state.latest_di
-                    if _di_now is None or not _di_now[config.DI_BUMPER]:
+                    if not _di_bit(_di_now, config.DI_BUMPER):
                         break
                     await asyncio.sleep(0.01)
                 state.bumper_active = False
@@ -151,6 +192,9 @@ async def auto_mode(state, direction="forward", engine=None):
                 logger.info("[%s] BUMPER CLEARED — waiting 2 s before resume", _label)
                 state.log_event("INFO", f"[{_label}] BUMPER CLEARED — resuming in 2 s")
                 await asyncio.sleep(2.0)
+                # Re-reset after the 2 s hold — derivative filter and integrator
+                # could have drifted against a steady lateral offset.
+                _reset_control_state("bumper_resume")
                 if direction == "forward":
                     await motion.set_forward(state, 0.0)
                 else:
@@ -162,17 +206,18 @@ async def auto_mode(state, direction="forward", engine=None):
             # Outer zone (DI_LIDAR_OUTER): dashboard indicator only — no speed change.
             # Middle zone (DI_LIDAR_SLOW): switch to SLOW speed.
             # Inner zone (DI_LIDAR_STOP): Cat 1 protective stop — decel then brake.
-            if state.lidar_stop_enabled and config.DI_LIDAR_STOP is not None and _di is not None and _di[config.DI_LIDAR_STOP]:
+            if state.lidar_stop_enabled and _di_bit(_di, config.DI_LIDAR_STOP):
                 if not tape_was_lost:
                     logger.warning("[%s] LIDAR INNER — obstacle, Cat 1 stop", _label)
                     state.log_event("WARNING", f"[{_label}] LIDAR INNER DETECT — protective stop")
                     await motion.set_cat1_stop(state)  # Cat 1: decel then brake
-                    current_target_speed = 0.0
-                    pid.reset()
+                    _reset_control_state("lidar_stop")
+                    # Borrow the tape-reacquire branch for recovery: when lidar
+                    # clears it will re-reset PID and reissue direction relays.
                     tape_was_lost = True
                 await asyncio.sleep(config.DT)
                 continue
-            if state.lidar_slow_enabled and config.DI_LIDAR_SLOW is not None and _di is not None and _di[config.DI_LIDAR_SLOW]:
+            if state.lidar_slow_enabled and _di_bit(_di, config.DI_LIDAR_SLOW):
                 if state.speed_mode == "HIGH":
                     state.speed_mode = "SLOW"
 
@@ -193,8 +238,7 @@ async def auto_mode(state, direction="forward", engine=None):
                     logger.warning("[%s] LOST TAPE — stopping", _label)
                     state.log_event("WARNING", f"[{_label}] TAPE LOST — AGV stopped")
                     await motion.idle(state)   # no mechanical brake — Cat 2 hold
-                    current_target_speed = 0.0
-                    pid.reset()
+                    _reset_control_state("tape_lost")
                     tape_was_lost = True
                     await asyncio.sleep(0.01)
                     continue
@@ -202,6 +246,9 @@ async def auto_mode(state, direction="forward", engine=None):
                 if tape_was_lost:
                     logger.info("[%s] TAPE REACQUIRED — resuming", _label)
                     state.log_event("INFO", f"[{_label}] TAPE REACQUIRED — resuming")
+                    # Re-reset — integrator and filtered-derivative could carry
+                    # pre-loss values that no longer reflect current geometry.
+                    _reset_control_state("tape_reacquired")
                     if direction == "forward":
                         await motion.set_forward(state, 0.0)
                     else:
@@ -262,16 +309,26 @@ async def auto_mode(state, direction="forward", engine=None):
 
             # ── CAN timeout ───────────────────────────────────────────────────
             if time.time() - state.can_last_rx > config.CAN_TIMEOUT:
-                if not tape_was_lost:
+                if not can_timed_out:
+                    # Edge: just became timed-out. One warning, one motion stop.
                     logger.warning("[%s] CAN TIMEOUT — sensor lost, stopping", _label)
                     state.log_event("ERROR", f"[{_label}] CAN TIMEOUT — sensor comms lost")
                     await motion.set_brake(state)
-                    current_target_speed = 0.0
-                    pid.reset()
+                    _reset_control_state("can_timeout")
+                    can_timed_out = True
                     tape_was_lost = True
-
                 await asyncio.sleep(config.DT)
                 continue
+            else:
+                # CAN is healthy this cycle. If we were previously timed out,
+                # log the recovery edge and reset PID/ramp — holding with brake
+                # during the outage leaves the controller state stale, and the
+                # first post-recovery compute would otherwise jerk the AGV.
+                if can_timed_out:
+                    _reset_control_state("can_recovery")
+                    logger.info("[%s] CAN recovered", _label)
+                    state.log_event("INFO", f"[{_label}] CAN recovered")
+                    can_timed_out = False
 
             # ── Diagnostics: actual cycle time + sensor rate + queue depths ───
             _now = _diag_loop.time()
@@ -320,23 +377,53 @@ async def manual_mode(state):
     Web remote (state.web_manual_command) takes priority over physical DI buttons.
     Emergency is fully owned by mode_manager — this task does not check it.
 
-    Acceleration model:
-        - Button held: ramp current speed from 0 toward target at MANUAL_ACCEL_RATE.
-        - Button released (state → idle): instant stop, no deceleration ramp.
-    The ramp is implemented as a 0..1 fraction multiplied into the target
-    voltages, so diagonal moves preserve their inner/outer wheel speed ratio.
+    Motion model (no acceleration ramp):
+        - Button held: commands the target voltage immediately (no ramp).
+        - Button released (state → idle): instant stop.
+
+    Transitions between motion states are smoothed by only re-issuing DO
+    direction writes when the wheel-direction relays actually need to change.
+    For example, FORWARD → FWD_LEFT keeps both wheels forward — only the AO
+    distribution changes, so the AGV does not momentarily stop while DO writes
+    propagate. Direction-changing transitions (e.g. FORWARD → REVERSE,
+    FORWARD → LEFT) do re-issue DO writes, which inherently includes the brief
+    relay switching time.
     """
     v_high_max = motion.rpm_to_voltage(motion.mps_to_rpm(config.MANUAL_TARGET_HIGH_SPEED))
     v_slow_max = motion.rpm_to_voltage(motion.mps_to_rpm(config.MANUAL_TARGET_SLOW_SPEED))
 
-    # Cycle period of this task (matches the asyncio.sleep at the bottom).
-    _CYCLE_S = 0.01
-    # Fraction increment per cycle: how much of "0 to MANUAL_TARGET_HIGH_SPEED"
-    # we cover each tick. Reaching full speed takes ~HIGH/ACCEL seconds.
-    _ramp_step = (config.MANUAL_ACCEL_RATE / config.MANUAL_TARGET_HIGH_SPEED) * _CYCLE_S
-    fraction = 0.0     # 0..1, scales target voltages during ramp-up
+    # Direction categories — motion states sharing the same DO relay pattern.
+    # When transitioning between two states in the same category, we only need
+    # to update the AO (no DO writes, no momentary stop).
+    _DIR_BOTH_FWD   = "both_fwd"      # forward, fwd_left, fwd_right
+    _DIR_BOTH_REV   = "both_rev"      # reverse, rvs_left, rvs_right
+    _DIR_SPIN_LEFT  = "spin_left"     # left
+    _DIR_SPIN_RIGHT = "spin_right"    # right
+    _MOTION_DIR = {
+        "forward":   _DIR_BOTH_FWD,
+        "fwd_left":  _DIR_BOTH_FWD,
+        "fwd_right": _DIR_BOTH_FWD,
+        "reverse":   _DIR_BOTH_REV,
+        "rvs_left":  _DIR_BOTH_REV,
+        "rvs_right": _DIR_BOTH_REV,
+        "left":      _DIR_SPIN_LEFT,
+        "right":     _DIR_SPIN_RIGHT,
+    }
+
+    def _target_voltages(ms):
+        """Return (left_v, right_v) for a given motion_state at full speed."""
+        if   ms == "fwd_left":  return v_slow_max, v_high_max   # inner=L slow, outer=R fast
+        elif ms == "fwd_right": return v_high_max, v_slow_max
+        elif ms == "rvs_left":  return v_slow_max, v_high_max
+        elif ms == "rvs_right": return v_high_max, v_slow_max
+        elif ms == "forward":   return v_high_max, v_high_max
+        elif ms == "reverse":   return v_high_max, v_high_max
+        elif ms == "left":      return v_slow_max, v_slow_max
+        elif ms == "right":     return v_slow_max, v_slow_max
+        return 0.0, 0.0
 
     current_motion = None
+    current_dir    = None   # last direction category written to DO relays
     _pusher_task   = None   # track active pusher task to prevent concurrent relay firing
 
     try:
@@ -358,10 +445,10 @@ async def manual_mode(state):
         if web_cmd is not None:
             motion_state = web_cmd
         elif di is not None:
-            pb_fwd   = di[config.DI_FWD]
-            pb_rvs   = di[config.DI_REV]
-            pb_left  = di[config.DI_LEFT]
-            pb_right = di[config.DI_RIGHT]
+            pb_fwd   = _di_bit(di, config.DI_FWD)
+            pb_rvs   = _di_bit(di, config.DI_REV)
+            pb_left  = _di_bit(di, config.DI_LEFT)
+            pb_right = _di_bit(di, config.DI_RIGHT)
 
             if pb_fwd and pb_left:       motion_state = "fwd_left"
             elif pb_fwd and pb_right:    motion_state = "fwd_right"
@@ -377,23 +464,31 @@ async def manual_mode(state):
             continue
 
         # ── Map motion_state to (left_target_v, right_target_v) and direction setup.
-        # On state change: issue the full set_* helper (which sets DO direction
-        # AND AO=0) so the ramp always starts from zero voltage.
-        # While the same state is held: re-issue AO-only updates each cycle until
-        # fraction reaches 1.0, then stop emitting writes.
+        #
+        # Key insight: many motion state changes share the same DO relay pattern
+        # (e.g. forward → fwd_left both keep both wheels in the forward direction).
+        # For those same-category transitions we skip DO writes entirely and just
+        # update AO — the AGV never decelerates to zero.  Only when the direction
+        # category genuinely changes (e.g. forward → left, which requires flipping
+        # a wheel relay) do we re-issue DO writes with AO=0 first so the relay
+        # switches under zero load.
         if motion_state == "idle":
             if current_motion != "idle":
-                logger.debug("Manual: IDLE (instant stop, no decel)")
+                logger.debug("Manual: IDLE (instant stop)")
                 await motion.idle(state)
-                fraction = 0.0
                 current_motion = "idle"
+                current_dir    = None
         else:
-            if motion_state != current_motion:
-                logger.debug("Manual: %s (ramp-up at %.2f m/s^2)",
-                             motion_state.upper(), config.MANUAL_ACCEL_RATE)
-                fraction = 0.0
-                # Issue full set_* at zero voltage to lock in the DO direction
-                # without imparting motion. Subsequent cycles just bump AO.
+            new_dir         = _MOTION_DIR.get(motion_state)
+            left_v, right_v = _target_voltages(motion_state)
+
+            if new_dir != current_dir:
+                # Direction category changed — relay flip required.
+                # Zero AO first so the relay switches under zero load, then
+                # immediately command the target voltage on the same cycle so
+                # there is no ramp delay.
+                logger.debug("Manual: %s (dir %s → %s)",
+                             motion_state.upper(), current_dir, new_dir)
                 if   motion_state == "fwd_left":  await motion.set_forward_left(state, 0.0, 0.0)
                 elif motion_state == "fwd_right": await motion.set_forward_right(state, 0.0, 0.0)
                 elif motion_state == "rvs_left":  await motion.set_reverse_left(state, 0.0, 0.0)
@@ -402,34 +497,30 @@ async def manual_mode(state):
                 elif motion_state == "reverse":   await motion.set_reverse(state, 0.0)
                 elif motion_state == "left":      await motion.set_left(state, 0.0)
                 elif motion_state == "right":     await motion.set_right(state, 0.0)
+                current_dir    = new_dir
                 current_motion = motion_state
 
-            # Advance the ramp; only emit AO writes while still climbing.
-            if fraction < 1.0:
-                fraction = min(1.0, fraction + _ramp_step)
-                v_h = v_high_max * fraction
-                v_s = v_slow_max * fraction
-                # Wheel voltage mapping per motion_state.
-                # See motion.py set_* helpers for the (left, right) convention.
-                if   motion_state == "fwd_left":  left_v, right_v = v_s, v_h
-                elif motion_state == "fwd_right": left_v, right_v = v_h, v_s
-                elif motion_state == "rvs_left":  left_v, right_v = v_s, v_h
-                elif motion_state == "rvs_right": left_v, right_v = v_h, v_s
-                elif motion_state == "forward":   left_v, right_v = v_h, v_h
-                elif motion_state == "reverse":   left_v, right_v = v_h, v_h
-                elif motion_state == "left":      left_v, right_v = v_s, v_s
-                elif motion_state == "right":     left_v, right_v = v_s, v_s
-                else:                              left_v, right_v = 0.0, 0.0
-                await motion.update_voltages(state, left_v, right_v)
+            # Always re-issue AO every cycle so the heartbeat keeps the AGV
+            # moving even when motion_state is unchanged, and so direction
+            # changes (which already queued DO writes + AO=0 above) are
+            # immediately followed by the target voltage in the same cycle.
+            await motion.update_voltages(state, left_v, right_v)
+            current_motion = motion_state
 
         # ── Web pusher request (hold: up/down energises, clear de-energises) ───
         pusher_req = state.web_pusher_request
         if pusher_req is not None:
             state.web_pusher_request = None
             # Cancel any in-flight task first — prevents the 200ms relay delay
-            # from re-energising relays after a clear has been requested.
+            # from re-energising relays after a clear has been requested. Await
+            # the cancelled task so its cleanup (pusher_all_off) lands in the
+            # DO queue BEFORE the new task starts enqueueing.
             if _pusher_task and not _pusher_task.done():
                 _pusher_task.cancel()
+                try:
+                    await _pusher_task
+                except (asyncio.CancelledError, Exception):
+                    pass
             if pusher_req == "up":
                 logger.info("[MANUAL] Pusher UP — hold")
                 _pusher_task = asyncio.create_task(motion.pusher_up(state))
@@ -452,7 +543,7 @@ async def manual_mode(state):
 #  MODE MANAGER
 # ══════════════════════════════════════════════════════════════════════════════
 
-async def mode_manager(state, engine=None):
+async def mode_manager(state, engine=None, restart_cb=None):
     """Central state machine.
 
     States: None | "manual" | "armed" | "running" | "reverse" | "emergency"
@@ -465,8 +556,11 @@ async def mode_manager(state, engine=None):
     DI_START       : momentary NO — rising edge = start auto
     DI_RESET       : momentary NO — rising edge = stop / reset
 
-    engine: SequenceEngine (Phase 3). Passed through to auto_mode and used for
-            cancel_armed() on mode transitions. None until Phase 3 is wired up.
+    engine:     SequenceEngine (Phase 3). Passed through to auto_mode and used for
+                cancel_armed() on mode transitions. None until Phase 3 is wired up.
+    restart_cb: async callable(state, reason) that bounces the systemd service.
+                Triggered when E-stop is engaged AND RESET is held for
+                _RESTART_COMBO_HOLD_S. None disables the combo.
     """
 
     current_mode  = None
@@ -474,6 +568,11 @@ async def mode_manager(state, engine=None):
     startup_task  = None   # ARMED→running pusher-up routine (deterministic start-from-home)
     last_start    = False
     last_reset    = False
+
+    # ── Physical restart combo: emergency engaged + RESET held 3 s ────────────
+    _RESTART_COMBO_HOLD_S = 3.0
+    _restart_combo_start  = None   # monotonic timestamp when combo first matched
+    _restart_combo_fired  = False  # one-shot until either input releases
 
     # Hardened start-from-home: when RFID sequences are enabled, every START
     # press deterministically drives the pusher UP and holds the AGV for 5 s,
@@ -509,6 +608,13 @@ async def mode_manager(state, engine=None):
         # by the active auto task, and we never want it to keep sequence_stop
         # held after a reset / emergency / end-cycle.
         await _cancel_startup()
+        # Cancel any in-flight sequence BEFORE the auto task and queue flush.
+        # Otherwise a sequence mid-execution (e.g. partway through pusher_extend)
+        # can still enqueue DO/AO writes that survive the subsequent
+        # _flush_and_idle drain and bleed into the next mode.
+        if engine is not None:
+            engine.cancel_active_sequence()
+            engine.cancel_armed()
         if active_task:
             active_task.cancel()
             try:
@@ -546,16 +652,45 @@ async def mode_manager(state, engine=None):
             continue
 
         di             = state.latest_di
-        emergency_safe = not di[config.DI_EMERGENCY]
-        switch_manual  = bool(di[config.DI_MODE_SWITCH]) ^ config.MODE_SWITCH_INVERT
-        btn_start      = di[config.DI_START]
-        btn_reset      = di[config.DI_RESET]
+        # Bounds-checked DI access — a truncated read from a flaky Modbus
+        # device must not crash mode_manager.
+        # Emergency is ALWAYS sourced from the physical DI, regardless of
+        # input debug mode — the operator must never lose the hardware E-stop.
+        emergency_safe = not _di_bit(di, config.DI_EMERGENCY, default=True)
+        if state.input_debug_mode_enabled:
+            # Virtual operator inputs from /api/debug/button and /api/debug/switch.
+            switch_manual = bool(state.virtual_switch_manual)
+            btn_start     = bool(state.virtual_start)
+            btn_reset     = bool(state.virtual_reset)
+        else:
+            switch_manual = _di_bit(di, config.DI_MODE_SWITCH) ^ config.MODE_SWITCH_INVERT
+            btn_start     = _di_bit(di, config.DI_START)
+            btn_reset     = _di_bit(di, config.DI_RESET)
 
         start_rising = btn_start and not last_start
         reset_rising = btn_reset and not last_reset
 
         last_start = btn_start
         last_reset = btn_reset
+
+        # ── Restart combo (E-stop engaged + RESET held _RESTART_COMBO_HOLD_S) ──
+        # Operator escape hatch: when the controller is wedged, the operator
+        # can force a service bounce without ssh. Emergency must be engaged
+        # first so motors are guaranteed quiet across the restart.
+        if restart_cb is not None and (not emergency_safe) and btn_reset:
+            if _restart_combo_start is None:
+                _restart_combo_start = time.monotonic()
+                logger.info("Restart combo armed — hold RESET %.1f s to restart",
+                            _RESTART_COMBO_HOLD_S)
+            elif (not _restart_combo_fired
+                    and time.monotonic() - _restart_combo_start >= _RESTART_COMBO_HOLD_S):
+                _restart_combo_fired = True
+                logger.warning("Restart combo fired — triggering controller restart")
+                asyncio.create_task(restart_cb(state,
+                    f"physical combo (E-stop + RESET {_RESTART_COMBO_HOLD_S:.1f}s)"))
+        else:
+            _restart_combo_start = None
+            _restart_combo_fired = False
 
         # ── System error guard (watchdog — Phase 4) ───────────────────────────
         # Critical driver lost (DIO) — stop everything including manual
@@ -571,21 +706,51 @@ async def mode_manager(state, engine=None):
 
         # ── Mapping reload on ARMED entry ─────────────────────────────────────
         if state.mapping_reload_pending and current_mode == "armed" and engine is not None:
-            rules = load_rules(config.AGV_ID)
-            if rules is not None:
-                new_seqs = compile_to_sequences(rules)
-                ok = engine.reload_sequences(new_seqs)
-                if ok:
+            new_seqs = None
+            if state.demo_mode_enabled:
+                # Demo mode: ignore the user's saved override file and run from
+                # the profile's default sequences. The override file is not
+                # touched on disk — it comes back when demo is toggled off.
+                new_seqs = list(config.SEQUENCES)
+                logger.info("[MAPPING] Demo mode — loading profile default sequences (%d)",
+                            len(new_seqs))
+                state.log_event("INFO",
+                    f"DEMO MODE: using profile default sequences ({len(new_seqs)} rules)")
+            else:
+                try:
+                    rules = load_rules(config.AGV_ID)
+                except OverrideFileCorrupt as exc:
+                    rules = None
+                    state.log_event("ERROR",
+                        f"Mapping override file corrupt on reload — keeping current sequences. "
+                        f"Bad file moved to {exc.renamed_to or '(could not rename)'}")
+                    logger.error("[MAPPING] reload aborted — override corrupt: %s", exc)
+                if rules is not None:
+                    new_seqs = compile_to_sequences(rules)
                     logger.info("[MAPPING] Sequences reloaded on ARMED entry (%d rules → %d seqs)",
                                 len(rules), len(new_seqs))
                     state.log_event("INFO",
                         f"MAPPING: sequences reloaded — {len(rules)} rules active")
-                else:
+            if new_seqs is not None:
+                ok = engine.reload_sequences(new_seqs)
+                if not ok:
                     logger.warning("[MAPPING] reload deferred — sequence still running")
             state.mapping_reload_pending = False
 
         # ── End-cycle request (sequence-triggered return to ARMED) ───────────
         if state.end_cycle_request and current_mode == "running":
+            if state.demo_mode_enabled:
+                # Demo mode: ignore the home-tag end_cycle so the AGV keeps
+                # running the loop. Clear the request and the sequence_stop
+                # left set by the preceding stop_agv action so motion resumes.
+                # RESET / mode-switch / emergency still stop the AGV via the
+                # higher-priority handlers above.
+                logger.info("END CYCLE suppressed — demo mode, continuing run")
+                state.log_event("INFO", "End cycle suppressed (demo mode) — continuing")
+                state.end_cycle_request = False
+                state.sequence_stop     = False
+                await asyncio.sleep(0.01)
+                continue
             logger.info("END CYCLE — sequence requested return to ARMED")
             state.log_event("INFO", "End cycle — returning to ARMED")
             state.end_cycle_request = False

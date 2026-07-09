@@ -69,9 +69,15 @@
     "GEAR_RATIO": 30
   },
 
+  "motor_cal": {
+    "_comment": "2026-07-09: re-fitted from encoder wheel-speed calibration (_calibration/ runs 14:23,14:26 left + 14:43,14:44 right; 14:20 excluded). motor_rpm = RPM_PER_VOLT*V + RPM_VOLT_OFFSET. Old shared values 646.59 / -101.2 made the AGV run ~2x commanded; these halve the command voltage so target speed = actual speed.",
+    "RPM_PER_VOLT":    1259.29,
+    "RPM_VOLT_OFFSET": -82.54
+  },
+
   "speeds": {
-    "MANUAL_TARGET_HIGH_SPEED":     0.3,
-    "MANUAL_TARGET_SLOW_SPEED":     0.1,
+    "MANUAL_TARGET_HIGH_SPEED":     0.4,
+    "MANUAL_TARGET_SLOW_SPEED":     0.2,
     "AUTO_TARGET_HIGH_SPEED":       0.4,
     "AUTO_TARGET_SLOW_SPEED":       0.4,
     "AUTO_TARGET_EXTRA_SLOW_SPEED": 0.10,
@@ -81,9 +87,9 @@
   },
 
   "pid_tuning": {
-    "_comment_high": "2026-05-12: DT halved to 50ms (sensor TPDO1 now at 100Hz). KP=2.4, TD=0.13 with N=2 filter (alpha~0.43 at DT=50ms).",
-    "KP": 2.4,
-    "TD": 0.13,
+    "_comment_high": "2026-05-25: HIGH speed is straights-only — retuned for low reactivity. Was KP=2.4, TD=0.13. KP/TD now slightly below SLOW to suppress wheel twitch on tape noise; trades sharp recovery (not needed on straights) for a smoother ride. V_RED_COEF cut from 0.5 -> 0.3 for the same reason (don't slow down on small lateral noise).",
+    "KP": 1.4,
+    "TD": 0.05,
     "N":  2,
     "_comment_slow": "SLOW: KP and TD slightly milder than HIGH; N=2 to match HIGH filter strength.",
     "KP_SLOW": 1.5,
@@ -95,7 +101,7 @@
     "TI_MAX":10,
     "DT": 0.05,
     "_comment_sr": "Speed reduction — deep SR_CAP (50%) and high V_RED_COEF needed because wheels are forward-only. SR_ALPHA=0.1 preserves ~0.5s time constant at DT=50ms.",
-    "V_RED_COEF":      0.5,
+    "V_RED_COEF":      0.3,
     "V_RED_COEF_SLOW": 0.8,
     "OUTPUT_CLAMP_RPM": 100,
     "SR_ALPHA": 0.08,

@@ -34,6 +34,22 @@ COOLDOWN_MAX = 60.0
 TAG_MIN = 0
 TAG_MAX = 999
 
+# Single source of truth for default cooldown per preset type. Both validate()
+# and compile_to_sequences() must use the same value, otherwise an operator
+# who omits cooldown_s will see one number in the UI and another at runtime.
+_DEFAULT_COOLDOWN_S = {
+    "end_cycle":       10.0,
+    "start_cycle":     10.0,
+    "pulse_pusher":    10.0,
+    "timed_pause":      5.0,
+    "pause_until_tag":  5.0,
+    "slow_zone":        5.0,
+}
+
+
+def default_cooldown_for(rtype: str) -> float:
+    return _DEFAULT_COOLDOWN_S.get(rtype, 5.0)
+
 
 # ── File paths ────────────────────────────────────────────────────────────────
 
@@ -49,10 +65,27 @@ def _backup_path(agv_id: str, slot: int) -> str:
 
 # ── Load / save ───────────────────────────────────────────────────────────────
 
+class OverrideFileCorrupt(Exception):
+    """Raised when the override file exists but cannot be parsed.
+
+    Callers should catch this, fall back to profile sequences, AND surface
+    the error to the operator (event log, dashboard) so silent loss of
+    custom mappings can't happen unnoticed.
+    """
+    def __init__(self, path, original_exc, renamed_to=None):
+        self.path = path
+        self.original = original_exc
+        self.renamed_to = renamed_to
+        super().__init__(f"{path}: {original_exc}")
+
+
 def load_rules(agv_id: str):
     """Return list of rules from the override file, or None if file doesn't exist.
 
     None (missing file) is distinct from [] (present but empty — user cleared all rules).
+    Raises OverrideFileCorrupt if the file exists but cannot be parsed; the
+    file is moved aside to {path}.broken.{ts}.json so the next save can write
+    a fresh override without overwriting the bad data.
     """
     path = _override_path(agv_id)
     if not os.path.exists(path):
@@ -62,8 +95,16 @@ def load_rules(agv_id: str):
             data = json.load(f)
         return data.get("rules", [])
     except (json.JSONDecodeError, OSError) as e:
-        logger.error("[MAPPING] Failed to load override file %s: %s", path, e)
-        return None
+        broken = f"{path}.broken.{int(time.time())}.json"
+        try:
+            os.rename(path, broken)
+            logger.error("[MAPPING] Override file corrupt at %s — moved to %s. "
+                         "Falling back to profile sequences.", path, broken)
+        except OSError as rename_err:
+            broken = None
+            logger.error("[MAPPING] Override file corrupt at %s (%s) and rename failed (%s). "
+                         "Falling back to profile sequences.", path, e, rename_err)
+        raise OverrideFileCorrupt(path, e, renamed_to=broken)
 
 
 def save_rules(agv_id: str, rules: list, source: str = "ui") -> None:
@@ -155,7 +196,14 @@ def list_backups(agv_id: str) -> list:
 
 
 def restore_backup(agv_id: str, slot: int) -> tuple:
-    """Restore from backup slot. Returns (rules, errors)."""
+    """Restore from backup slot. Returns (rules, errors).
+
+    Loads the source backup fully into memory and validates BEFORE save_rules
+    is called. save_rules rotates the current live file into .bak.1, which
+    cascades and would otherwise overwrite the source backup if the chain
+    happens to touch it. By passing the in-memory rules to save_rules, the
+    rotation cannot lose the data we read.
+    """
     p = _backup_path(agv_id, slot)
     if not os.path.exists(p):
         return None, [{"rule_id": None, "field": "slot",
@@ -163,15 +211,24 @@ def restore_backup(agv_id: str, slot: int) -> tuple:
     try:
         with open(p) as f:
             data = json.load(f)
-        rules = data.get("rules", [])
-        errors = validate(rules)
-        if errors:
-            return None, errors
-        save_rules(agv_id, rules, source=f"restore_slot_{slot}")
-        return rules, []
     except (OSError, json.JSONDecodeError) as e:
         return None, [{"rule_id": None, "field": None,
-                        "message": f"Restore failed: {e}"}]
+                        "message": f"Restore read failed: {e}"}]
+
+    rules = data.get("rules", [])
+    errors = validate(rules)
+    if errors:
+        return None, errors
+
+    # Snapshot the rules into a new list so subsequent rotation/disk activity
+    # cannot mutate what we're about to write.
+    rules_snapshot = list(rules)
+    try:
+        save_rules(agv_id, rules_snapshot, source=f"restore_slot_{slot}")
+    except Exception as e:
+        return None, [{"rule_id": None, "field": None,
+                        "message": f"Restore write failed: {e}"}]
+    return rules_snapshot, []
 
 
 # ── Export / import ───────────────────────────────────────────────────────────
@@ -217,7 +274,10 @@ def validate(rules: list) -> list:
                         "message": f"Too many rules (max {_MAX_RULES})"})
         return errors
 
-    # tag_dec → (rule_id, preset_type) for conflict detection across enabled rules
+    # tag_dec → list of (rule_id, preset_type) for conflict detection across
+    # enabled rules. The list (not a single tuple) lets us catch the case where
+    # *two* end_cycle rules collide on the same tag even when a legitimate
+    # start_cycle pair exists.
     all_tags: dict = {}
 
     for r in rules:
@@ -232,7 +292,7 @@ def validate(rules: list) -> list:
         if not r.get("enabled", True):
             continue  # disabled rules skip all conflict checks
 
-        cooldown = r.get("cooldown_s", 5.0)
+        cooldown = r.get("cooldown_s", default_cooldown_for(rtype))
         try:
             cooldown = float(cooldown)
         except (TypeError, ValueError):
@@ -249,9 +309,14 @@ def validate(rules: list) -> list:
             return True
 
         def _register_tag(field, tag):
-            """Register a tag; allow end_cycle+start_cycle to share the same tag."""
-            if tag in all_tags:
-                existing_rid, existing_type = all_tags[tag]
+            """Register a tag and check for conflicts.
+
+            Allowed exception: at most ONE end_cycle paired with ONE start_cycle
+            on the same tag (the arrival/departure pattern). Any other repeat —
+            including two end_cycles on the same tag — is rejected.
+            """
+            existing = all_tags.setdefault(tag, [])
+            for existing_rid, existing_type in existing:
                 shared_ok = (
                     rtype in ("end_cycle", "start_cycle") and
                     existing_type in ("end_cycle", "start_cycle") and
@@ -259,9 +324,10 @@ def validate(rules: list) -> list:
                 )
                 if not shared_ok:
                     errors.append({"rule_id": rid, "field": field,
-                                    "message": f"Tag {tag} already used by rule {existing_rid}"})
-            else:
-                all_tags[tag] = (rid, rtype)
+                                    "message": f"Tag {tag} already used by rule {existing_rid} "
+                                               f"({existing_type})"})
+                    return  # report once per tag
+            existing.append((rid, rtype))
 
         def _check_duration(field, value):
             try:
@@ -342,9 +408,7 @@ def compile_to_sequences(rules: list) -> list:
         rtype = r["type"]
         rid8  = r["id"][:8]
 
-        # Default cooldowns: stricter ops get 10s, speed/pause get 5s
-        default_cd = 10.0 if rtype in ("end_cycle", "start_cycle", "pulse_pusher") else 5.0
-        cooldown   = float(r.get("cooldown_s", default_cd))
+        cooldown = float(r.get("cooldown_s", default_cooldown_for(rtype)))
 
         if rtype == "end_cycle":
             seqs.append({

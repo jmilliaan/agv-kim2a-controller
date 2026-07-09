@@ -85,39 +85,59 @@ class SequenceEngine:
         """Hot-swap the sequence list. Safe to call from the asyncio loop.
 
         Refuses if a sequence is currently running (returns False).
-        Clears armed and cooldown state — warn the operator that a recently-fired
-        rule could re-fire immediately after reload.
+        Preserves cooldowns and armed state for any sequence whose name still
+        exists in the new list. A rule that just fired won't immediately re-fire
+        after the reload just because it was edited; it has to wait out its
+        cooldown like normal.
         """
         if self._active_sequence is not None:
             logger.warning("[SEQ] reload_sequences refused — '%s' is running",
                            self._active_sequence)
             return False
         self._sequences = list(new_defs)
-        self._armed.clear()
-        self._cooldowns.clear()
-        self._state.pending_sequence = None
-        logger.info("[SEQ] Sequences reloaded — %d definition(s) active", len(self._sequences))
+        surviving_names = {seq["name"] for seq in self._sequences}
+        # Keep cooldowns/armed only for sequences that still exist
+        self._cooldowns = {n: exp for n, exp in self._cooldowns.items() if n in surviving_names}
+        self._armed     = {n: seq for n, seq in self._armed.items()      if n in surviving_names}
+        if self._state.pending_sequence not in surviving_names:
+            self._state.pending_sequence = None
+        logger.info("[SEQ] Sequences reloaded — %d definition(s) active (cooldowns preserved: %d)",
+                    len(self._sequences), len(self._cooldowns))
         return True
 
-    async def on_rfid_tag(self, tag_hex: str) -> bool:
+    # ── Dispatch results ─────────────────────────────────────────────────────
+    # MATCHED_FIRED:      tag matched and a sequence was launched/armed
+    # MATCHED_SUPPRESSED: tag matched but blocked by cooldown / mode / at_home
+    # UNMAPPED:           no rule references this tag
+    MATCHED_FIRED      = "fired"
+    MATCHED_SUPPRESSED = "suppressed"
+    UNMAPPED           = "unmapped"
+
+    async def on_rfid_tag(self, tag_hex: str) -> str:
         """Called by rfid_processor whenever a tag is read.
 
-        Returns True if at least one matching sequence was found (and either
-        launched or armed), False if no sequence claimed this tag.
+        Returns one of:
+          - MATCHED_FIRED:      at least one matching rule launched / armed
+          - MATCHED_SUPPRESSED: at least one rule references this tag but every
+                                one was blocked by preconditions (cooldown,
+                                requires_mode, requires_at_home, active sequence)
+          - UNMAPPED:           no rule references this tag
         """
         now = time.time()
-        matched = False
+        matched_any   = False
+        fired_any     = False
         for seq in self._sequences:
             trig = seq["trigger"]
 
             if trig["type"] == "rfid" and trig["rfid_tag"] == tag_hex:
-                matched = True
+                matched_any = True
                 if not self._check_preconditions(seq, now):
                     continue
                 self._active_task = asyncio.create_task(self._run_sequence(seq))
+                fired_any = True
 
             elif trig["type"] == "rfid_then_marker" and trig["rfid_tag"] == tag_hex:
-                matched = True
+                matched_any = True
                 if not self._check_preconditions(seq, now):
                     continue
                 # Arm: slow down for approach, record armed state
@@ -125,7 +145,13 @@ class SequenceEngine:
                 self._state.speed_mode       = "SLOW"
                 self._state.pending_sequence = seq["name"]
                 logger.info("[SEQ] Armed '%s' — slowing for marker approach", seq["name"])
-        return matched
+                fired_any = True
+
+        if fired_any:
+            return self.MATCHED_FIRED
+        if matched_any:
+            return self.MATCHED_SUPPRESSED
+        return self.UNMAPPED
 
     async def on_marker(self, side: str):
         """Called by auto_mode whenever a left/right marker is detected in the

@@ -508,6 +508,20 @@
   </div>
 </div>
 
+<!-- Demo mode panel -->
+<div id="demo-panel" class="raised" style="background:#c0c0c0;padding:0;margin-top:12px;">
+  <div class="panel-title">DEMO MODE &nbsp;[ CONTINUOUS LOOP — DEFAULT MAPPING ]</div>
+  <div style="padding:12px 16px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+    <button id="btn-demo-toggle" style="background:#c0c0c0;color:#000;">DEMO: OFF</button>
+    <div style="width:3px;height:42px;background:#a0a0a0;"></div>
+    <span style="font-size:13px;color:#404040;flex:1;line-height:1.4;">
+      When ON: AGV runs continuously using <b>profile default</b> mapping (ignores saved overrides);
+      home-position end-cycle is suppressed. Stop with RESET, mode switch, or emergency.
+      <br><span id="demo-apply-hint" style="font-size:12px;color:#800000;font-weight:bold;"></span>
+    </span>
+  </div>
+</div>
+
 <!-- Reverse auto control panel -->
 <div id="rev-panel" class="raised" style="background:#c0c0c0;padding:0;margin-top:12px;">
   <div class="panel-title">REVERSE AUTO &nbsp;[ TAPE FOLLOWING — REVERSE ]</div>
@@ -636,6 +650,21 @@ function fetchState() {
       document.getElementById('btn-rev-stop').disabled  = !revActive;
       document.getElementById('btn-rev-stop').style.opacity  = !revActive ? '0.4' : '1';
 
+      // Demo mode toggle button — reflect current state (avoid clobbering an
+      // in-flight click by skipping while a POST is pending).
+      const demoBtn = document.getElementById('btn-demo-toggle');
+      if (!demoBtn.dataset.pending) {
+        const on = !!agv.demo_mode_enabled;
+        demoBtn.textContent     = 'DEMO: ' + (on ? 'ON' : 'OFF');
+        demoBtn.style.background = on ? '#006000' : '#c0c0c0';
+        demoBtn.style.color      = on ? '#fff'    : '#000';
+      }
+      // Hint: reload happens on next ARMED entry, mirroring mapping-edit flow.
+      const hint = document.getElementById('demo-apply-hint');
+      const seqsForHint = d.sequences || {};
+      hint.textContent = seqsForHint.mapping_reload_pending
+        ? 'Sequence reload pending — applies on next ARMED entry' : '';
+
       document.getElementById('ts').textContent = new Date().toLocaleTimeString();
     })
     .catch(() => {
@@ -660,6 +689,32 @@ function postRevAuto(running) {
 
 document.getElementById('btn-rev-start').addEventListener('click', () => postRevAuto(true));
 document.getElementById('btn-rev-stop').addEventListener('click',  () => postRevAuto(false));
+
+document.getElementById('btn-demo-toggle').addEventListener('click', function() {
+  const btn = this;
+  const turningOn = !btn.textContent.includes('ON');
+  if (turningOn && !confirm('Enable DEMO MODE?\n\nAGV will run continuously using the profile default mapping.\nYour custom mapping override will be temporarily ignored.\n\nApplies on the next ARMED entry.')) {
+    return;
+  }
+  btn.dataset.pending = '1';
+  fetch('/api/tuning/toggle', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ feature: 'demo_mode_enabled', enabled: turningOn })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.ok) {
+      btn.textContent     = 'DEMO: ' + (turningOn ? 'ON' : 'OFF');
+      btn.style.background = turningOn ? '#006000' : '#c0c0c0';
+      btn.style.color      = turningOn ? '#fff'    : '#000';
+    } else {
+      alert('Toggle failed: ' + (d.error || 'unknown'));
+    }
+  })
+  .catch(() => alert('Toggle failed: connection error'))
+  .finally(() => { delete btn.dataset.pending; });
+});
 
 function fetchWifi() {
   fetch('/api/wifi')

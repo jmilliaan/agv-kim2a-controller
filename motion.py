@@ -4,11 +4,12 @@ import config
 # ── Kinematic Math ────────────────────────────────────────────────────────────
 
 def voltage_to_rpm(voltage):
-    rpm = 646.59 * voltage - 101.2
+    # Per-profile motor calibration (config defaults reproduce the old 646.59 / -101.2).
+    rpm = config.RPM_PER_VOLT * voltage + config.RPM_VOLT_OFFSET
     return rpm
 
 def rpm_to_voltage(rpm):
-    voltage = (rpm + 101.2) / 646.59
+    voltage = (rpm - config.RPM_VOLT_OFFSET) / config.RPM_PER_VOLT
     return voltage
 
 def mps_to_rpm(v_meter_per_second):
@@ -145,22 +146,53 @@ async def pusher_clear(state):
     for ch in config.PUSHER_CHANNELS["extend"] + config.PUSHER_CHANNELS["retract"]:
         await state.do_queue.put((ch, False))
 
-async def pusher_up(state):
-    """Drive the actuator UP (extend). Clears retract relays then waits 200ms before energizing extend relays."""
+def _pusher_all_off_nowait(state):
+    """Fail-safe: enqueue OFF for every pusher channel without yielding to the loop.
+
+    Used from cancellation handlers where an `await` would itself be cancelled.
+    Drops queue items silently if the queue is bounded/full — better to lose a
+    cleanup write than to raise during cleanup.
+    """
     if config.PUSHER_CHANNELS is None:
         return
-    for ch in config.PUSHER_CHANNELS["retract"]:
-        await state.do_queue.put((ch, False))
-    await asyncio.sleep(0.2)   # relay de-energization delay — do not remove
-    for ch in config.PUSHER_CHANNELS["extend"]:
-        await state.do_queue.put((ch, True))
+    for ch in (config.PUSHER_CHANNELS["extend"] + config.PUSHER_CHANNELS["retract"]):
+        try:
+            state.do_queue.put_nowait((ch, False))
+        except Exception:
+            pass
+
+async def pusher_up(state):
+    """Drive the actuator UP (extend). Clears retract relays then waits 200ms before energizing extend relays.
+
+    On cancellation (mode switch, new pusher request) the except-block enqueues
+    OFF for every pusher channel so the actuator never lands in a half-energised
+    state.
+    """
+    if config.PUSHER_CHANNELS is None:
+        return
+    try:
+        for ch in config.PUSHER_CHANNELS["retract"]:
+            await state.do_queue.put((ch, False))
+        await asyncio.sleep(0.2)   # relay de-energization delay — do not remove
+        for ch in config.PUSHER_CHANNELS["extend"]:
+            await state.do_queue.put((ch, True))
+    except asyncio.CancelledError:
+        _pusher_all_off_nowait(state)
+        raise
 
 async def pusher_down(state):
-    """Drive the actuator DOWN (retract). Clears extend relays then waits 200ms before energizing retract relays."""
+    """Drive the actuator DOWN (retract). Clears extend relays then waits 200ms before energizing retract relays.
+
+    On cancellation, all pusher channels are forced OFF.
+    """
     if config.PUSHER_CHANNELS is None:
         return
-    for ch in config.PUSHER_CHANNELS["extend"]:
-        await state.do_queue.put((ch, False))
-    await asyncio.sleep(0.2)   # relay de-energization delay — do not remove
-    for ch in config.PUSHER_CHANNELS["retract"]:
-        await state.do_queue.put((ch, True))
+    try:
+        for ch in config.PUSHER_CHANNELS["extend"]:
+            await state.do_queue.put((ch, False))
+        await asyncio.sleep(0.2)   # relay de-energization delay — do not remove
+        for ch in config.PUSHER_CHANNELS["retract"]:
+            await state.do_queue.put((ch, True))
+    except asyncio.CancelledError:
+        _pusher_all_off_nowait(state)
+        raise

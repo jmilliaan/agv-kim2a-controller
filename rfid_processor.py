@@ -34,8 +34,12 @@ async def rfid_processor(state, engine):
             # Soft-disabled: keep dashboard display alive, but do not trigger
             # any sequence. AGV continues tape-following at the active speed.
             continue
-        matched = await engine.on_rfid_tag(tag)
-        if not matched:
+        result = await engine.on_rfid_tag(tag)
+        # Only log tags with NO matching rule. Tags that are matched but
+        # suppressed (cooldown, wrong mode, at_home gate) are intentional —
+        # treating them as "unmapped" would confuse the operator's debugging.
+        if result == engine.UNMAPPED:
             logger.info("[RFID] Unmapped tag: %s", tag)
-            import time as _time
-            state.unmapped_rfid_log.append((_time.time(), tag))
+            state.unmapped_rfid_log.append((time.time(), tag))
+        elif result == engine.MATCHED_SUPPRESSED:
+            logger.debug("[RFID] Matched but suppressed: %s", tag)

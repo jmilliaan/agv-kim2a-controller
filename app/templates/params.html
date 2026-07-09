@@ -339,6 +339,30 @@
       </label>
     </div>
 
+    <div class="tune-row">
+      <span class="tune-label">
+        HORN
+        <span class="tune-hint">master gate — OFF silences both horns in every mode (incl. demo / alarm)</span>
+      </span>
+      <label class="tgl">
+        <input type="checkbox" id="tgl-horn"
+               onchange="toggleFeature('horn_enabled', this)">
+        <span class="tgl-slider"></span>
+      </label>
+    </div>
+
+    <div class="tune-row">
+      <span class="tune-label">
+        INPUT DEBUG MODE
+        <span class="tune-hint">bypass physical START / RESET / MODE switch — use virtual buttons on MANUAL page (emergency is never bypassed)</span>
+      </span>
+      <label class="tgl">
+        <input type="checkbox" id="tgl-input-debug"
+               onchange="toggleFeature('input_debug_mode_enabled', this)">
+        <span class="tgl-slider"></span>
+      </label>
+    </div>
+
     <div class="speed-grid">
       <div class="speed-cell">
         <label>AUTO HIGH (m/s)</label>
@@ -435,6 +459,8 @@
       $('tgl-lidar-stop').checked = d.lidar_stop_enabled;
       $('tgl-lidar-slow').checked = d.lidar_slow_enabled;
       $('tgl-rfid').checked       = d.rfid_enabled;
+      $('tgl-horn').checked       = d.horn_enabled;
+      $('tgl-input-debug').checked = d.input_debug_mode_enabled;
       $('spd-high').value  = fmt(d.auto_high_speed);
       $('spd-slow').value  = fmt(d.auto_slow_speed);
       $('spd-xslow').value = fmt(d.auto_extra_slow_speed);

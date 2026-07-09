@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import signal
 import threading
 from pymodbus.client import AsyncModbusTcpClient
@@ -24,25 +25,77 @@ logger = logging.getLogger(__name__)
 
 
 async def shutdown():
-    """Release the web server port, then zero all DO and AO outputs."""
+    """Release the web server port, then zero all DO and AO outputs.
+
+    Each Modbus connect is bounded by a 1 s timeout so an unreachable device
+    cannot block the shutdown path indefinitely (which would prevent a clean
+    exit on power loss).
+    """
     stop_server()   # unblock serve_forever() so the daemon thread exits cleanly
     logger.info("Shutting down — zeroing all outputs...")
+    _SHUTDOWN_CONNECT_TIMEOUT_S = 1.0
+
+    # AO
     try:
         ao_client = AsyncModbusTcpClient(config.AO_IP, port=config.MODBUS_PORT)
-        await ao_client.connect()
-        for i in range(config.NUM_AO):
-            await ao_client.write_register(address=config.AO_BASE + i, value=0, device_id=config.DEVICE_ID)
-        ao_client.close()
-
-        if config.DIO_ENABLED:
-            dio_client = AsyncModbusTcpClient(config.DIO_IP, port=config.MODBUS_PORT)
-            await dio_client.connect()
-            for i in range(config.NUM_DO):
-                await dio_client.write_coil(address=config.DO_BASE + i, value=False, device_id=config.DEVICE_ID)
-            dio_client.close()
-        logger.info("All outputs zeroed. Shutdown complete.")
+        try:
+            await asyncio.wait_for(ao_client.connect(), timeout=_SHUTDOWN_CONNECT_TIMEOUT_S)
+            for i in range(config.NUM_AO):
+                await ao_client.write_register(address=config.AO_BASE + i, value=0, device_id=config.DEVICE_ID)
+            logger.info("AO outputs zeroed.")
+        except asyncio.TimeoutError:
+            logger.warning("AO connect timed out during shutdown — skipping zero-out.")
+        finally:
+            try: ao_client.close()
+            except Exception: pass
     except Exception as e:
-        logger.error("Shutdown error: %s", e)
+        logger.error("AO shutdown error: %s", e)
+
+    # DO
+    if config.DIO_ENABLED:
+        try:
+            dio_client = AsyncModbusTcpClient(config.DIO_IP, port=config.MODBUS_PORT)
+            try:
+                await asyncio.wait_for(dio_client.connect(), timeout=_SHUTDOWN_CONNECT_TIMEOUT_S)
+                for i in range(config.NUM_DO):
+                    await dio_client.write_coil(address=config.DO_BASE + i, value=False, device_id=config.DEVICE_ID)
+                logger.info("DO outputs zeroed.")
+            except asyncio.TimeoutError:
+                logger.warning("DIO connect timed out during shutdown — skipping zero-out.")
+            finally:
+                try: dio_client.close()
+                except Exception: pass
+        except Exception as e:
+            logger.error("DO shutdown error: %s", e)
+
+    logger.info("Shutdown complete.")
+
+
+# ── Controlled restart (HMI button + physical E-stop+RESET-3s combo) ─────────
+# systemd unit has Restart=always RestartSec=2, so os._exit(0) here causes
+# the service to come back up within a couple of seconds. We zero AO/DO via
+# shutdown() first so motors are guaranteed safe across the bounce.
+_restart_in_progress = False
+
+async def request_restart(state, reason: str):
+    global _restart_in_progress
+    if _restart_in_progress:
+        return
+    _restart_in_progress = True
+    try:
+        state.log_event("CRITICAL", f"CONTROLLER RESTART requested: {reason}")
+        logger.warning("Restart requested (%s) — zeroing outputs then exiting for systemd relaunch",
+                       reason)
+        # Brief grace so the HTTP response can flush and a held physical button
+        # has a chance to be released before the bounce.
+        await asyncio.sleep(0.5)
+        await shutdown()
+    except Exception as exc:
+        logger.error("Error during restart shutdown sequence (continuing to exit): %s", exc)
+    finally:
+        logger.warning("Exiting now — systemd will relaunch in ~2 s")
+        os._exit(0)
+
 
 async def run():
     setup_logging()
@@ -52,8 +105,17 @@ async def run():
     state      = AMRState()
     state.loop = loop   # expose for Flask thread → call_soon_threadsafe
 
-    from core.mapping_store import load_rules, compile_to_sequences
-    _override_rules = load_rules(config.AGV_ID)
+    from core.mapping_store import load_rules, compile_to_sequences, OverrideFileCorrupt
+    try:
+        _override_rules = load_rules(config.AGV_ID)
+    except OverrideFileCorrupt as exc:
+        _override_rules = None
+        # State exists so log to event log; the dashboard's Errors page will
+        # show this so the operator can see why their custom mappings vanished.
+        state.log_event("ERROR",
+            f"Mapping override file corrupt — using profile defaults. "
+            f"Bad file moved to {exc.renamed_to or '(could not rename)'}")
+        logger.error("Mapping override corrupt: %s", exc)
     if _override_rules is not None:
         _initial_seqs = compile_to_sequences(_override_rules)
         logger.info("Loaded mapping override: %s  (%d rule(s) → %d sequence(s))",
@@ -81,7 +143,9 @@ async def run():
     ]:
         logger.info("%-12s %s", name, "ENABLED" if enabled else "DISABLED")
 
-    threading.Thread(target=run_server, args=(state, engine), daemon=True).start()
+    threading.Thread(target=run_server,
+                     args=(state, engine, request_restart),
+                     daemon=True).start()
 
     def terminate_gracefully():
         logger.info("Termination signal received. Cancelling tasks...")
@@ -112,7 +176,7 @@ async def run():
     core_tasks.append(safety_watchdog(state, watched=watched))
     core_tasks.append(rfid_processor(state, engine))
     core_tasks.append(horn_controller(state))
-    core_tasks.append(modes.mode_manager(state, engine))
+    core_tasks.append(modes.mode_manager(state, engine, restart_cb=request_restart))
 
     tasks = asyncio.gather(*core_tasks)
 
