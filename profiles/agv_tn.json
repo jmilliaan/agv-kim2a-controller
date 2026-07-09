@@ -70,9 +70,9 @@
   },
 
   "motor_cal": {
-    "_comment": "2026-07-09: re-fitted from encoder wheel-speed calibration (_calibration/ runs 14:23,14:26 left + 14:43,14:44 right; 14:20 excluded). motor_rpm = RPM_PER_VOLT*V + RPM_VOLT_OFFSET. Old shared values 646.59 / -101.2 made the AGV run ~2x commanded; these halve the command voltage so target speed = actual speed.",
-    "RPM_PER_VOLT":    1259.29,
-    "RPM_VOLT_OFFSET": -82.54
+    "_comment": "2026-07-09: INDEPENDENT per-wheel fit from _calibration/ runs 15:16 (left) + 15:09 (right), R^2~0.99. motor_rpm = RPM_PER_VOLT*V + RPM_VOLT_OFFSET. Right has more deadband (more negative offset) so it gets more voltage for the same target -> AGV runs straight. Mean matches the prior shared 1259.29/-82.54 so overall speed is unchanged.",
+    "left":  { "RPM_PER_VOLT": 1261.69, "RPM_VOLT_OFFSET": -59.88 },
+    "right": { "RPM_PER_VOLT": 1254.54, "RPM_VOLT_OFFSET": -93.41 }
   },
 
   "speeds": {
@@ -87,13 +87,13 @@
   },
 
   "pid_tuning": {
-    "_comment_high": "2026-05-25: HIGH speed is straights-only — retuned for low reactivity. Was KP=2.4, TD=0.13. KP/TD now slightly below SLOW to suppress wheel twitch on tape noise; trades sharp recovery (not needed on straights) for a smoother ride. V_RED_COEF cut from 0.5 -> 0.3 for the same reason (don't slow down on small lateral noise).",
-    "KP": 1.4,
-    "TD": 0.05,
+    "_comment_high": "2026-07-09: derivative sign bug in core/pid.py fixed (it ignored error_sign, so with the rear sensor error_sign=+1 the D term was ANTI-damping — larger TD grew the weave). With the fix TD now damps: raised 0.062 -> 0.1 as a conservative start; step TD up on track (0.1->0.2->0.3) until the weave is smooth, back off if wheels twitch on tape noise. KP kept at 1.56.",
+    "KP": 1.56,
+    "TD": 0.1,
     "N":  2,
-    "_comment_slow": "SLOW: KP and TD slightly milder than HIGH; N=2 to match HIGH filter strength.",
-    "KP_SLOW": 1.5,
-    "TD_SLOW": 0.06,
+    "_comment_slow": "SLOW: matches HIGH; step TD together with HIGH during tuning.",
+    "KP_SLOW": 1.56,
+    "TD_SLOW": 0.1,
     "N_SLOW":  2,
     "_comment_shared": "Integral ENABLED — deadband-gated (|e|<5mm) removes steady bias on straights. TI_MAX caps i_term contribution to ~66 rpm.",
     "TI": 2.5,

@@ -94,13 +94,17 @@ WHEEL_DIAMETER      = _params["kinematics"]["WHEEL_DIAMETER"]
 GEAR_RATIO          = _params["kinematics"]["GEAR_RATIO"]
 WHEEL_CIRCUMFERENCE = 3.14159 * WHEEL_DIAMETER
 
-# ── Motor voltage↔rpm calibration (per-profile) ───────────────────────────────
+# ── Motor voltage↔rpm calibration (per-wheel, per-profile) ────────────────────
 # motor_rpm = RPM_PER_VOLT * V + RPM_VOLT_OFFSET  (motion.voltage_to_rpm / rpm_to_voltage).
-# Defaults reproduce the historical shared constants, so profiles without a
-# "motor_cal" block (agv1_kim, agv2_kim, parameters.json) are unchanged.
-_motor_cal      = _params.get("motor_cal", {})
-RPM_PER_VOLT    = float(_motor_cal.get("RPM_PER_VOLT",    646.59))
-RPM_VOLT_OFFSET = float(_motor_cal.get("RPM_VOLT_OFFSET", -101.2))
+# Accepts three profile shapes for backwards-compatibility:
+#   per-wheel  -> "motor_cal": {"left": {...}, "right": {...}}   (agv_tn)
+#   scalar     -> "motor_cal": {"RPM_PER_VOLT": .., "RPM_VOLT_OFFSET": ..}  (both wheels same)
+#   absent     -> historical shared constants 646.59 / -101.2   (agv1_kim, agv2_kim, parameters.json)
+_motor_cal = _params.get("motor_cal", {})
+def _wheel_cal(side):
+    w = _motor_cal.get(side, _motor_cal)   # per-wheel dict if present, else the scalar root
+    return (float(w.get("RPM_PER_VOLT", 646.59)), float(w.get("RPM_VOLT_OFFSET", -101.2)))
+MOTOR_CAL = {"left": _wheel_cal("left"), "right": _wheel_cal("right")}
 
 # ── Speeds ────────────────────────────────────────────────────────────────────
 MANUAL_TARGET_HIGH_SPEED     = _params["speeds"]["MANUAL_TARGET_HIGH_SPEED"]

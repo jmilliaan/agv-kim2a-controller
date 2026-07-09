@@ -278,8 +278,8 @@ async def auto_mode(state, direction="forward", engine=None):
                 pv = sensor["left_mm"]
                 left_rpm, right_rpm, dbg = pid.compute(pv, base_rpm, error_sign)
 
-                left_v  = max(0.0, min(config.AO_MAX_VOLTAGE, motion.rpm_to_voltage(left_rpm)))
-                right_v = max(0.0, min(config.AO_MAX_VOLTAGE, motion.rpm_to_voltage(right_rpm)))
+                left_v  = max(0.0, min(config.AO_MAX_VOLTAGE, motion.rpm_to_voltage(left_rpm,  "left")))
+                right_v = max(0.0, min(config.AO_MAX_VOLTAGE, motion.rpm_to_voltage(right_rpm, "right")))
 
                 await state.ao_queue.put((0, left_v))
                 await state.ao_queue.put((1, right_v))
@@ -389,8 +389,13 @@ async def manual_mode(state):
     FORWARD → LEFT) do re-issue DO writes, which inherently includes the brief
     relay switching time.
     """
-    v_high_max = motion.rpm_to_voltage(motion.mps_to_rpm(config.MANUAL_TARGET_HIGH_SPEED))
-    v_slow_max = motion.rpm_to_voltage(motion.mps_to_rpm(config.MANUAL_TARGET_SLOW_SPEED))
+    # Per-wheel command voltages (right has more deadband → higher voltage for same speed).
+    _rpm_high = motion.mps_to_rpm(config.MANUAL_TARGET_HIGH_SPEED)
+    _rpm_slow = motion.mps_to_rpm(config.MANUAL_TARGET_SLOW_SPEED)
+    v_high_max_l = motion.rpm_to_voltage(_rpm_high, "left")
+    v_high_max_r = motion.rpm_to_voltage(_rpm_high, "right")
+    v_slow_max_l = motion.rpm_to_voltage(_rpm_slow, "left")
+    v_slow_max_r = motion.rpm_to_voltage(_rpm_slow, "right")
 
     # Direction categories — motion states sharing the same DO relay pattern.
     # When transitioning between two states in the same category, we only need
@@ -412,14 +417,14 @@ async def manual_mode(state):
 
     def _target_voltages(ms):
         """Return (left_v, right_v) for a given motion_state at full speed."""
-        if   ms == "fwd_left":  return v_slow_max, v_high_max   # inner=L slow, outer=R fast
-        elif ms == "fwd_right": return v_high_max, v_slow_max
-        elif ms == "rvs_left":  return v_slow_max, v_high_max
-        elif ms == "rvs_right": return v_high_max, v_slow_max
-        elif ms == "forward":   return v_high_max, v_high_max
-        elif ms == "reverse":   return v_high_max, v_high_max
-        elif ms == "left":      return v_slow_max, v_slow_max
-        elif ms == "right":     return v_slow_max, v_slow_max
+        if   ms == "fwd_left":  return v_slow_max_l, v_high_max_r   # inner=L slow, outer=R fast
+        elif ms == "fwd_right": return v_high_max_l, v_slow_max_r
+        elif ms == "rvs_left":  return v_slow_max_l, v_high_max_r
+        elif ms == "rvs_right": return v_high_max_l, v_slow_max_r
+        elif ms == "forward":   return v_high_max_l, v_high_max_r
+        elif ms == "reverse":   return v_high_max_l, v_high_max_r
+        elif ms == "left":      return v_slow_max_l, v_slow_max_r
+        elif ms == "right":     return v_slow_max_l, v_slow_max_r
         return 0.0, 0.0
 
     current_motion = None

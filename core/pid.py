@@ -75,7 +75,13 @@ class PIDController:
             i_term = 0.0
 
         # ── D (low-pass filtered) ─────────────────────────────────────────────
-        raw_d           = -self._kp * self._td * ((pv - self.last_pv) / self._dt)
+        # Derivative must honour error_sign: the P term acts on e = error_sign*pv,
+        # so the derivative has to be sign-matched or it becomes ANTI-damping.
+        # For error_sign=-1 (front sensor) this equals the old -kp*td*dpv/dt.
+        # For error_sign=+1 (AGV B rear sensor, SENSOR_ORIENTATION=-1) it flips to
+        # the correct sign — the previous code omitted error_sign here and made
+        # the derivative feed the weave instead of damping it.
+        raw_d           = self._kp * self._td * error_sign * ((pv - self.last_pv) / self._dt)
         self.filtered_d += self._alpha * (raw_d - self.filtered_d)
 
         # ── Output clamp ──────────────────────────────────────────────────────

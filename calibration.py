@@ -243,21 +243,24 @@ async def main(wheel, manage_service):
 
             v_cmd = commanded_speed(elapsed)
             rpm   = motion.mps_to_rpm(v_cmd)
-            volt  = motion.rpm_to_voltage(rpm)
+            # Per-wheel voltages so the AGV drives straight while measuring.
             # AO_MAX_VOLTAGE cap lives in modes.py (not imported) — enforce it here.
-            volt  = max(0.0, min(volt, config.AO_MAX_VOLTAGE))
+            left_v  = max(0.0, min(motion.rpm_to_voltage(rpm, "left"),  config.AO_MAX_VOLTAGE))
+            right_v = max(0.0, min(motion.rpm_to_voltage(rpm, "right"), config.AO_MAX_VOLTAGE))
+            # Voltage attributed to the wheel the encoder physically sits on.
+            volt = left_v if wheel == "left" else right_v
 
             if v_cmd <= 0.0:
                 await motion.idle(state)
                 direction_set = False
-            elif not direction_set:
-                # First positive step: set direction relays + brakes off + speed.
-                await motion.set_forward(state, volt)
-                direction_set = True
-                started_driving = True
             else:
-                # Direction already latched — AO-only update avoids flooding the DO queue.
-                await motion.update_voltages(state, volt, volt)
+                if not direction_set:
+                    # First positive step: latch direction relays + brakes off.
+                    await motion.set_forward(state, 0.0)
+                    direction_set = True
+                    started_driving = True
+                # AO-only per-wheel update avoids flooding the DO queue each cycle.
+                await motion.update_voltages(state, left_v, right_v)
 
             rows.append((round(elapsed, 3), v_cmd, round(volt, 4),
                          state.encoder_v, state.encoder_rpm, state.encoder_count))

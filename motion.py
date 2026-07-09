@@ -3,14 +3,14 @@ import config
 
 # ── Kinematic Math ────────────────────────────────────────────────────────────
 
-def voltage_to_rpm(voltage):
-    # Per-profile motor calibration (config defaults reproduce the old 646.59 / -101.2).
-    rpm = config.RPM_PER_VOLT * voltage + config.RPM_VOLT_OFFSET
-    return rpm
+def voltage_to_rpm(voltage, wheel="left"):
+    # Per-wheel motor calibration (config defaults reproduce the old 646.59 / -101.2).
+    a, b = config.MOTOR_CAL[wheel]
+    return a * voltage + b
 
-def rpm_to_voltage(rpm):
-    voltage = (rpm - config.RPM_VOLT_OFFSET) / config.RPM_PER_VOLT
-    return voltage
+def rpm_to_voltage(rpm, wheel="left"):
+    a, b = config.MOTOR_CAL[wheel]
+    return (rpm - b) / a
 
 def mps_to_rpm(v_meter_per_second):
     v_meter_per_minute = v_meter_per_second * 60

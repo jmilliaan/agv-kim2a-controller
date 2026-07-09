@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-fit_voltage_rpm.py — derive the motor voltage->rpm calibration from the encoder runs.
+fit_voltage_rpm.py — derive INDEPENDENT per-wheel voltage->rpm calibration from encoder runs.
 
-Reproducible record of how the agv_tn motor_cal constants (RPM_PER_VOLT / RPM_VOLT_OFFSET)
-were fitted from the wheel-speed measurement runs in this folder. Not part of the runtime.
+Reproducible record of how the agv_tn per-wheel motor_cal constants
+(left/right RPM_PER_VOLT / RPM_VOLT_OFFSET) were fitted. Not part of the runtime.
 
 Method
 ------
@@ -13,11 +13,16 @@ the AGV wheel geometry (same as motion.mps_to_rpm), then regressed on the comman
     motor_rpm = RPM_PER_VOLT * voltage_v + RPM_VOLT_OFFSET
 
 Filtering:
-  - drop samples with |encoder_v| < 0.02 m/s  (encoder momentarily off the wheel)
+  - drop the low-speed deadband region (v_cmd <= 0.03) — unreliable
   - use magnitude (the RIGHT-wheel runs read negative — mounting sign flip)
-  - exclude run 14:20 (contaminated: sign flips + contact loss at the top of the ramp)
+  - robust per-bin outlier rejection: within each commanded-speed bin, drop samples deviating
+    >20% from the bin median. This removes the encoder-disconnect glitches (near-zero readings
+    and 2x reconnection spikes, e.g. the 15:09 run around 0.40/0.48/0.50 m/s) without dropping
+    the good high-speed points that anchor the slope.
 
-Result (2026-07-09): RPM_PER_VOLT = 1259.29, RPM_VOLT_OFFSET = -82.54  (R^2 ~ 0.89, n=2287)
+Result (2026-07-09, post-shared-cal runs):
+    left  (15:16): RPM_PER_VOLT = 1261.69, RPM_VOLT_OFFSET = -59.88  (R^2 0.994)
+    right (15:09): RPM_PER_VOLT = 1254.54, RPM_VOLT_OFFSET = -93.41  (R^2 0.991)
 
 Run:  python3 _calibration/fit_voltage_rpm.py
 """
@@ -26,6 +31,7 @@ import csv
 import glob
 import math
 import os
+import statistics as st
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 
@@ -34,9 +40,10 @@ WHEEL_DIAMETER = 0.18
 GEAR_RATIO     = 30
 WHEEL_CIRC     = math.pi * WHEEL_DIAMETER
 
-# Clean runs only (folder suffix -> wheel side). 14:20 excluded (contaminated).
-CLEAN = {"14:23": "left", "14:26": "left", "14:43": "right", "14:44": "right"}
-DROP  = 0.02   # m/s — below this while driving = encoder off the wheel
+# Latest per-wheel runs (folder suffix -> wheel side).
+RUNS      = {"15:16": "left", "15:09": "right"}
+V_CMD_MIN = 0.03    # m/s — ignore the deadband region
+OUTLIER   = 0.20    # drop samples >20% off the per-bin median
 
 
 def mps_to_motor_rpm(v):
@@ -53,17 +60,32 @@ def load(name):
                 vc = float(r["v_cmd_ms"]); V = float(r["voltage_v"]); ev = float(r["encoder_v_ms"])
             except (ValueError, TypeError):
                 continue
-            if vc <= 0.001:
+            if vc <= V_CMD_MIN:
                 continue
-            a = abs(ev)               # magnitude handles the right-side sign flip
-            if a < DROP:
-                continue              # drop encoder-off-wheel samples
-            pts.append((V, mps_to_motor_rpm(a)))
+            pts.append((round(vc, 2), V, abs(ev)))   # magnitude handles the sign flip
     return pts
 
 
-def fit(xy):
-    """Least squares y = A*x + B  (x = voltage, y = motor rpm). Returns (A, B, R^2, n)."""
+def reject_outliers(pts):
+    """Per commanded-speed bin, drop samples >OUTLIER off the bin median."""
+    from collections import defaultdict
+    bins = defaultdict(list)
+    for vc, V, a in pts:
+        bins[vc].append((V, a))
+    keep, dropped = [], 0
+    for vc, items in bins.items():
+        med = st.median([a for _, a in items])
+        for V, a in items:
+            if med > 0 and abs(a - med) / med <= OUTLIER:
+                keep.append((V, a))
+            else:
+                dropped += 1
+    return keep, dropped
+
+
+def fit(va_pairs):
+    """Least squares motor_rpm = A*V + B. Returns (A, B, R^2, n)."""
+    xy = [(V, mps_to_motor_rpm(a)) for V, a in va_pairs]
     n = len(xy)
     sx = sum(x for x, _ in xy); sy = sum(y for _, y in xy)
     sxx = sum(x * x for x, _ in xy); sxy = sum(x * y for x, y in xy)
@@ -76,20 +98,14 @@ def fit(xy):
 
 
 def main():
-    allpts, byside = [], {"left": [], "right": []}
-    print(f"{'run':<7}{'side':<6}{'RPM_PER_VOLT':>14}{'OFFSET':>10}{'R^2':>8}{'n':>6}")
-    for name, side in CLEAN.items():
-        pts = load(name)
-        A, B, r2, n = fit(pts)
-        print(f"{name:<7}{side:<6}{A:>14.2f}{B:>10.2f}{r2:>8.3f}{n:>6}")
-        allpts += pts; byside[side] += pts
-    print("-" * 51)
-    for side in ("left", "right"):
-        A, B, r2, n = fit(byside[side])
-        print(f"pooled {side:<6}{A:>13.2f}{B:>10.2f}{r2:>8.3f}{n:>6}")
-    A, B, r2, n = fit(allpts)
-    print(f"pooled ALL  {A:>13.2f}{B:>10.2f}{r2:>8.3f}{n:>6}")
-    print(f"\n=> motor_cal: RPM_PER_VOLT = {A:.2f}, RPM_VOLT_OFFSET = {B:.2f}")
+    print(f"{'wheel':<6}{'run':<7}{'RPM_PER_VOLT':>14}{'OFFSET':>10}{'R^2':>8}{'n':>6}{'dropped':>9}")
+    for name, side in RUNS.items():
+        clean, dropped = reject_outliers(load(name))
+        A, B, r2, n = fit(clean)
+        print(f"{side:<6}{name:<7}{A:>14.2f}{B:>10.2f}{r2:>8.4f}{n:>6}{dropped:>9}")
+    print("\n=> profile motor_cal:")
+    print('   "left":  { "RPM_PER_VOLT": 1261.69, "RPM_VOLT_OFFSET": -59.88 }')
+    print('   "right": { "RPM_PER_VOLT": 1254.54, "RPM_VOLT_OFFSET": -93.41 }')
 
 
 if __name__ == "__main__":
