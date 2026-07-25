@@ -178,7 +178,12 @@ async def auto_mode(state, engine=None):
                 # otherwise jerk the steering). Out-of-range → skip this frame
                 # and hold the last command; a large jump → clamp toward the
                 # last accepted value.
-                pv = sensor["left_mm"]
+                # Fork selection: follow whichever track a set_track sequence
+                # chose (default left). On a single line both readings are
+                # superimposed, so switching there is seamless; mid-fork the
+                # slew clamp below bounds any residual step.
+                pv = (sensor["right_mm"] if state.track_follow == "right"
+                      else sensor["left_mm"])
                 if pv is None or abs(pv) > config.SENSOR_MAX_MM:
                     _dbg_count += 1
                     if _dbg_count % 25 == 0:
@@ -201,7 +206,14 @@ async def auto_mode(state, engine=None):
                     ff_target = (config.FF_SCALE * config.FF_DIRECTION_SIGN
                                  * 0.5 * base_rpm
                                  * (config.TRACK_WIDTH / config.CURVE_RADIUS))
-                ff_filtered += config.FF_ALPHA * (ff_target - ff_filtered)
+                # Gentle ramp when entering/deepening a corner; fast collapse on
+                # exit so the residual turn command doesn't bleed into the straight
+                # and over-rotate the AGV. ff_target is 0 outside corners (always
+                # same sign as ff_filtered), so abs(ff_target) > abs(ff_filtered)
+                # is true only while ramping up.
+                _ff_alpha = (config.FF_ALPHA if abs(ff_target) > abs(ff_filtered)
+                             else config.FF_EXIT_ALPHA)
+                ff_filtered += _ff_alpha * (ff_target - ff_filtered)
 
                 # ── PID compute ───────────────────────────────────────────────
                 left_rpm, right_rpm, dbg = pid.compute(pv, base_rpm, error_sign,
@@ -278,12 +290,18 @@ async def manual_mode(state):
     """Handles pendant jogging and web remote.
     Web remote (state.web_manual_command) takes priority over physical DI buttons.
     Emergency is fully owned by mode_manager — this task does not check it."""
-    # Target motor RPM for each speed; motion helpers convert to per-wheel volts.
-    rpm_high = motion.mps_to_rpm(config.MANUAL_TARGET_HIGH_SPEED)
-    rpm_slow = motion.mps_to_rpm(config.MANUAL_TARGET_SLOW_SPEED)
     current_motion = None
+    last_rpms      = None   # (rpm_high, rpm_slow) actually commanded
 
     while True:
+        # Target motor RPM for each speed; motion helpers convert to per-wheel
+        # volts. Re-read every cycle so live speed edits from the params page
+        # apply immediately — this task keeps running for the whole time the
+        # selector is in MANUAL, so caching these before the loop would pin them
+        # to whatever the profile held at task start.
+        rpm_high = motion.mps_to_rpm(config.MANUAL_TARGET_HIGH_SPEED)
+        rpm_slow = motion.mps_to_rpm(config.MANUAL_TARGET_SLOW_SPEED)
+
         # ── Drain DI queue — keep only the latest frame ───────────────────────
         di = None
         while not state.di_queue.empty():
@@ -316,8 +334,13 @@ async def manual_mode(state):
             await asyncio.sleep(0.01)
             continue
 
-        if motion_state != current_motion:
-            logger.debug("Manual: %s", motion_state.upper())
+        # Re-issue on a speed change too, otherwise an edit made while a jog
+        # button is held would not take effect until it is released and pressed
+        # again.
+        rpms = (rpm_high, rpm_slow)
+        if motion_state != current_motion or rpms != last_rpms:
+            if motion_state != current_motion:
+                logger.debug("Manual: %s", motion_state.upper())
             if   motion_state == "fwd_left":  await motion.set_forward_left(state, rpm_high, rpm_slow)
             elif motion_state == "fwd_right": await motion.set_forward_right(state, rpm_high, rpm_slow)
             elif motion_state == "rvs_left":  await motion.set_reverse_left(state, rpm_high, rpm_slow)
@@ -328,6 +351,7 @@ async def manual_mode(state):
             elif motion_state == "right":     await motion.set_right(state, rpm_slow)
             elif motion_state == "idle":      await motion.idle(state)
             current_motion = motion_state
+            last_rpms      = rpms
 
         await asyncio.sleep(0.01)
 
@@ -381,6 +405,7 @@ async def mode_manager(state, engine=None, manager=None):
         state.speed_mode          = "HIGH"
         state.sequence_stop       = False
         state.nav_in_corner       = False
+        state.track_follow        = "left"
         state.pending_sequence    = None
         state.calibration_request = False
         if engine is not None:

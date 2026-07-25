@@ -44,10 +44,11 @@ async def safety_watchdog(state, watched: list):
         if fault_detail is not None:
             if not state.system_error:
                 logger.error(
-                    "WATCHDOG: driver '%s' stale (no data) — forcing idle",
+                    "WATCHDOG: hardware lost — '%s' stale (no data) — forcing idle",
                     fault_detail,
                 )
                 state.system_error = True
+                state.system_error_detail = fault_detail
                 # Zero speed outputs immediately without waiting for mode_manager
                 state.set_ao(0, 0.0)
                 state.set_ao(1, 0.0)
@@ -55,5 +56,6 @@ async def safety_watchdog(state, watched: list):
             if state.system_error:
                 logger.info("WATCHDOG: all drivers recovered — clearing system_error")
                 state.system_error = False
+                state.system_error_detail = None
 
         await asyncio.sleep(0.05)

@@ -70,6 +70,7 @@ class SequenceEngine:
         # ── Built-in action registry ──────────────────────────────────────────
         self._actions: dict = {
             "set_speed":         self._act_set_speed,
+            "set_track":         self._act_set_track,
             "wait_marker":       self._act_wait_marker,
             "stop_agv":          self._act_stop_agv,
             "resume":            self._act_resume,
@@ -341,6 +342,17 @@ class SequenceEngine:
         else:
             self._state.nav_in_corner = False
         logger.info("[SEQ] Speed → %s", p["speed"])
+
+    async def _act_set_track(self, p: dict):
+        # Fork selection: switch which MGS1600 track the steering PID follows.
+        # The sensor always reports both tracks (superimposed on a single line),
+        # so this is purely a host-side choice — no command is sent to the sensor.
+        side = str(p.get("side", "")).lower()
+        if side not in ("left", "right"):
+            logger.warning("[SEQ] set_track: invalid side %r — ignored", p.get("side"))
+            return
+        self._state.track_follow = side
+        logger.info("[SEQ] Track follow → %s", side.upper())
 
     async def _act_wait_marker(self, p: dict):
         side     = p["side"]

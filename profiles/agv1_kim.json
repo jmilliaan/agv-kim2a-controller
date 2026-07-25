@@ -141,6 +141,7 @@
     "CURVE_DIRECTION": "left",
     "CURVE_SPEED_MODES": ["SLOW"],
     "FF_ALPHA": 0.15,
+    "FF_EXIT_ALPHA": 0.6,
     "FF_SCALE": 0.85
   },
 
@@ -176,6 +177,28 @@
         { "type": "set_speed", "speed": "SLOW" }
       ],
       "cooldown_s": 0.0,
+      "requires_mode": "running"
+    },
+    {
+      "_comment": "Fork before the seq-1 station — follow the RIGHT track through the branch. Tag placeholder: replace 00AA with the scanned tag.",
+      "name": "fork_right_to_seq1",
+      "category": "navigation",
+      "trigger": { "type": "rfid", "rfid_tag": "00AA" },
+      "actions": [
+        { "type": "set_track", "side": "right" }
+      ],
+      "cooldown_s": 5.0,
+      "requires_mode": "running"
+    },
+    {
+      "_comment": "After the merge back onto the main loop — revert to the default LEFT track. Tag placeholder: replace 00BB with the scanned tag.",
+      "name": "fork_merge_revert",
+      "category": "navigation",
+      "trigger": { "type": "rfid", "rfid_tag": "00BB" },
+      "actions": [
+        { "type": "set_track", "side": "left" }
+      ],
+      "cooldown_s": 5.0,
       "requires_mode": "running"
     },
     {

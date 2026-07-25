@@ -206,6 +206,7 @@ _ff_dir           = str(_ff.get("CURVE_DIRECTION", "left")).lower()
 FF_DIRECTION_SIGN = -1.0 if _ff_dir == "left" else 1.0   # left turn => output < 0
 FF_CURVE_MODES    = set(_ff.get("CURVE_SPEED_MODES", ["SLOW"]))
 FF_ALPHA          = _ff.get("FF_ALPHA", 0.15)            # smooths corner entry/exit
+FF_EXIT_ALPHA     = _ff.get("FF_EXIT_ALPHA", FF_ALPHA)   # fast collapse on corner exit (else FF_ALPHA)
 FF_SCALE          = _ff.get("FF_SCALE", 1.0)             # overall multiplier on the corner compensation
 
 
@@ -296,6 +297,7 @@ def _validate():
         check(TRACK_WIDTH  > 0, f"TRACK_WIDTH_M must be > 0 (got {TRACK_WIDTH})")
         check(CURVE_RADIUS > 0, f"CURVE_RADIUS_M must be > 0 (got {CURVE_RADIUS})")
         check(0.0 < FF_ALPHA <= 1.0, f"FF_ALPHA must be in (0,1] (got {FF_ALPHA})")
+        check(0.0 < FF_EXIT_ALPHA <= 1.0, f"FF_EXIT_ALPHA must be in (0,1] (got {FF_EXIT_ALPHA})")
 
     # Encoder / calibration (only matters when the encoder is enabled)
     if ENCODER_ENABLED:
@@ -316,3 +318,60 @@ def _validate():
 
 
 _validate()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  LIVE-TUNABLE PARAMETERS  (params page → /api/params/tuning)
+# ══════════════════════════════════════════════════════════════════════════════
+# RAM only: the endpoint mutates these module globals in place. Nothing is ever
+# written back to the profile JSON, so a restart restores the profile values.
+#
+# The endpoint is gated to idle ARMED / idle MANUAL. That matters: auto_mode is
+# built fresh on every START (modes.py), so it re-reads all of these — including
+# the PIDController constructor args — with no extra plumbing. manual_mode is
+# the exception, and re-reads MANUAL_TARGET_* every cycle for the same reason.
+#
+# _validate() cannot be reused here (no arguments, validates the whole module,
+# and it does not bound KP/TD/V_RED_COEF at all), so this table carries its own
+# bounds. They are deliberately wider than any profile value — a guard against
+# typos and runaway input, not a tuning opinion.
+TUNABLE_SPECS = {   # key: (min, max)
+    # Auto speeds and ramp rates
+    "AUTO_TARGET_HIGH_SPEED":         (0.0,   _MAX_SPEED_MPS),
+    "AUTO_TARGET_SLOW_SPEED":         (0.0,   _MAX_SPEED_MPS),
+    "AUTO_TARGET_APPROACH_SPEED":     (0.0,   _MAX_SPEED_MPS),
+    "ACCEL_RATE":                     (0.01,  10.0),
+    "DECEL_RATE":                     (0.01,  10.0),
+    "APPROACH_DECEL_RATE":            (0.01,  10.0),
+    # Manual speeds
+    "MANUAL_TARGET_HIGH_SPEED":       (0.0,   _MAX_SPEED_MPS),
+    "MANUAL_TARGET_SLOW_SPEED":       (0.0,   _MAX_SPEED_MPS),
+    # PID gains — HIGH.  N >= 1: the derivative filter coefficient
+    # alpha = dt / ((TD / N) + dt) degenerates as N -> 0.
+    "KP":                             (0.0,   50.0),
+    "TD":                             (0.0,   5.0),
+    "N":                              (1.0,   100.0),
+    "V_RED_COEF":                     (0.0,   50.0),
+    # PID gains — SLOW
+    "KP_SLOW":                        (0.0,   50.0),
+    "TD_SLOW":                        (0.0,   5.0),
+    "N_SLOW":                         (1.0,   100.0),
+    "V_RED_COEF_SLOW":                (0.0,   50.0),
+    # PID gains — APPROACH
+    "KP_APPROACH":                    (0.0,   50.0),
+    "TD_APPROACH":                    (0.0,   5.0),
+    "N_APPROACH":                     (1.0,   100.0),
+    "V_RED_COEF_APPROACH":            (0.0,   50.0),
+    # Output clamps
+    "OUTPUT_CLAMP_RPM":               (1.0,   5000.0),
+    "OUTPUT_CLAMP_INTO_BAR_APPROACH": (1.0,   5000.0),
+    "OUTPUT_CLAMP_AWAY_APPROACH":     (1.0,   5000.0),
+    # Curvature feedforward
+    "FF_SCALE":                       (0.0,   5.0),
+    "FF_ALPHA":                       (0.001, 1.0),
+    "FF_EXIT_ALPHA":                  (0.001, 1.0),
+}
+
+# Snapshot for "reset to profile". Captured after _validate(), so it reflects the
+# profile exactly, including every .get() fallback default.
+TUNABLE_DEFAULTS = {k: globals()[k] for k in TUNABLE_SPECS}

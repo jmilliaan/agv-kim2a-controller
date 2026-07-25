@@ -88,7 +88,9 @@ def _build_state_snapshot():
         "mode":                 mode,
         "emergency":            s.emergency_active,
         "system_error":         s.system_error,
+        "system_error_detail":  s.system_error_detail,
         "speed_mode":           s.speed_mode,
+        "track_follow":         s.track_follow,
         "sequence_stop":        s.sequence_stop,
         "sequence_request":     s.plc_sequence_request,
         "seq_pulse_active":     s.plc_sequence_request is not None,
@@ -141,12 +143,18 @@ def _build_state_snapshot():
         "active": None, "armed": None, "cooldowns": {}, "last_event": None
     }
 
+    # ── Driver frame rates (DI / CAN / RFID) ──────────────────────────────────
+    # The CAN rate is the one that matters for PID tuning: the control loop only
+    # advances when a sensor frame lands, so this IS the effective loop rate.
+    drivers = _manager.driver_health() if _manager is not None else []
+
     return {
         "agv":        agv,
         "plc_writes": plc_writes,
         "plc_reads":  plc_reads,
         "sensor":     sensor,
         "sequences":  sequences,
+        "drivers":    drivers,
     }
 
 
@@ -359,6 +367,7 @@ def api_params():
             "Direction Sign":    config.FF_DIRECTION_SIGN,
             "Curve Speed Modes": ", ".join(sorted(config.FF_CURVE_MODES)),
             "FF Alpha":          config.FF_ALPHA,
+            "FF Exit Alpha":     config.FF_EXIT_ALPHA,
             "FF Scale":          config.FF_SCALE,
         },
         "Timing": {
@@ -442,6 +451,88 @@ def api_set_features():
         "SEQ_ENABLED":  config.SEQ_ENABLED,
         "SLMP_ENABLED": config.SLMP_ENABLED,
     })
+
+
+def _tuning_guard():
+    """Shared guard for the live-tuning endpoints.
+
+    Returns an error (body, status) tuple, or None when the request may proceed.
+    Tuning is allowed only from idle ARMED / idle MANUAL — never while the AGV is
+    driving a line or sitting in a fault. That restriction is what lets the values
+    be applied with a plain setattr: auto_mode is rebuilt from scratch on the next
+    START, so it re-reads every one of them."""
+    if _state is None:
+        return {"error": "state not initialised"}, 503
+    mode = _state.current_mode
+    if mode in ("running", "emergency"):
+        return {"error": f"Cannot change tuning while AGV is {mode}"}, 403
+    return None
+
+
+def _tuning_values(config):
+    return {k: getattr(config, k) for k in config.TUNABLE_SPECS}
+
+
+@app.route("/api/params/tuning", methods=["GET", "POST"])
+def api_tuning():
+    import config, math
+
+    if request.method == "GET":
+        mode = _state.current_mode if _state is not None else None
+        return jsonify({
+            "values":   _tuning_values(config),
+            "specs":    {k: list(v) for k, v in config.TUNABLE_SPECS.items()},
+            "defaults": config.TUNABLE_DEFAULTS,
+            "locked":   mode in ("running", "emergency"),
+        })
+
+    err = _tuning_guard()
+    if err:
+        return jsonify(err[0]), err[1]
+
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data, dict) or not data:
+        return jsonify({"error": "no parameters provided"}), 400
+
+    # Validate the WHOLE batch before mutating anything, so a single rejected
+    # field cannot leave a gain set half-applied.
+    updates = {}
+    for k, raw in data.items():
+        if k not in config.TUNABLE_SPECS:
+            return jsonify({"error": f"'{k}' is not a tunable parameter"}), 400
+        try:
+            v = float(raw)
+        except (TypeError, ValueError):
+            return jsonify({"error": f"{k} must be a number (got {raw!r})"}), 400
+        if not math.isfinite(v):
+            return jsonify({"error": f"{k} must be finite (got {raw!r})"}), 400
+        lo, hi = config.TUNABLE_SPECS[k]
+        if not (lo <= v <= hi):
+            return jsonify({"error": f"{k} must be in [{lo}, {hi}] (got {v})"}), 400
+        updates[k] = v
+
+    for k, v in updates.items():
+        setattr(config, k, v)
+
+    logger.info("TUNING: applied %s",
+                ", ".join(f"{k}={v}" for k, v in sorted(updates.items())))
+    return jsonify({"ok": True, "applied": sorted(updates),
+                    "values": _tuning_values(config)})
+
+
+@app.route("/api/params/tuning/reset", methods=["POST"])
+def api_tuning_reset():
+    import config
+
+    err = _tuning_guard()
+    if err:
+        return jsonify(err[0]), err[1]
+
+    for k, v in config.TUNABLE_DEFAULTS.items():
+        setattr(config, k, v)
+
+    logger.info("TUNING: reset all tunable parameters to profile defaults")
+    return jsonify({"ok": True, "values": _tuning_values(config)})
 
 
 _RESTART_CMD = ["/usr/bin/systemctl", "restart", "agv-controller.service"]

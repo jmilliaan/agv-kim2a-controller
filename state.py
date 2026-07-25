@@ -9,6 +9,7 @@ class SystemState:
         self.current_mode     = None   # None | "manual" | "armed" | "running" | "calibrate" | "emergency"
         self.emergency_active = False
         self.system_error     = False  # set by safety_watchdog on driver comms loss
+        self.system_error_detail = None  # name of the stale driver, or None
 
 
 class KinematicState:
@@ -20,6 +21,7 @@ class KinematicState:
         self.web_manual_command   = None    # set by Flask remote; "forward"|"reverse"|"left"|"right"|"fwd_left"|"fwd_right"|"rvs_left"|"rvs_right"|None
         self.web_manual_expire    = 0.0     # epoch after which web_manual_command is treated as None
         self.nav_in_corner        = False   # True only while a NAV sequence holds SLOW; gates feedforward
+        self.track_follow         = "left"  # "left" | "right" — which MGS1600 track the PID follows (fork selection)
         self.calibration_request  = False   # set by Flask to start the wheel-speed calibration ramp
         self.calibration_wheel    = "right" # "right" | "left" — which wheel the encoder is mounted on
         # Web button bypass — when True, web_btn_* override the physical DI signals
@@ -147,6 +149,11 @@ class AMRState:
     @system_error.setter
     def system_error(self, v): self.system.system_error = v
 
+    @property
+    def system_error_detail(self): return self.system.system_error_detail
+    @system_error_detail.setter
+    def system_error_detail(self, v): self.system.system_error_detail = v
+
     # ── KinematicState shims ──────────────────────────────────────────────────
 
     @property
@@ -168,6 +175,11 @@ class AMRState:
     def nav_in_corner(self): return self.kinematic.nav_in_corner
     @nav_in_corner.setter
     def nav_in_corner(self, v): self.kinematic.nav_in_corner = v
+
+    @property
+    def track_follow(self): return self.kinematic.track_follow
+    @track_follow.setter
+    def track_follow(self, v): self.kinematic.track_follow = v
 
     @property
     def calibration_request(self): return self.kinematic.calibration_request

@@ -519,7 +519,7 @@
     <div class="lamp"></div>EMERGENCY
   </div>
   <div id="syserr-lamp" class="syserr-lamp">
-    <div class="lamp"></div>SYS ERROR
+    <div class="lamp"></div><span id="syserr-text">SYS ERROR</span>
   </div>
   <div id="wifi-indicator">
     <div id="wifi-bars">
@@ -589,6 +589,15 @@
     <div class="drive-field">
       <span class="drive-label">RFID</span>
       <span class="drive-value rfid" id="rfid-tag-display">—</span>
+    </div>
+    <div class="drive-field">
+      <span class="drive-label">SENSOR</span>
+      <span class="drive-value" id="can-rate-display">—</span>
+      <span class="drive-unit">Hz</span>
+    </div>
+    <div class="drive-field">
+      <span class="drive-label">TRACK</span>
+      <span class="drive-value" id="track-follow-display">—</span>
     </div>
   </div>
 </div>
@@ -736,6 +745,10 @@ function fetchState() {
       // System error lamp
       const sel2 = document.getElementById('syserr-lamp');
       sel2.className = 'syserr-lamp' + (agv.system_error ? ' active' : '');
+      document.getElementById('syserr-text').textContent =
+        agv.system_error && agv.system_error_detail
+          ? 'SYS ERROR: ' + agv.system_error_detail
+          : 'SYS ERROR';
 
       // Status write lamps (green = normal on, red = emergency on)
       setLamp(document.getElementById('w-M2000'), w.M2000_READY,             'on-green');
@@ -836,6 +849,19 @@ function fetchState() {
       // RFID last tag
       const rfidEl = document.getElementById('rfid-tag-display');
       rfidEl.textContent = agv.latest_rfid_tag || '—';
+
+      // Magnetic sensor frame rate — this is the effective PID loop rate, since
+      // auto_mode only advances when a sensor frame lands.
+      const canDrv  = (d.drivers || []).find(x => x.name === 'CAN MGS1600');
+      const rateEl  = document.getElementById('can-rate-display');
+      rateEl.textContent = canDrv ? canDrv.rate_hz.toFixed(1) : '—';
+      rateEl.style.color = !canDrv || canDrv.rate_hz === 0 ? '#a00000' : '#000080';
+
+      // Fork track selection — highlight when RIGHT (non-default)
+      const trackEl = document.getElementById('track-follow-display');
+      const track   = agv.track_follow || '—';
+      trackEl.textContent = track.toUpperCase();
+      trackEl.style.color = track === 'right' ? '#a05000' : '#000080';
 
       document.getElementById('ts').textContent = new Date().toLocaleTimeString();
     })

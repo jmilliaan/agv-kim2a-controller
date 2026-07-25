@@ -2,6 +2,7 @@ import asyncio
 import logging
 import signal
 import threading
+import time
 from pymodbus.client import AsyncModbusTcpClient
 
 import config
@@ -111,6 +112,27 @@ class DriverManager:
             await self._start(flag)
         else:
             await self._stop(flag)
+
+    def driver_health(self):
+        """Health + observed frame rate for every watched sensor driver.
+
+        Read by the web layer from the Flask thread, so it only reads driver
+        state — the drivers themselves keep their counters up to date on the
+        event loop.
+        """
+        now = time.time()
+        out = []
+        for drv, timeout_s in list(self._watched):
+            h = drv.get_health()
+            out.append({
+                "name":      h["detail"],
+                "ok":        h["ok"],
+                "rate_hz":   round(h.get("rate_hz", 0.0), 1),
+                "total":     h.get("total", 0),
+                "age_s":     round(now - h["last_rx"], 2),
+                "timeout_s": timeout_s,
+            })
+        return out
 
     def set_enabled(self, flag, enabled):
         """Thread-safe entry point for the Flask server. Blocks until applied."""

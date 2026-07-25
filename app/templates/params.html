@@ -154,6 +154,82 @@
   #settings-msg.warn { color: #a00000; font-weight: bold; }
   #settings-msg.ok   { color: #006000; font-weight: bold; }
 
+  /* ── Live tuning (editable speeds / PID / feedforward) ── */
+  #tuning-card { margin-bottom: 15px; }
+  .tune-group {
+    padding: 10px 15px;
+    border-bottom: 1px solid #b0b0b0;
+  }
+  .tune-group-title {
+    color: #303060;
+    font-weight: bold;
+    font-size: 17px;
+    letter-spacing: 0.6px;
+    margin-bottom: 8px;
+  }
+  .tune-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+  }
+  .tune-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .tune-field label {
+    font-size: 13px;
+    color: #505060;
+    letter-spacing: 0.4px;
+  }
+  /* Inset bevel — the inverse of .raised, so inputs read as sunken wells. */
+  .tune-field input {
+    width: 108px;
+    height: 38px;
+    padding: 0 8px;
+    background: #fff;
+    color: #000080;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: bold;
+    text-align: right;
+    border-top:    2px solid #808080;
+    border-left:   2px solid #808080;
+    border-right:  2px solid #fff;
+    border-bottom: 2px solid #fff;
+  }
+  .tune-field input.dirty { background: #ffffc0; color: #a05000; }
+  .tune-actions {
+    display: flex;
+    gap: 10px;
+    padding: 10px 15px;
+    border-bottom: 1px solid #b0b0b0;
+  }
+  .tune-btn {
+    height: 42px;
+    padding: 0 22px;
+    font-family: inherit; font-weight: bold; font-size: 16px; letter-spacing: 1px;
+    color: #fff; cursor: pointer; background: #505060;
+    border-top:    2px solid #fff;
+    border-left:   2px solid #fff;
+    border-right:  2px solid #808080;
+    border-bottom: 2px solid #808080;
+  }
+  .tune-btn.apply { background: #006000; }
+  .tune-btn.revert { background: #806000; }
+  .tune-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  #tuning-card.locked .tune-field input,
+  #tuning-card.locked .tune-btn { opacity: 0.5; cursor: not-allowed; }
+  #tuning-msg {
+    padding: 8px 15px;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    min-height: 18px;
+  }
+  #tuning-msg.info { color: #303060; }
+  #tuning-msg.warn { color: #a00000; font-weight: bold; }
+  #tuning-msg.ok   { color: #006000; font-weight: bold; }
+
   /* ── Wheel-speed calibration ── */
   #calib-card { margin-bottom: 15px; }
   .wheel-sel { display: flex; gap: 8px; flex-shrink: 0; }
@@ -245,6 +321,16 @@
   <div id="settings-msg" class="info">—</div>
 </div>
 
+<div id="tuning-card" class="section raised">
+  <div class="section-title">LIVE TUNING &nbsp;<span class="dep-note">(not saved — resets to profile on restart)</span></div>
+  <div id="tuning-groups"></div>
+  <div class="tune-actions">
+    <button class="tune-btn apply"  id="tune-apply">APPLY</button>
+    <button class="tune-btn revert" id="tune-revert">RESET TO PROFILE</button>
+  </div>
+  <div id="tuning-msg" class="info">—</div>
+</div>
+
 <div class="grid" id="params-grid"></div>
 
 <div id="calib-card" class="section raised">
@@ -294,10 +380,14 @@ function renderValue(v) {
   return `<td class="param-val">${v}</td>`;
 }
 
-fetch('/api/params')
+// Re-callable: the read-only tables below must be refreshed after a live edit,
+// otherwise they keep showing the values from page load.
+function loadParams() {
+  return fetch('/api/params')
   .then(r => r.json())
   .then(data => {
     const grid = document.getElementById('params-grid');
+    grid.innerHTML = '';
     // Render Speeds and PID sections first, then everything else
     const PRIORITY = ['Speeds', 'PID Tuning'];
     const ordered = [
@@ -329,6 +419,8 @@ fetch('/api/params')
   .catch(() => {
     document.getElementById('params-grid').textContent = 'Failed to load parameters.';
   });
+}
+loadParams();
 
 // ── Editable controller settings ──────────────────────────────────────────
 const _card = document.getElementById('settings-card');
@@ -389,6 +481,148 @@ function applyResponse(d) {
   });
 });
 
+// ── Live tuning (speeds / PID gains / feedforward) ────────────────────────
+// Editing is gated server-side to idle ARMED / idle MANUAL. AUTO values are read
+// when auto_mode is rebuilt at the next START; manual speeds apply immediately.
+const TUNE_LAYOUT = [
+  ['AUTO SPEEDS & RAMPS', [
+    ['AUTO_TARGET_HIGH_SPEED',     'High (m/s)'],
+    ['AUTO_TARGET_SLOW_SPEED',     'Slow (m/s)'],
+    ['AUTO_TARGET_APPROACH_SPEED', 'Approach (m/s)'],
+    ['ACCEL_RATE',                 'Accel (m/s²)'],
+    ['DECEL_RATE',                 'Decel (m/s²)'],
+    ['APPROACH_DECEL_RATE',        'Appr Decel (m/s²)'],
+  ]],
+  ['MANUAL SPEEDS', [
+    ['MANUAL_TARGET_HIGH_SPEED', 'High (m/s)'],
+    ['MANUAL_TARGET_SLOW_SPEED', 'Slow (m/s)'],
+  ]],
+  ['PID GAINS — HIGH', [
+    ['KP', 'KP'], ['TD', 'TD'], ['N', 'N'], ['V_RED_COEF', 'V-Red'],
+    ['OUTPUT_CLAMP_RPM', 'Clamp (RPM)'],
+  ]],
+  ['PID GAINS — SLOW', [
+    ['KP_SLOW', 'KP'], ['TD_SLOW', 'TD'], ['N_SLOW', 'N'],
+    ['V_RED_COEF_SLOW', 'V-Red'],
+  ]],
+  ['PID GAINS — APPROACH', [
+    ['KP_APPROACH', 'KP'], ['TD_APPROACH', 'TD'], ['N_APPROACH', 'N'],
+    ['V_RED_COEF_APPROACH', 'V-Red'],
+    ['OUTPUT_CLAMP_INTO_BAR_APPROACH', 'Clamp Into-Bar'],
+    ['OUTPUT_CLAMP_AWAY_APPROACH',     'Clamp Away'],
+  ]],
+  ['FEEDFORWARD', [
+    ['FF_SCALE', 'Scale'], ['FF_ALPHA', 'Alpha'], ['FF_EXIT_ALPHA', 'Exit Alpha'],
+  ]],
+];
+
+const _tCard = document.getElementById('tuning-card');
+const _tMsg  = document.getElementById('tuning-msg');
+let _tServer = {};   // last value confirmed by the server, per key
+let _tSpecs  = {};
+
+function _setTMsg(text, cls) { _tMsg.textContent = text; _tMsg.className = cls; }
+
+function _tInput(key) { return document.getElementById('tune-' + key); }
+
+function _tMarkDirty(key) {
+  const el = _tInput(key);
+  if (!el) return;
+  const dirty = el.value.trim() !== '' && Number(el.value) !== Number(_tServer[key]);
+  el.classList.toggle('dirty', dirty);
+}
+
+function _tBuild() {
+  const host = document.getElementById('tuning-groups');
+  host.innerHTML = '';
+  for (const [title, fields] of TUNE_LAYOUT) {
+    const g = document.createElement('div');
+    g.className = 'tune-group';
+    let html = `<div class="tune-group-title">${title}</div><div class="tune-fields">`;
+    for (const [key, label] of fields) {
+      const spec = _tSpecs[key] || [];
+      const hint = spec.length === 2 ? ` title="${key} — allowed ${spec[0]} … ${spec[1]}"` : '';
+      html += `<div class="tune-field">` +
+              `<label for="tune-${key}">${label}</label>` +
+              `<input type="number" step="any" id="tune-${key}" data-key="${key}"${hint}>` +
+              `</div>`;
+    }
+    g.innerHTML = html + `</div>`;
+    host.appendChild(g);
+  }
+  host.querySelectorAll('input[data-key]').forEach(el => {
+    el.addEventListener('input', () => _tMarkDirty(el.dataset.key));
+  });
+}
+
+// Write server values into the inputs and clear all dirty marks.
+function _tSync(values) {
+  _tServer = values;
+  for (const [key, val] of Object.entries(values)) {
+    const el = _tInput(key);
+    if (el) { el.value = val; el.classList.remove('dirty'); }
+  }
+}
+
+function _tLoad() {
+  return fetch('/api/params/tuning')
+    .then(r => r.json())
+    .then(d => {
+      _tSpecs = d.specs || {};
+      _tBuild();
+      _tSync(d.values || {});
+    })
+    .catch(() => _setTMsg('Failed to load tuning parameters.', 'warn'));
+}
+
+function _tCollectChanged() {
+  const out = {};
+  for (const [, fields] of TUNE_LAYOUT) {
+    for (const [key] of fields) {
+      const el = _tInput(key);
+      if (!el || el.value.trim() === '') continue;
+      if (Number(el.value) !== Number(_tServer[key])) out[key] = Number(el.value);
+    }
+  }
+  return out;
+}
+
+function _tPost(url, body, pendingMsg) {
+  _setTMsg(pendingMsg, 'info');
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+    .then(r => r.json().then(d => ({ ok: r.ok, d })))
+    .then(({ ok, d }) => {
+      if (!ok) { _setTMsg(d.error || 'Failed to apply.', 'warn'); return false; }
+      _tSync(d.values || {});
+      loadParams();          // refresh the read-only tables below
+      return true;
+    })
+    .catch(() => { _setTMsg('Connection error — not applied.', 'warn'); return false; });
+}
+
+document.getElementById('tune-apply').addEventListener('click', () => {
+  if (_tCard.classList.contains('locked')) return;
+  const changed = _tCollectChanged();
+  if (!Object.keys(changed).length) { _setTMsg('Nothing changed.', 'info'); return; }
+  _tPost('/api/params/tuning', changed, 'Applying…').then(ok => {
+    if (ok) _setTMsg('Applied. Manual speeds take effect now; AUTO values load on '
+                     + 'next START. Not saved — resets to profile on restart.', 'ok');
+  });
+});
+
+document.getElementById('tune-revert').addEventListener('click', () => {
+  if (_tCard.classList.contains('locked')) return;
+  _tPost('/api/params/tuning/reset', {}, 'Resetting…').then(ok => {
+    if (ok) _setTMsg('Reset to profile values.', 'ok');
+  });
+});
+
+_tLoad();
+
 function pollMode() {
   fetch('/api/state')
     .then(r => r.json())
@@ -398,10 +632,14 @@ function pollMode() {
       if (isLocked !== _locked) {
         _locked = isLocked;
         _card.classList.toggle('locked', isLocked);
-        if (isLocked)
+        _tCard.classList.toggle('locked', isLocked);
+        if (isLocked) {
           _setMsg('Locked — cannot change while AGV is ' + mode.toUpperCase() + '.', 'warn');
-        else
+          _setTMsg('Locked — tuning is only editable in idle ARMED or idle MANUAL.', 'warn');
+        } else {
           _setMsg('Changes apply immediately. Resets to profile default on restart.', 'info');
+          _setTMsg('Edit values, then press APPLY.', 'info');
+        }
       }
     })
     .catch(() => {});

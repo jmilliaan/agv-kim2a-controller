@@ -37,7 +37,7 @@ class PIDController:
         mode change — replaces the 6-variable reset block scattered through the
         original auto_mode."""
         self.integral        = 0.0
-        self.last_pv         = 0.0
+        self.last_e          = 0.0
         self.filtered_d      = 0.0
         self.speed_reduction = 0.0
         self._last_t         = None   # perf_counter ts of previous compute()
@@ -72,7 +72,10 @@ class PIDController:
             pv:          process variable — sensor left_mm (lateral offset in mm)
             base_rpm:    current target RPM from the acceleration ramp
             error_sign:  -1.0 for forward (sensor at front),
-                         +1.0 for reverse  (sensor at rear — geometry inverted)
+                         +1.0 for reverse  (sensor at rear — geometry inverted).
+                         Every term (P, I, D) derives from `e`, so this factor
+                         propagates through the whole controller automatically —
+                         do not reintroduce a term computed from raw `pv`.
             feedforward: open-loop steering differential (rpm) added to the PID
                          output — e.g. curvature feedforward in a corner. Not
                          subject to the PID output clamp (it is a known-good
@@ -110,8 +113,14 @@ class PIDController:
             i_term = 0.0
 
         # ── D (low-pass filtered) ─────────────────────────────────────────────
+        # Differentiate the ERROR, not the raw measurement, so error_sign reaches
+        # the D term the same way it reaches P and I. Differentiating pv with a
+        # hardcoded minus only happens to be right when error_sign == -1; it
+        # inverts D into positive feedback for error_sign == +1 (reverse).
+        # Setpoint is fixed at 0 here, so there is no derivative-kick downside.
+        de               = (e - self.last_e) / dt
         alpha            = dt / ((self._td / self._n) + dt)
-        raw_d            = -self._kp * self._td * ((pv - self.last_pv) / dt)
+        raw_d            = self._kp * self._td * de
         self.filtered_d += alpha * (raw_d - self.filtered_d)
 
         # ── Output clamp (PID steering only) ──────────────────────────────────
@@ -122,14 +131,14 @@ class PIDController:
         output_total = output + feedforward
 
         # ── Speed reduction (low-pass filtered, capped) ───────────────────────
-        raw_sr               = abs(e * self._v_red_coef) + abs((pv - self.last_pv) / dt) * 0.5
+        raw_sr               = abs(e * self._v_red_coef) + abs(de) * 0.5
         raw_sr               = min(raw_sr, base_rpm * self._sr_cap)
         self.speed_reduction += self._sr_alpha * (raw_sr - self.speed_reduction)
 
         left_rpm  = base_rpm - self.speed_reduction + output_total
         right_rpm = base_rpm - self.speed_reduction - output_total
 
-        self.last_pv = pv
+        self.last_e = e
 
         return left_rpm, right_rpm, {
             "e":               e,
